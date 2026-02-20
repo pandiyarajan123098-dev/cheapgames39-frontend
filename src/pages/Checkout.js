@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = "https://cheapgames39-backend.onrender.com";
 const WHATSAPP_NUMBER = "919659868303";
 
 const Checkout = () => {
