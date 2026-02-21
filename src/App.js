@@ -24,6 +24,7 @@ import Terms from "./pages/Terms";
 import FAQ from "./pages/FAQ";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OrderStatus from "./pages/OrderStatus";
+import Giveaway from "./pages/Giveaway";
 
 function App() {
   return (
@@ -58,6 +59,7 @@ function App() {
 <Route path="/terms" element={<Terms />} />
 <Route path="/faq" element={<FAQ />} />
 <Route path="/order-status" element={<OrderStatus />} />
+<Route path="/giveaway" element={<Giveaway />} />
             </Routes>
             <Footer />
           </div>

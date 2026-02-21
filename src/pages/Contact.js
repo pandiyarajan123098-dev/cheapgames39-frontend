@@ -183,7 +183,7 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">Instagram</h3>
                     <a
-                      href="https://instagram.com/cheapgames39"
+                      href="https://instagram.com/cheapgames39_official"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-[#B50000] transition"
