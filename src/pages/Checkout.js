@@ -1,12 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { toast } from "sonner";
 
-const API = "https://cheapgames39-backend.onrender.com";
+/* =========================================
+   CONFIG
+========================================= */
+
+const API_BASE = "https://cheapgames39-backend-1.onrender.com/api";
 const WHATSAPP_NUMBER = "919659868303";
+
+/* =========================================
+   COMPONENT
+========================================= */
 
 const Checkout = () => {
   const { user, accessToken } = useAuth();
@@ -15,7 +23,6 @@ const Checkout = () => {
 
   const [loading, setLoading] = useState(false);
   const [confirmLoading, setConfirmLoading] = useState(false);
-
   const [orderId, setOrderId] = useState(null);
   const [showQR, setShowQR] = useState(false);
   const [transactionId, setTransactionId] = useState("");
@@ -28,18 +35,27 @@ const Checkout = () => {
     billing_zip: "",
   });
 
-  // ================= TOTAL =================
+  /* =========================================
+     TOTAL CALCULATION (optimized)
+  ========================================= */
 
-  const total = cart.reduce(
-    (sum, item) => sum + (item.games?.price || 0) * item.quantity,
-    0
-  );
+  const total = useMemo(() => {
+    return cart.reduce(
+      (sum, item) => sum + (item.games?.price || 0) * item.quantity,
+      0
+    );
+  }, [cart]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData((prev) => ({
+      ...prev,
+      [e.target.name]: e.target.value,
+    }));
   };
 
-  // ================= CREATE ORDER =================
+  /* =========================================
+     CREATE ORDER
+  ========================================= */
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
@@ -55,18 +71,18 @@ const Checkout = () => {
       return;
     }
 
-    setLoading(true);
-
     try {
+      setLoading(true);
+
       const res = await axios.post(
-        `${API}/orders`,
+        `${API_BASE}/orders`,
         {
           billing_name: formData.billing_name,
           billing_email: formData.billing_email,
           billing_address: formData.billing_address,
           billing_city: formData.billing_city,
           billing_zip: formData.billing_zip,
-          total_price: total, // ✅ MUST match backend
+          total_price: total,
         },
         {
           headers: {
@@ -79,14 +95,16 @@ const Checkout = () => {
       setShowQR(true);
       toast.success("Order created. Complete UPI payment.");
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      console.error("Create Order Error:", error.response?.data || error.message);
       toast.error("Failed to create order");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
-  // ================= CONFIRM PAYMENT =================
+  /* =========================================
+     CONFIRM PAYMENT
+  ========================================= */
 
   const handleConfirmPayment = async () => {
     if (!transactionId || transactionId.length < 12) {
@@ -94,14 +112,12 @@ const Checkout = () => {
       return;
     }
 
-    setConfirmLoading(true);
-
     try {
+      setConfirmLoading(true);
+
       await axios.put(
-        `${API}/orders/${orderId}`,
-        {
-          transaction_id: transactionId, // ✅ ONLY this
-        },
+        `${API_BASE}/orders/${orderId}`,
+        { transaction_id: transactionId },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -128,14 +144,16 @@ Amount: ₹${total}
       toast.success("Payment submitted successfully");
       navigate("/");
     } catch (error) {
-      console.error(error.response?.data || error.message);
+      console.error("Confirm Payment Error:", error.response?.data || error.message);
       toast.error("Failed to confirm payment");
+    } finally {
+      setConfirmLoading(false);
     }
-
-    setConfirmLoading(false);
   };
 
-  // ================= UI =================
+  /* =========================================
+     UI
+  ========================================= */
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] pt-24 pb-20 px-6 text-white">
@@ -245,7 +263,6 @@ Amount: ₹${total}
             </button>
           </div>
         )}
-
       </div>
     </div>
   );
