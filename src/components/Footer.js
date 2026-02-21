@@ -58,10 +58,10 @@ export const Footer = () => {
           <div>
             <h4 className="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
             <div className="flex space-x-4">
-              <a href="https://instagram.com/cheapgames39" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-instagram-link">
+              <a href="https://instagram.com/cheapgames39_official" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-instagram-link">
                 <Instagram className="w-6 h-6" />
               </a>
-              <a href="https://wa.me/919999999999" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-whatsapp-link">
+              <a href="https://wa.me/919659868303" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-whatsapp-link">
                 <Phone className="w-6 h-6" />
               </a>
             </div>
@@ -69,13 +69,13 @@ export const Footer = () => {
         </div>
 
         <div className="border-t border-white/10 mt-8 pt-8 text-center">
-          <p className="text-gray-500 text-sm">&copy; 2026 CheapGames39 Store. All rights reserved.</p>
+          <p className="text-gray-500 text-sm">&copy; 2026 CheapGames39. All rights reserved.</p>
         </div>
       </div>
 
       {/* WhatsApp Floating Button */}
       <a
-        href="https://wa.me/919999999999"
+        href="https://wa.me/919659868303"
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all z-50"
