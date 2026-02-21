@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Phone, Instagram, Mail, MapPin } from "lucide-react";
 import { toast } from "sonner";
 
-const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
+const API = process.env.REACT_APP_BACKEND_URL || "https://cheapgames39-backend-1.onrender.com";
 
 const Contact = () => {
   const [formData, setFormData] = useState({
