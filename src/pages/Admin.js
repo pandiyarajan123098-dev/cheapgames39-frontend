@@ -24,7 +24,7 @@ const Admin = () => {
 });
 
   useEffect(() => {
-if (!user || user.email !== "cheapgames39official@gmail.com") {
+ if (!user) {
   navigate("/");
   return;
 }
