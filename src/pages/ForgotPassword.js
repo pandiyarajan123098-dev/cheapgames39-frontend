@@ -12,7 +12,7 @@ e.preventDefault();
 setLoading(true);
 
 const { error } = await supabase.auth.resetPasswordForEmail(email, {
-  redirectTo: "https://https://www.cheapgames39store.shop/reset-password",
+  redirectTo: "https://www.cheapgames39store.shop/reset-password",
 });
 
 if (error) {
