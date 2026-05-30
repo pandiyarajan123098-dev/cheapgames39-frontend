@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { motion } from "framer-motion";
@@ -15,7 +16,7 @@ const Signup = () => {
   });
 
   const [loading, setLoading] = useState(false);
-
+const [showPassword, setShowPassword] = useState(false);
   const handleChange = (e) => {
     setFormData((prev) => ({
       ...prev,
@@ -93,21 +94,37 @@ const Signup = () => {
             </div>
 
             {/* Password */}
-            <div>
-              <label className="block text-sm text-gray-400 mb-2">
-                Password
-              </label>
-              <input
-                type="password"
-                name="password"
-                required
-                minLength={6}
-                value={formData.password}
-                onChange={handleChange}
-                className="w-full bg-[#141414] border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-gray-600 focus:border-[#B50000] focus:ring-1 focus:ring-[#B50000] outline-none transition-all duration-300"
-                placeholder="••••••••"
-              />
-            </div>
+      {/* Password */}
+<div>
+  <label className="block text-sm text-gray-400 mb-2">
+    Password
+  </label>
+
+  <div className="relative">
+    <input
+      type={showPassword ? "text" : "password"}
+      name="password"
+      required
+      minLength={6}
+      value={formData.password}
+      onChange={handleChange}
+      className="w-full bg-[#141414] border border-white/10 rounded-xl px-4 py-3 pr-12 text-white placeholder:text-gray-600 focus:border-[#B50000] focus:ring-1 focus:ring-[#B50000] outline-none transition-all duration-300"
+      placeholder="••••••••"
+    />
+
+    <button
+      type="button"
+      onClick={() => setShowPassword(!showPassword)}
+      className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+    >
+      {showPassword ? (
+        <EyeOff size={20} />
+      ) : (
+        <Eye size={20} />
+      )}
+    </button>
+  </div>
+</div>
 
             {/* Button */}
             <button

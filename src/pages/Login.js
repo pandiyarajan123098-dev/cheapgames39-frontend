@@ -115,6 +115,17 @@ const Login = () => {
               </button>
             </form>
 
+
+            <div className="text-center mt-4">
+  <Link
+    to="/forgot-password"
+    className="text-gray-400 hover:text-[#B50000] transition duration-300"
+
+  >
+    Forgot Password?
+  </Link>
+</div>
+
             {/* Footer */}
             <p className="text-center text-gray-400 mt-6 text-sm">
               Don't have an account?{' '}

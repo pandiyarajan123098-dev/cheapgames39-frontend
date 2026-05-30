@@ -25,6 +25,9 @@ import FAQ from "./pages/FAQ";
 import ProtectedRoute from "./components/ProtectedRoute";
 import OrderStatus from "./pages/OrderStatus";
 import Giveaway from "./pages/Giveaway";
+import Dashboard from "./pages/Dashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -50,7 +53,7 @@ function App() {
               <Route path="/success" element={<Success />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
-      
+      <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/contact" element={<Contact />} />
@@ -60,6 +63,14 @@ function App() {
 <Route path="/faq" element={<FAQ />} />
 <Route path="/order-status" element={<OrderStatus />} />
 <Route path="/giveaway" element={<Giveaway />} />
+<Route
+  path="/forgot-password"
+  element={<ForgotPassword />}
+/>
+<Route
+  path="/reset-password"
+  element={<ResetPassword />}
+/>
             </Routes>
             <Footer />
           </div>

@@ -127,23 +127,24 @@ setGames(res.data);
     <div className="min-h-screen bg-[#0f0f0f] pt-24 pb-20 px-6">
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-12">
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }} data-testid="admin-page-title">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter uppercase" style={{ fontFamily: 'Rajdhani, sans-serif' }} data-testid="admin-page-title">
             Admin <span className="text-[#B50000]">Panel</span>
           </h1>
           <button
             onClick={handleAddNew}
-            className="bg-[#B50000] hover:bg-[#FF0000] text-white rounded-full px-8 py-3 font-bold transition-all flex items-center"
+            className="bg-[#B50000] hover:bg-[#FF0000] text-white rounded-full px-4 md:px-8 py-3 font-bold transition-all flex items-center"
             data-testid="add-game-button"
           >
             <Plus className="w-5 h-5 mr-2" /> Add Game
           </button>
         </div>
 
-        <div className="bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden" data-testid="games-table">
+       <div className="bg-[#1a1a1a] border border-white/10 rounded-xl overflow-x-auto" data-testid="games-table">
           <table className="w-full">
             <thead className="bg-[#141414] border-b border-white/10">
               <tr>
-                <th className="text-left p-4 text-sm font-semibold text-gray-400">ID</th>
+                <th className="hidden md:table-cell text-left p-4 text-sm font-semibold text-gray-400">ID
+</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Title</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Category</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Price</th>
@@ -154,8 +155,12 @@ setGames(res.data);
             <tbody>
               {games.map(game => (
                 <tr key={game.id} className="border-b border-white/5 hover:bg-white/5" data-testid={`admin-game-row-${game.id}`}>
-                  <td className="p-4 text-gray-400">{game.id}</td>
-                  <td className="p-4">{game.title}</td>
+                 <td className="hidden md:table-cell p-4 text-gray-400">
+  {game.id}
+</td>
+                 <td className="p-4 text-sm md:text-base">
+  {game.title}
+</td>
                   <td className="p-4 text-gray-400">{game.categories?.name}</td>
                   <td className="p-4 font-semibold">₹{game.price}</td>
              
