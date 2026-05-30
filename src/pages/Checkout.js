@@ -124,13 +124,25 @@ const Checkout = () => {
           },
         }
       );
+const gameList = cart
+  .map(
+    (item) =>
+      `• ${item.games?.title} x${item.quantity} - ₹${
+        (item.games?.price || 0) * item.quantity
+      }`
+  )
+  .join("\n");
 
-      const message = `
+const message = `
 Payment Submitted
 
 Order ID: ${orderId}
 Name: ${formData.billing_name}
 Email: ${formData.billing_email}
+
+Games Purchased:
+${gameList}
+
 Transaction ID: ${transactionId}
 Amount: ₹${total}
 `;
