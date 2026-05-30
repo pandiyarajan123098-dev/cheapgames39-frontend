@@ -126,7 +126,7 @@ const Home = () => {
               muted
               loop
             >
-              <source src="/videos/trailer.mp4" type="video/mp4" />
+              <source src="/videos/trailer1.mp4" type="video/mp4" />
             </video>
 
           </motion.div>

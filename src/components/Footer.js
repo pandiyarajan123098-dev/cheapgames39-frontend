@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Instagram, Phone } from 'lucide-react';
+import { Instagram, Phone, Facebook } from 'lucide-react';
+import { FaDiscord } from 'react-icons/fa';
 
 export const Footer = () => {
   return (
@@ -58,13 +59,44 @@ export const Footer = () => {
           <div>
             <h4 className="text-white font-semibold mb-4 uppercase tracking-wider text-sm">Connect With Us</h4>
             <div className="flex space-x-4">
-              <a href="https://instagram.com/cheapgames39_official" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-instagram-link">
-                <Instagram className="w-6 h-6" />
-              </a>
-              <a href="https://wa.me/919659868303" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-[#B50000] transition-colors" data-testid="footer-whatsapp-link">
-                <Phone className="w-6 h-6" />
-              </a>
-            </div>
+
+  <a
+    href="https://www.instagram.com/cheapgames39.official?igsh=MTUxajEzMjNuZWY2MA=="
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-gray-400 hover:text-[#B50000] transition-colors"
+  >
+    <Instagram className="w-6 h-6" />
+  </a>
+
+  <a
+    href="https://discord.gg/d9JKQgH5g"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-gray-400 hover:text-[#5865F2] transition-colors"
+  >
+    <FaDiscord className="w-6 h-6" />
+  </a>
+
+  <a
+    href="https://www.facebook.com/share/18u5P3mXHc/"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-gray-400 hover:text-[#1877F2] transition-colors"
+  >
+    <Facebook className="w-6 h-6" />
+  </a>
+
+  <a
+    href="https://wa.me/916379490178"
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-gray-400 hover:text-[#25D366] transition-colors"
+  >
+    <Phone className="w-6 h-6" />
+  </a>
+
+</div>
           </div>
         </div>
 
@@ -74,15 +106,18 @@ export const Footer = () => {
       </div>
 
       {/* WhatsApp Floating Button */}
-      <a
-        href="https://chat.whatsapp.com/FQfpsiwYv1pLqWScaIFc69"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all z-50"
-        data-testid="whatsapp-floating-button"
-      >
-        <Phone className="w-6 h-6" />
-      </a>
+    <a
+  href="https://whatsapp.com/channel/0029Vb8WvNiGehEGfRVnMr2T"
+  target="_blank"
+  rel="noopener noreferrer"
+  className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all z-50"
+>
+  <img
+    src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
+    alt="WhatsApp"
+    className="w-7 h-7"
+  />
+</a>
     </footer>
   );
 };

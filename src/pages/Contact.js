@@ -166,12 +166,12 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">WhatsApp</h3>
                     <a
-                      href="https://wa.me/919659868303"
+                      href="https://wa.me/916379490178"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-[#B50000] transition"
                     >
-                      +91 96598 68303
+                      +91 63794 90178
                     </a>
                   </div>
                 </div>
@@ -183,7 +183,7 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">Instagram</h3>
                     <a
-                      href="https://instagram.com/cheapgames39_official"
+                      href="https://instagram.com/cheapgames39.official"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-gray-400 hover:text-[#B50000] transition"
@@ -200,10 +200,10 @@ const Contact = () => {
                   <div>
                     <h3 className="font-semibold mb-1">Email</h3>
                     <a
-                      href="mailto:spptcheapgames39@gmail.com"
+                      href="mailto:cg39support@gmail.com"
                       className="text-gray-400 hover:text-[#B50000] transition"
                     >
-                      spptcheapgames39@gmail.com
+                      cg39support@gmail.com
                     </a>
                   </div>
                 </div>

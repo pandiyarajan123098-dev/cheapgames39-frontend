@@ -10,7 +10,7 @@ import { toast } from "sonner";
 ========================================= */
 
 const API_BASE = "https://cheapgames39-backend-1.onrender.com/api";
-const WHATSAPP_NUMBER = "919659868303";
+const WHATSAPP_NUMBER = "916379490178";
 
 /* =========================================
    COMPONENT

@@ -23,14 +23,15 @@ const Admin = () => {
   image_url: '',
 });
 
-  useEffect(() => {
- if (!user) {
-  navigate("/");
-  return;
-}
-    fetchGames();
-    fetchCategories();
-  }, [user]);
+useEffect(() => {
+  if (!user) {
+    navigate("/");
+    return;
+  }
+
+  fetchGames();
+  fetchCategories();
+}, [user, navigate]);
 
   const fetchGames = async () => {
     const res = await axios.get(`${API}/games?limit=100`);

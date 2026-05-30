@@ -10,6 +10,13 @@ import {
   LogOut,
 } from "lucide-react";
 
+import {
+  FaHome,
+  FaGamepad,
+  FaGift,
+  FaPhoneAlt,
+} from "react-icons/fa";
+
 export const Header = () => {
   const { user, logout } = useAuth();
   const { cartCount } = useCart();
@@ -213,54 +220,74 @@ export const Header = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-[#141414] border-t border-white">
-          <nav className="container mx-auto px-6 py-6 flex flex-col space-y-5 text-sm uppercase tracking-wider">
+     {/* Mobile Menu */}
+{mobileMenuOpen && (
+  <div className="md:hidden bg-[#111111] border-t border-white/10">
+    <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
 
-            <NavLink
-              to="/"
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                isActive ? "text-white font-semibold" : "text-gray-400"
-              }
-            >
-              Home
-            </NavLink>
+      <NavLink
+        to="/"
+        onClick={() => setMobileMenuOpen(false)}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+            isActive
+              ? "bg-[#B50000] text-white shadow-lg"
+              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+          }`
+        }
+      >
+        <FaHome size={18} />
+        <span>HOME</span>
+      </NavLink>
 
-            <NavLink
-              to="/games"
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                isActive ? "text-white font-semibold" : "text-gray-400"
-              }
-            >
-              Games
-            </NavLink>
+      <NavLink
+        to="/games"
+        onClick={() => setMobileMenuOpen(false)}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+            isActive
+              ? "bg-[#B50000] text-white shadow-lg"
+              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+          }`
+        }
+      >
+        <FaGamepad size={18} />
+        <span>GAMES</span>
+      </NavLink>
 
-            <NavLink
-              to="/offers"
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                isActive ? "text-white font-semibold" : "text-gray-400"
-              }
-            >
-              Offers
-            </NavLink>
+      <NavLink
+        to="/offers"
+        onClick={() => setMobileMenuOpen(false)}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+            isActive
+              ? "bg-[#B50000] text-white shadow-lg"
+              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+          }`
+        }
+      >
+        <FaGift size={18} />
+        <span>OFFERS</span>
+      </NavLink>
 
-            <NavLink
-              to="/contact"
-              onClick={() => setMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                isActive ? "text-white font-semibold" : "text-gray-400"
-              }
-            >
-              Contact
-            </NavLink>
+      <NavLink
+        to="/contact"
+        onClick={() => setMobileMenuOpen(false)}
+        className={({ isActive }) =>
+          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+            isActive
+              ? "bg-[#B50000] text-white shadow-lg"
+              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+          }`
+        }
+      >
+        <FaPhoneAlt size={18} />
+        <span>CONTACT</span>
+      </NavLink>
 
-          </nav>
-        </div>
-      )}
+    </nav>
+  </div>
+)}
     </header>
   );
 };
