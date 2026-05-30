@@ -136,6 +136,16 @@ export const Header = () => {
                       Wishlist
                     </Link>
 
+                    {user?.email === "pandiyarajan007123@gmail.com" && (
+  <Link
+    to="/admin"
+   className="block px-4 py-2 text-sm text-[#FFD700] hover:bg-white/5"
+    onClick={() => setUserMenuOpen(false)}
+  >
+    Admin Panel
+  </Link>
+)}
+
                     {user.role === "admin" && (
                       <Link
                         to="/admin"

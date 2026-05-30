@@ -8,33 +8,33 @@ import { useNavigate } from 'react-router-dom';
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
 const Admin = () => {
-  const { user, token } = useAuth();
+ const { user, accessToken } = useAuth();
   const navigate = useNavigate();
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    price: '',
-    category_id: '',
-    image_url: '',
-    rating: '4.5'
-  });
+  title: '',
+  description: '',
+  steam_price: '',
+  price: '',
+  category_id: '',
+  image_url: '',
+});
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      navigate('/');
-      return;
-    }
+if (!user || user.email !== "cheapgames39official@gmail.com") {
+  navigate("/");
+  return;
+}
     fetchGames();
     fetchCategories();
   }, [user]);
 
   const fetchGames = async () => {
     const res = await axios.get(`${API}/games?limit=100`);
-    setGames(res.data.games);
+setGames(res.data);
   };
 
   const fetchCategories = async () => {
@@ -48,27 +48,36 @@ const Admin = () => {
       if (editingGame) {
         await axios.put(`${API}/games/${editingGame.id}`, {
           ...formData,
+          steam_price: parseFloat(formData.steam_price),
           price: parseFloat(formData.price),
-          category_id: parseInt(formData.category_id),
-          rating: parseFloat(formData.rating)
+          category_id: formData.category_id,
+         
         }, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success('Game updated successfully!');
       } else {
         await axios.post(`${API}/games`, {
           ...formData,
+          steam_price: parseFloat(formData.steam_price),
           price: parseFloat(formData.price),
-          category_id: parseInt(formData.category_id),
-          rating: parseFloat(formData.rating)
+          category_id: formData.category_id,
+          
         }, {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success('Game added successfully!');
       }
       setShowModal(false);
       setEditingGame(null);
-      setFormData({ title: '', description: '', price: '', category_id: '', image_url: '', rating: '4.5' });
+      setFormData({   title: '',
+  description: '',
+  steam_price: '',
+  price: '',
+  category_id: '',
+  image_url: '',
+});
+
       fetchGames();
     } catch (error) {
       toast.error('Failed to save game');
@@ -77,14 +86,14 @@ const Admin = () => {
 
   const handleEdit = (game) => {
     setEditingGame(game);
-    setFormData({
-      title: game.title,
-      description: game.description,
-      price: game.price.toString(),
-      category_id: game.category_id.toString(),
-      image_url: game.image_url,
-      rating: game.rating.toString()
-    });
+   setFormData({
+  title: game.title,
+  description: game.description,
+  steam_price: game.steam_price?.toString() || "",
+  price: game.price.toString(),
+  category_id: game.category_id.toString(),
+  image_url: game.image_url,
+});
     setShowModal(true);
   };
 
@@ -92,7 +101,7 @@ const Admin = () => {
     if (!window.confirm('Are you sure you want to delete this game?')) return;
     try {
       await axios.delete(`${API}/games/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${accessToken}` }
       });
       toast.success('Game deleted!');
       fetchGames();
@@ -103,7 +112,14 @@ const Admin = () => {
 
   const handleAddNew = () => {
     setEditingGame(null);
-    setFormData({ title: '', description: '', price: '', category_id: '', image_url: '', rating: '4.5' });
+    setFormData({ title: '',
+  description: '',
+  steam_price: '',
+  price: '',
+  category_id: '',
+  image_url: '',
+});
+
     setShowModal(true);
   };
 
@@ -131,7 +147,7 @@ const Admin = () => {
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Title</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Category</th>
                 <th className="text-left p-4 text-sm font-semibold text-gray-400">Price</th>
-                <th className="text-left p-4 text-sm font-semibold text-gray-400">Rating</th>
+                
                 <th className="text-center p-4 text-sm font-semibold text-gray-400">Actions</th>
               </tr>
             </thead>
@@ -142,7 +158,7 @@ const Admin = () => {
                   <td className="p-4">{game.title}</td>
                   <td className="p-4 text-gray-400">{game.categories?.name}</td>
                   <td className="p-4 font-semibold">₹{game.price}</td>
-                  <td className="p-4 text-gray-400">{game.rating}</td>
+             
                   <td className="p-4">
                     <div className="flex justify-center gap-2">
                       <button
@@ -201,6 +217,26 @@ const Admin = () => {
                   data-testid="game-description-input"
                 />
               </div>
+
+              <div>
+  <label className="block text-sm text-gray-400 mb-2">
+    Steam Price (₹)
+  </label>
+
+  <input
+    type="number"
+    value={formData.steam_price}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        steam_price: e.target.value,
+      })
+    }
+    required
+    className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3 text-white"
+  />
+</div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-2">Price (₹)</label>
@@ -239,20 +275,7 @@ const Admin = () => {
                   data-testid="game-image-input"
                 />
               </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Rating (1-5)</label>
-                <input
-                  type="number"
-                  step="0.1"
-                  min="1"
-                  max="5"
-                  value={formData.rating}
-                  onChange={(e) => setFormData({ ...formData, rating: e.target.value })}
-                  required
-                  className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3 text-white focus:border-[#B50000] focus:ring-1 focus:ring-[#B50000] outline-none"
-                  data-testid="game-rating-input"
-                />
-              </div>
+           
               <div className="flex gap-4 mt-6">
                 <button
                   type="submit"
