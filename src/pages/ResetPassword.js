@@ -53,7 +53,7 @@ return (
     <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8">
 
       <h2 className="text-3xl font-bold text-white mb-2">
-        🔑 Reset Password
+         Reset Password
       </h2>
 
       <p className="text-gray-400 mb-6">
