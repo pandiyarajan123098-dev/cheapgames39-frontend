@@ -212,11 +212,25 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
         </div>
 
         {/* Loading */}
-        {loading && (
-          <div className="text-center text-gray-400 py-20">
-            Loading games...
-          </div>
-        )}
+       {loading && (
+  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
+    {[...Array(8)].map((_, index) => (
+      <div
+        key={index}
+        className="bg-[#141414] rounded-xl overflow-hidden border border-white/10 animate-pulse"
+      >
+        <div className="h-52 bg-[#222]"></div>
+
+        <div className="p-4">
+          <div className="h-4 bg-[#222] rounded mb-3"></div>
+          <div className="h-4 bg-[#222] rounded w-2/3 mb-4"></div>
+
+          <div className="h-6 bg-[#222] rounded w-1/3"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+)}
 
         {/* Error */}
         {error && (

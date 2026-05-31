@@ -226,12 +226,34 @@ useEffect(() => {
   };
 
   if (loading || !game) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center text-white">
-        Loading game details...
+  return (
+    <div className="min-h-screen bg-[#0f0f0f] text-white animate-pulse">
+      <div className="h-[32vh] bg-[#1a1a1a]" />
+
+      <div className="container mx-auto px-6 mt-8">
+        <div className="grid lg:grid-cols-3 gap-12">
+
+          <div className="h-[500px] bg-[#1a1a1a] rounded-2xl"></div>
+
+          <div className="lg:col-span-2">
+            <div className="h-12 bg-[#1a1a1a] rounded w-2/3 mb-6"></div>
+
+            <div className="h-6 bg-[#1a1a1a] rounded w-1/4 mb-8"></div>
+
+            <div className="h-4 bg-[#1a1a1a] rounded mb-3"></div>
+            <div className="h-4 bg-[#1a1a1a] rounded mb-3"></div>
+            <div className="h-4 bg-[#1a1a1a] rounded w-3/4 mb-8"></div>
+
+            <div className="h-12 bg-[#1a1a1a] rounded w-40 mb-8"></div>
+
+            <div className="h-14 bg-[#1a1a1a] rounded w-56"></div>
+          </div>
+
+        </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
@@ -350,31 +372,35 @@ useEffect(() => {
 
       </div>
 
-      {/* RELATED GAMES */}
-<div className="mt-24">
+     {/* RELATED GAMES */}
+<div className="mt-24 px-4">
   <h2 className="text-4xl font-bold mb-8">
     Related <span className="text-[#B50000]">Games</span>
   </h2>
 
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
     {relatedGames.map((related) => (
       <div
         key={related.id}
         onClick={() => navigate(`/games/${related.id}`)}
-        className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition"
+        className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition h-[260px] flex flex-col"
       >
-        <img
-          src={related.image_url}
-          alt={related.title}
-          className="w-full h-40 object-cover"
-        />
+        {/* Image */}
+        <div className="h-36 overflow-hidden">
+          <img
+            src={related.image_url}
+            alt={related.title}
+            className="w-full h-full object-cover"
+          />
+        </div>
 
-        <div className="p-3">
-          <h3 className="text-white font-semibold">
+        {/* Content */}
+        <div className="p-3 flex flex-col flex-1">
+          <h3 className="text-white text-sm font-semibold line-clamp-2 min-h-[42px]">
             {related.title}
           </h3>
 
-          <p className="text-[#B50000] mt-2">
+          <p className="text-[#B50000] font-bold mt-auto">
             ₹{related.price}
           </p>
         </div>
