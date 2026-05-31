@@ -9,6 +9,8 @@ import {
   PlayCircle,
 } from "lucide-react";
 
+import RecentlyViewed from "../components/RecentlyViewed";
+
 const Home = () => {
   return (
     <div className="bg-black text-white overflow-x-hidden">
@@ -60,6 +62,7 @@ const Home = () => {
         </div>
       </section>
 
+<RecentlyViewed />
 
       {/* HOW IT WORKS */}
       <section className="py-28 px-6 bg-[#0d0d0d]">

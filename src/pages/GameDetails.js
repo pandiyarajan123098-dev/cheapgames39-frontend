@@ -16,7 +16,9 @@ const GameDetails = () => {
   const { addToCart } = useCart();
 
   const [game, setGame] = useState(null);
+  
   const [reviews, setReviews] = useState([]);
+  const [relatedGames, setRelatedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
@@ -44,6 +46,26 @@ const GameDetails = () => {
     }
   }, [id]);
 
+  const fetchRelatedGames = useCallback(async () => {
+  if (!game?.category_id) return;
+
+  try {
+    const res = await axios.get(`${API}/games`);
+
+    const filtered = (res.data || [])
+      .filter(
+        (g) =>
+          g.category_id === game.category_id &&
+          g.id !== game.id
+      )
+      .slice(0, 4);
+
+    setRelatedGames(filtered);
+  } catch (err) {
+    console.error(err);
+  }
+}, [game]);
+  
   const checkWishlist = useCallback(async () => {
     if (!user || !accessToken) return;
 
@@ -70,6 +92,38 @@ const GameDetails = () => {
     };
     load();
   }, [fetchGame, fetchReviews, checkWishlist]);
+
+ /* ================= RECENTLY VIEWED ================= */
+
+useEffect(() => {
+  if (!game) return;
+
+  let recent =
+    JSON.parse(localStorage.getItem("recentGames")) || [];
+
+  recent = recent.filter((g) => g.id !== game.id);
+
+  recent.unshift({
+    id: game.id,
+    title: game.title,
+    image: game.image_url,
+  });
+
+  recent = recent.slice(0, 20);
+
+  localStorage.setItem(
+    "recentGames",
+    JSON.stringify(recent)
+  );
+}, [game]);
+
+/* ================= RELATED GAMES ================= */
+
+useEffect(() => {
+  if (game) {
+    fetchRelatedGames();
+  }
+}, [game, fetchRelatedGames]);
 
   /* ================= AUTO DISCOUNT ================= */
 
@@ -295,7 +349,40 @@ const GameDetails = () => {
         </div>
 
       </div>
-      
+
+      {/* RELATED GAMES */}
+<div className="mt-24">
+  <h2 className="text-4xl font-bold mb-8">
+    Related <span className="text-[#B50000]">Games</span>
+  </h2>
+
+  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+    {relatedGames.map((related) => (
+      <div
+        key={related.id}
+        onClick={() => navigate(`/games/${related.id}`)}
+        className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition"
+      >
+        <img
+          src={related.image_url}
+          alt={related.title}
+          className="w-full h-40 object-cover"
+        />
+
+        <div className="p-3">
+          <h3 className="text-white font-semibold">
+            {related.title}
+          </h3>
+
+          <p className="text-[#B50000] mt-2">
+            ₹{related.price}
+          </p>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
+
         {/* REVIEWS (Stars removed visually only) */}
         <div className="mt-24">
           <h2 className="text-4xl font-bold mb-8">

@@ -8,10 +8,12 @@ const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 const Games = () => {
   const navigate = useNavigate();
-
+const [showSuggestions, setShowSuggestions] = useState(false);
+const [selectedIndex, setSelectedIndex] = useState(-1);
   const [allGames, setAllGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState("");
+  
   const [categoryFilter, setCategoryFilter] = useState("");
   const [sortBy, setSortBy] = useState("");
   const [page, setPage] = useState(0);
@@ -57,6 +59,13 @@ const Games = () => {
   useEffect(() => {
     setPage(0);
   }, [search, categoryFilter, sortBy]);
+
+
+  const suggestions = allGames
+  .filter((game) =>
+    game.title?.toLowerCase().includes(search.toLowerCase())
+  )
+  .slice(0, 5);
 
   /* ================= FILTER ================= */
 
@@ -105,15 +114,78 @@ const Games = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12">
 
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search games..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-[#141414] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:border-[#B50000] outline-none"
-            />
-          </div>
+  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+
+  <input
+  type="text"
+  placeholder="Search games..."
+  value={search}
+  onChange={(e) => {
+    setSearch(e.target.value);
+    setShowSuggestions(true);
+    setSelectedIndex(-1);
+  }}
+  onFocus={() => setShowSuggestions(true)}
+  onKeyDown={(e) => {
+    if (!suggestions.length) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev < suggestions.length - 1 ? prev + 1 : 0
+      );
+    }
+
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev > 0 ? prev - 1 : suggestions.length - 1
+      );
+    }
+
+   if (e.key === "Enter" && selectedIndex >= 0) {
+  navigate(`/games/${suggestions[selectedIndex].id}`);
+  setShowSuggestions(false);
+  setSearch("");
+  setSelectedIndex(-1);
+}
+  }}
+  className="w-full bg-[#141414] border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:border-[#B50000] outline-none"
+/>
+
+  {showSuggestions && search && (
+    <div className="absolute top-full left-0 w-full mt-2 bg-[#141414] border border-white/10 rounded-xl overflow-hidden z-50 shadow-xl">
+      {suggestions.map((game, index) => (
+        <div
+          key={game.id}
+       onClick={() => {
+  navigate(`/games/${game.id}`);
+  setSearch("");
+  setShowSuggestions(false);
+  setSelectedIndex(-1);
+}}
+          className={`flex items-center gap-3 p-3 cursor-pointer transition ${
+  selectedIndex === index
+    ? "bg-[#B50000]"
+    : "hover:bg-[#B50000]"
+}`}
+        >
+          <img
+            src={game.image_url}
+            alt={game.title}
+            className="w-12 h-12 rounded object-cover"
+          />
+
+          <span className="text-white text-sm">
+            {game.title}
+
+           
+          </span>
+        </div>
+      ))}
+    </div>
+  )}
+</div>
 
           <select
             value={categoryFilter}
