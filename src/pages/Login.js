@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import ReCAPTCHA from "react-google-recaptcha";
 
 const Login = () => {
   const { login } = useAuth();
@@ -16,11 +17,16 @@ const Login = () => {
 
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+const [captchaToken, setCaptchaToken] = useState(null);
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
+  if (!captchaToken) {
+    toast.error("Please verify that you are not a robot");
+    return;
+  }
 
+  setLoading(true);
     try {
       await login(formData.email, formData.password);
       toast.success('Login successful!');
@@ -104,7 +110,12 @@ const Login = () => {
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
               </div>
-
+<div className="flex justify-center">
+  <ReCAPTCHA
+    sitekey="6Ld0dAUtAAAAALg-0PUO7PVo_e0gC3Tx7T9YUY73"
+    onChange={(token) => setCaptchaToken(token)}
+  />
+</div>
               {/* Button */}
               <button
                 type="submit"
