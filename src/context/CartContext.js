@@ -47,7 +47,7 @@ export const CartProvider = ({ children }) => {
         .eq("user_id", user.id);
 
       if (error) throw error;
-
+console.log("CART DATA", data);
       setCart(data || []);
       setCartCount(
         (data || []).reduce((sum, item) => sum + item.quantity, 0)
