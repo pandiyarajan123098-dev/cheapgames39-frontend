@@ -94,6 +94,19 @@ return data;
 
 };
 
+const loginWithGoogle = async () => {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
+
+  if (error) throw error;
+
+  return data;
+};
+
 // ================= LOGOUT =================
 
 const logout = async () => {
@@ -113,16 +126,17 @@ setAccessToken(null);
 // ================= CONTEXT VALUE =================
 
 const value = useMemo(
-() => ({
-user,
-session,
-accessToken,
-loading,
-signup,
-login,
-logout,
-}),
-[user, session, accessToken, loading]
+  () => ({
+    user,
+    session,
+    accessToken,
+    loading,
+    signup,
+    login,
+    loginWithGoogle,
+    logout,
+  }),
+  [user, session, accessToken, loading]
 );
 
 return (

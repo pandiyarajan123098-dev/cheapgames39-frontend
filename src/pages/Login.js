@@ -6,8 +6,9 @@ import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
 import ReCAPTCHA from "react-google-recaptcha";
 
+
 const Login = () => {
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -36,6 +37,14 @@ const [captchaToken, setCaptchaToken] = useState(null);
       setLoading(false);
     }
   };
+
+  const handleGoogleLogin = async () => {
+  try {
+    await loginWithGoogle();
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] px-6">
@@ -116,6 +125,25 @@ const [captchaToken, setCaptchaToken] = useState(null);
     onChange={(token) => setCaptchaToken(token)}
   />
 </div>
+
+<div className="flex items-center my-4">
+  <div className="flex-1 h-px bg-gray-700"></div>
+  <span className="px-3 text-gray-400 text-sm">OR</span>
+  <div className="flex-1 h-px bg-gray-700"></div>
+</div>
+
+<button
+  type="button"
+  onClick={handleGoogleLogin}
+  className="w-full bg-white text-black rounded-full py-3 font-semibold flex items-center justify-center gap-3 hover:bg-gray-200 transition-all"
+>
+  <img
+    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+    alt="Google"
+    className="w-5 h-5"
+  />
+  Continue with Google
+</button>
               {/* Button */}
               <button
                 type="submit"

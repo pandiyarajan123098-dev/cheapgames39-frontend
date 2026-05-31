@@ -268,6 +268,34 @@ const GameDetails = () => {
           </motion.div>
         </div>
 
+
+{/* STEAM GUIDE */}
+        <div className="mt-24 bg-[#111] border border-white/10 rounded-2xl p-10 shadow-xl">
+          <h2 className="text-4xl font-bold mb-10">
+            Steam Account Activation Guide
+          </h2>
+
+          <ul className="space-y-4 text-gray-300 text-lg">
+            <li className="flex items-center gap-2">
+              <ArrowRight size={16} /> Install Steam on your PC
+            </li>
+            <li className="flex items-center gap-2">
+              <ArrowRight size={16} /> Login using provided credentials
+            </li>
+            <li className="flex items-center gap-2">
+              <ArrowRight size={16} /> Download the game from Library
+            </li>
+            <li className="flex items-center gap-2">
+              <ArrowRight size={16} /> Switch Steam to Offline Mode
+            </li>
+            <li className="flex items-center gap-2">
+              <ArrowRight size={16} /> Launch and enjoy the game
+            </li>
+          </ul>
+        </div>
+
+      </div>
+      
         {/* REVIEWS (Stars removed visually only) */}
         <div className="mt-24">
           <h2 className="text-4xl font-bold mb-8">
@@ -316,32 +344,7 @@ const GameDetails = () => {
           ))}
         </div>
 
-        {/* STEAM GUIDE */}
-        <div className="mt-24 bg-[#111] border border-white/10 rounded-2xl p-10 shadow-xl">
-          <h2 className="text-4xl font-bold mb-10">
-            Steam Account Activation Guide
-          </h2>
-
-          <ul className="space-y-4 text-gray-300 text-lg">
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Install Steam on your PC
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Login using provided credentials
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Download the game from Library
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Switch Steam to Offline Mode
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Launch and enjoy the game
-            </li>
-          </ul>
-        </div>
-
-      </div>
+        
     </div>
   );
 };

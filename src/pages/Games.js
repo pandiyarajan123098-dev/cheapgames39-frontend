@@ -98,7 +98,7 @@ const Games = () => {
       <div className="max-w-7xl mx-auto">
 
         <h1 className="text-4xl md:text-6xl font-bold uppercase mb-10 text-white">
-          ALL <span className="text-[#B50000]">GAMES</span>
+          EXPLORE <span className="text-[#B50000]">GAMES</span>
         </h1>
 
         {/* Search / Filter */}
