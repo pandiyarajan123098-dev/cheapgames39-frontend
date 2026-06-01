@@ -6,6 +6,7 @@ import { useCart } from "../context/CartContext";
 import { ShoppingCart, Heart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+import publicReviews from "../data/publicReviews";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -17,12 +18,13 @@ const GameDetails = () => {
 
   const [game, setGame] = useState(null);
   
-  const [reviews, setReviews] = useState([]);
+ 
   const [relatedGames, setRelatedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [wishlistLoading, setWishlistLoading] = useState(false);
   const [reviewLoading, setReviewLoading] = useState(false);
   const [comment, setComment] = useState("");
+  const [myReview, setMyReview] = useState("");
   const [inWishlist, setInWishlist] = useState(false);
 
   /* ================= FETCH GAME ================= */
@@ -37,14 +39,6 @@ const GameDetails = () => {
     }
   }, [id, navigate]);
 
-  const fetchReviews = useCallback(async () => {
-    try {
-      const res = await axios.get(`${API}/reviews/${id}`);
-      setReviews(res.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  }, [id]);
 
   const fetchRelatedGames = useCallback(async () => {
   if (!game?.category_id) return;
@@ -87,11 +81,14 @@ const GameDetails = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      await Promise.all([fetchGame(), fetchReviews(), checkWishlist()]);
+     await Promise.all([
+  fetchGame(),
+  checkWishlist()
+]);
       setLoading(false);
     };
     load();
-  }, [fetchGame, fetchReviews, checkWishlist]);
+  }, [fetchGame, checkWishlist]);
 
  /* ================= RECENTLY VIEWED ================= */
 
@@ -124,6 +121,21 @@ useEffect(() => {
     fetchRelatedGames();
   }
 }, [game, fetchRelatedGames]);
+
+
+useEffect(() => {
+  if (!user) return;
+
+  const savedReview = localStorage.getItem(
+    `myReview_${user.id}_${id}`
+  );
+
+  if (savedReview) {
+    setMyReview(savedReview);
+  } else {
+    setMyReview("");
+  }
+}, [id, user]);
 
   /* ================= AUTO DISCOUNT ================= */
 
@@ -197,33 +209,27 @@ useEffect(() => {
 
   /* ================= SUBMIT REVIEW ================= */
 
-  const handleSubmitReview = async (e) => {
-    e.preventDefault();
+ const handleSubmitReview = (e) => {
+  e.preventDefault();
 
-    if (!user) {
-      toast.error("Login required");
-      navigate("/login");
-      return;
-    }
+  if (!user) {
+    toast.error("Login required");
+    navigate("/login");
+    return;
+  }
 
-    try {
-      setReviewLoading(true);
+localStorage.setItem(
+  `myReview_${user.id}_${id}`,
+  comment
+);
 
-      await axios.post(
-        `${API}/reviews`,
-        { game_id: id, rating: 5, comment }, // keep backend structure
-        { headers: { Authorization: `Bearer ${accessToken}` } }
-      );
+  setMyReview(comment);
 
-      toast.success("Review submitted");
-      setComment("");
-      fetchReviews();
-    } catch {
-      toast.error("Failed to submit review");
-    } finally {
-      setReviewLoading(false);
-    }
-  };
+  toast.success("Review Saved");
+
+  setComment("");
+};
+
 
   if (loading || !game) {
   return (
@@ -440,21 +446,32 @@ useEffect(() => {
             </form>
           )}
 
-          {reviews.map((review) => (
-            <div
-              key={review.id}
-              className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 mb-6"
-            >
-              <h4 className="font-semibold mb-2">
-                {review.users?.full_name || "Anonymous"}
-              </h4>
+         {publicReviews.map((review, index) => (
+  <div
+    key={index}
+    className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 mb-6"
+  >
+    <h4 className="font-semibold mb-2">
+      {review.name}
+    </h4>
 
-              <p className="text-gray-300">{review.comment}</p>
-              <p className="text-xs text-gray-500 mt-2">
-                {new Date(review.created_at).toLocaleDateString()}
-              </p>
-            </div>
-          ))}
+    <p className="text-gray-300">
+      {review.comment}
+    </p>
+  </div>
+))}
+
+{myReview && (
+  <div className="mt-10">
+    <h3 className="text-2xl font-bold mb-4">
+      My Review
+    </h3>
+
+    <div className="bg-[#141414] border border-[#B50000] rounded-xl p-6">
+      <p>{myReview}</p>
+    </div>
+  </div>
+)}
         </div>
 
         
