@@ -25,6 +25,7 @@ const GameDetails = () => {
   const [reviewLoading, setReviewLoading] = useState(false);
   const [comment, setComment] = useState("");
   const [myReview, setMyReview] = useState("");
+ 
   const [inWishlist, setInWishlist] = useState(false);
 
   /* ================= FETCH GAME ================= */
@@ -93,26 +94,29 @@ const GameDetails = () => {
  /* ================= RECENTLY VIEWED ================= */
 
 useEffect(() => {
-  if (!game) return;
+  console.log("Game Data:", game);
+  if (!game?.id) return;
 
-  let recent =
+  const recent =
     JSON.parse(localStorage.getItem("recentGames")) || [];
 
-  recent = recent.filter((g) => g.id !== game.id);
-
-  recent.unshift({
-    id: game.id,
-    title: game.title,
-    image: game.image_url,
-  });
-
-  recent = recent.slice(0, 20);
+  const updated = [
+    {
+      id: String(game.id),
+      title: game.title,
+      image: game.image_url,
+    },
+    ...recent.filter(
+      (g) => String(g.id) !== String(game.id)
+    ),
+  ].slice(0, 20);
 
   localStorage.setItem(
     "recentGames",
-    JSON.stringify(recent)
+    JSON.stringify(updated)
   );
 }, [game]);
+
 
 /* ================= RELATED GAMES ================= */
 
@@ -136,6 +140,8 @@ useEffect(() => {
     setMyReview("");
   }
 }, [id, user]);
+
+
 
   /* ================= AUTO DISCOUNT ================= */
 
@@ -232,6 +238,7 @@ localStorage.setItem(
 
 
   if (loading || !game) {
+    
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white animate-pulse">
       <div className="h-[32vh] bg-[#1a1a1a]" />
@@ -260,6 +267,31 @@ localStorage.setItem(
     </div>
   );
 }
+
+const startIndex =
+  id
+    .split("")
+    .reduce(
+      (sum, char) => sum + char.charCodeAt(0),
+      0
+    ) %
+  publicReviews.length;
+
+const rotatedReviews = [
+  ...publicReviews,
+  ...publicReviews,
+].slice(startIndex, startIndex + 5);
+
+const reviewCount =
+  8 +
+  (
+    id
+      .split("")
+      .reduce(
+        (sum, char) => sum + char.charCodeAt(0),
+        0
+      ) % 46
+  );
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
@@ -416,15 +448,31 @@ localStorage.setItem(
 </div>
 
         {/* REVIEWS (Stars removed visually only) */}
-        <div className="mt-24">
-          <h2 className="text-4xl font-bold mb-8">
-            Customer <span className="text-[#B50000]">Reviews</span>
-          </h2>
+       <div className="mt-24 px-4">
+      <h2 className="text-4xl font-bold mb-8">
+  Customer{" "}
+  <span className="text-[#B50000]">
+    Reviews
+  </span>
+
+  <span className="text-gray-400 text-2xl ml-2">
+    ({reviewCount})
+  </span>
+</h2>
 
           {user && (
             <form
               onSubmit={handleSubmitReview}
-              className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 mb-10"
+              className="
+bg-[#1a1a1a]
+border border-white/10
+rounded-xl
+p-6
+mb-6
+min-h-[140px]
+hover:border-[#B50000]
+transition
+"
             >
               <textarea
                 value={comment}
@@ -446,14 +494,29 @@ localStorage.setItem(
             </form>
           )}
 
-         {publicReviews.map((review, index) => (
-  <div
-    key={index}
-    className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 mb-6"
-  >
+        {rotatedReviews.map((review, index) => (
+<div
+  key={index}
+  className="
+bg-[#1a1a1a]
+border
+border-white/10
+rounded-xl
+p-6
+mb-6
+min-h-[140px]
+w-full
+shadow-lg
+"
+
+>
     <h4 className="font-semibold mb-2">
       {review.name}
     </h4>
+
+    <p className="text-green-400 text-sm mb-2">
+  ✓ Verified Purchase
+</p>
 
     <p className="text-gray-300">
       {review.comment}
@@ -467,7 +530,17 @@ localStorage.setItem(
       My Review
     </h3>
 
-    <div className="bg-[#141414] border border-[#B50000] rounded-xl p-6">
+    <div className="
+bg-[#141414]
+border
+border-[#B50000]
+rounded-xl
+p-6
+min-h-[140px]
+w-full
+shadow-lg
+">
+
       <p>{myReview}</p>
     </div>
   </div>

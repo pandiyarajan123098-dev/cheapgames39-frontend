@@ -4,12 +4,20 @@ import { Link } from "react-router-dom";
 const RecentlyViewed = () => {
   const [games, setGames] = useState([]);
 
-  useEffect(() => {
+ useEffect(() => {
+  const loadRecent = () => {
     const recent =
       JSON.parse(localStorage.getItem("recentGames")) || [];
 
     setGames(recent.slice(0, 5));
-  }, []);
+  };
+
+  loadRecent();
+
+  const interval = setInterval(loadRecent, 1000);
+
+  return () => clearInterval(interval);
+}, []);
 
   const clearHistory = () => {
     localStorage.removeItem("recentGames");
