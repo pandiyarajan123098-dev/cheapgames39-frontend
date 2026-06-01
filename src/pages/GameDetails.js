@@ -384,30 +384,109 @@ const reviewCount =
 
 
 {/* STEAM GUIDE */}
-        <div className="mt-24 bg-[#111] border border-white/10 rounded-2xl p-10 shadow-xl">
-          <h2 className="text-4xl font-bold mb-10">
-            Steam Account Activation Guide
-          </h2>
+<div className="mt-24 bg-[#111] border border-white/10 rounded-2xl p-10 shadow-xl">
 
-          <ul className="space-y-4 text-gray-300 text-lg">
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Install Steam on your PC
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Login using provided credentials
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Download the game from Library
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Switch Steam to Offline Mode
-            </li>
-            <li className="flex items-center gap-2">
-              <ArrowRight size={16} /> Launch and enjoy the game
-            </li>
-          </ul>
-        </div>
+  <h2 className="text-4xl font-bold mb-10">
+    Steam Account Activation Guide
+  </h2>
 
+  <div className="grid md:grid-cols-2 gap-6">
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
+      <h3 className="text-[#B50000] font-bold text-xl mb-3">
+        Step 1
+      </h3>
+
+      <p className="text-gray-300">
+        Download and install Steam from the official website if it is not already installed on your PC.
+      </p>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
+      <h3 className="text-[#B50000] font-bold text-xl mb-3">
+        Step 2
+      </h3>
+
+      <p className="text-gray-300">
+        Login using the Steam account credentials provided after your purchase is verified.
+      </p>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
+      <h3 className="text-[#B50000] font-bold text-xl mb-3">
+        Step 3
+      </h3>
+
+      <p className="text-gray-300">
+        Open your Steam Library and start downloading the purchased game directly to your PC.
+      </p>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
+      <h3 className="text-[#B50000] font-bold text-xl mb-3">
+        Step 4
+      </h3>
+
+      <p className="text-gray-300">
+        After installation is complete, switch Steam to Offline Mode and enjoy uninterrupted gameplay.
+      </p>
+    </div>
+
+  </div>
+
+  {/* TRUST STATS */}
+  <div className="grid grid-cols-3 gap-4 mt-10">
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
+      <h3 className="text-3xl font-bold text-[#B50000]">
+        500+
+      </h3>
+
+      <p className="text-gray-400 text-sm mt-1">
+        Orders Delivered
+      </p>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
+      <h3 className="text-3xl font-bold text-[#B50000]">
+        24/7
+      </h3>
+
+      <p className="text-gray-400 text-sm mt-1">
+        Customer Support
+      </p>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
+      <h3 className="text-3xl font-bold text-[#B50000]">
+        99%
+      </h3>
+
+      <p className="text-gray-400 text-sm mt-1">
+        Positive Feedback
+      </p>
+    </div>
+
+  </div>
+
+  {/* IMPORTANT NOTES */}
+  <div className="mt-10 bg-[#141414] border border-[#B50000]/30 rounded-xl p-6">
+
+    <h3 className="text-[#B50000] font-bold text-xl mb-4">
+      Important Information
+    </h3>
+
+    <ul className="space-y-3 text-gray-300">
+      <li>✓ Account details are delivered after payment verification.</li>
+      <li>✓ Detailed activation instructions are provided with every purchase.</li>
+      <li>✓ Customer support is available if you need assistance.</li>
+      <li>✓ Follow the provided steps carefully before launching the game.</li>
+      <li>✓ Most orders are processed and delivered within a short time.</li>
+    </ul>
+
+  </div>
+
+</div>
       </div>
 
      {/* RELATED GAMES */}
@@ -523,6 +602,10 @@ shadow-lg
     </p>
   </div>
 ))}
+
+<p className="text-[#B50000] text-sm mt-3 cursor-pointer">
+  Read More →
+</p>
 
 {myReview && (
   <div className="mt-10">
