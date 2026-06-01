@@ -477,11 +477,11 @@ const reviewCount =
     </h3>
 
     <ul className="space-y-3 text-gray-300">
-      <li>✓ Account details are delivered after payment verification.</li>
-      <li>✓ Detailed activation instructions are provided with every purchase.</li>
-      <li>✓ Customer support is available if you need assistance.</li>
-      <li>✓ Follow the provided steps carefully before launching the game.</li>
-      <li>✓ Most orders are processed and delivered within a short time.</li>
+      <li>★ Account details are delivered after payment verification.</li>
+      <li>★ Detailed activation instructions are provided with every purchase.</li>
+      <li>★ Customer support is available if you need assistance.</li>
+      <li>★ Follow the provided steps carefully before launching the game.</li>
+      <li>★ Most orders are processed and delivered within a short time.</li>
     </ul>
 
   </div>
@@ -494,7 +494,7 @@ const reviewCount =
   <h2 className="text-4xl font-bold mb-8">
     Related <span className="text-[#B50000]">Games</span>
   </h2>
-
+{relatedGames.length > 0 ? (
   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
     {relatedGames.map((related) => (
       <div
@@ -502,7 +502,6 @@ const reviewCount =
         onClick={() => navigate(`/games/${related.id}`)}
         className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition h-[260px] flex flex-col"
       >
-        {/* Image */}
         <div className="h-36 overflow-hidden">
           <img
             src={related.image_url}
@@ -511,7 +510,6 @@ const reviewCount =
           />
         </div>
 
-        {/* Content */}
         <div className="p-3 flex flex-col flex-1">
           <h3 className="text-white text-sm font-semibold line-clamp-2 min-h-[42px]">
             {related.title}
@@ -524,6 +522,25 @@ const reviewCount =
       </div>
     ))}
   </div>
+) : (
+  <div className="bg-[#141414] border border-white/10 rounded-xl p-8 text-center">
+    <h3 className="text-xl font-bold mb-3">
+      Looking for More Games?
+    </h3>
+
+    <p className="text-gray-400 mb-5">
+      Browse our complete collection and discover hundreds of affordable PC games.
+    </p>
+
+    <button
+      onClick={() => navigate("/games")}
+      className="bg-[#B50000] px-6 py-3 rounded-full font-bold"
+    >
+      Browse All Games
+    </button>
+  </div>
+)}
+
 </div>
 
         {/* REVIEWS (Stars removed visually only) */}
@@ -593,8 +610,25 @@ shadow-lg
       {review.name}
     </h4>
 
-    <p className="text-green-400 text-sm mb-2">
+<p className="text-green-400 text-sm mb-1">
   ✓ Verified Purchase
+</p>
+
+<p className="text-gray-500 text-xs mb-3">
+  {
+    [
+      "3 hours ago",
+      "8 hours ago",
+      "12 hours ago",
+      "1 day ago",
+      "2 days ago",
+      "4 days ago",
+      "6 days ago",
+      "1 week ago",
+      "2 weeks ago",
+      "3 weeks ago",
+    ][index % 10]
+  }
 </p>
 
     <p className="text-gray-300">

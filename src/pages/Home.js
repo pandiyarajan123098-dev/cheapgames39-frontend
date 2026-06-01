@@ -8,7 +8,7 @@ import {
   Sparkles,
   PlayCircle,
 } from "lucide-react";
-
+import CategorySlider from "../components/CategorySlider";
 import RecentlyViewed from "../components/RecentlyViewed";
 
 const Home = () => {
@@ -61,6 +61,8 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+<CategorySlider />
 
 <RecentlyViewed />
 
