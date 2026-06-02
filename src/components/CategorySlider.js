@@ -2,163 +2,154 @@ import { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const slides = [
-  {
-    category: "Racing Games",
-    description: "Experience high-speed racing and realistic driving physics.",
-    game1: "Forza Horizon 5",
-    game2: "Assetto Corsa",
-    video1: "/videos/horizon5.mp4",
-    video2: "/videos/ac.mp4",
-  },
-  {
-    category: "Sports Games",
-    description: "Step into the ring or dominate the cricket field.",
-    game1: "WWE 2K25",
-    game2: "Cricket 24",
-    video1: "/videos/wwwe25.mp4",
-    video2: "/videos/cricket224.mp4",
-  },
-  {
-    category: "Action Games",
-    description: "Explore huge worlds and immersive stories.",
-    game1: "GTA V",
-    game2: "Red Dead Redemption 2",
-    video1: "/videos/gta55.mp4",
-    video2: "/videos/rdr20.mp4",
-  },
-  {
-    category: "Shooter Games",
-    description: "Intense firefights and action-packed multiplayer battles.",
-    game1: "Call Of Duty",
-    game2: "Battlefield 2042",
-    video1: "/videos/cood.mp4",
-    video2: "/videos/2042aa.mp4",
-  },
-  {
-    category: "Horror Games",
-    description: "Survive terrifying adventures and horror experiences.",
-    game1: "Resident Evil 4",
-    game2: "Outlast",
-    video1: "/videos/re4.mp4",
-    video2: "/videos/outlast.mp4",
-  },
+{
+category: "Racing Games",
+game: "Forza Horizon 5",
+description:
+"Experience the ultimate open-world racing adventure.",
+video: "/videos/horizon5.mp4",
+},
+{
+category: "Sports Games",
+game: "WWE 2K25",
+description:
+"Step into the ring with the latest WWE superstars.",
+video: "/videos/wwwe25.mp4",
+},
+{
+  category: "Action Games",
+  game: "Red Dead Redemption 2",
+  description:
+    "Explore the Wild West in an epic open-world adventure.",
+  video: "/videos/rdr20.mp4",
+},
+{
+category: "Shooter Games",
+game: "Battlefield 2042",
+description:
+"Massive battles and next-generation warfare.",
+video: "/videos/2042.mp4",
+},
+{
+category: "Horror Games",
+game: "Resident Evil 4",
+description:
+"Survive one of the greatest horror experiences ever made.",
+video: "/videos/RE44.mp4",
+},
 ];
 
 export default function CategorySlider() {
-  const [current, setCurrent] = useState(0);
+const [current, setCurrent] = useState(0);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 11000);
+useEffect(() => {
+const interval = setInterval(() => {
+setCurrent((prev) => (prev + 1) % slides.length);
+}, 11000);
 
-    return () => clearInterval(interval);
-  }, []);
+return () => clearInterval(interval);
 
-  const slide = slides[current];
+}, []);
 
-  const nextSlide = () => {
-    setCurrent((prev) => (prev + 1) % slides.length);
-  };
+const slide = slides[current];
 
-  const prevSlide = () => {
-    setCurrent(
-      (prev) => (prev - 1 + slides.length) % slides.length
-    );
-  };
+const nextSlide = () => {
+setCurrent((prev) => (prev + 1) % slides.length);
+};
 
-  return (
-    <section className="py-20 px-4 bg-[#0d0d0d]">
-      <div className="max-w-7xl mx-auto">
+const prevSlide = () => {
+setCurrent(
+(prev) => (prev - 1 + slides.length) % slides.length
+);
+};
 
-        {/* CATEGORY TITLE */}
-        <div className="text-center mb-8">
-          <h2 className="text-3xl md:text-5xl font-bold">
-            {slide.category}
-          </h2>
+return (
+<section className="py-20 px-4 bg-[#0d0d0d]">
+<div className="max-w-7xl mx-auto">
 
-          <p className="text-gray-400 mt-3">
+    {/* CATEGORY */}
+    <div className="text-center mb-8">
+      <h2 className="text-3xl md:text-5xl font-bold">
+        {slide.category}
+      </h2>
+
+      <p className="text-gray-400 mt-3">
+        {slide.description}
+      </p>
+    </div>
+
+    {/* SLIDER */}
+    <div className="relative">
+
+      <button
+        onClick={prevSlide}
+        className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black/90 p-3 rounded-full"
+      >
+        <ChevronLeft size={24} />
+      </button>
+
+      <button
+        onClick={nextSlide}
+        className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/70 hover:bg-black/90 p-3 rounded-full"
+      >
+        <ChevronRight size={24} />
+      </button>
+
+      <div className="relative rounded-3xl overflow-hidden border border-white/10">
+
+                <video
+  key={slide.video}
+  autoPlay
+  muted
+  loop
+  playsInline
+  preload="metadata"
+  className="w-full h-[280px] md:h-[550px] object-cover"
+>
+
+          <source src={slide.video} type="video/mp4" />
+        </video>
+
+
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+
+        <div className="absolute bottom-0 left-0 p-6 md:p-10">
+
+          <span className="bg-[#B50000] px-4 py-2 rounded-full text-sm font-semibold">
+            ⭐ Featured Game
+          </span>
+
+          <h3 className="text-3xl md:text-5xl font-bold mt-4">
+            {slide.game}
+          </h3>
+
+          <p className="text-gray-300 mt-3 max-w-2xl">
             {slide.description}
           </p>
-        </div>
 
-        {/* MAIN CARD */}
-        <div className="relative bg-[#111] border border-white/10 rounded-3xl p-4 md:p-8">
-
-          {/* LEFT BUTTON */}
-          <button
-            onClick={prevSlide}
-            className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-20 bg-black/70 p-3 rounded-full"
-          >
-            <ChevronLeft size={24} />
-          </button>
-
-          {/* RIGHT BUTTON */}
-          <button
-            onClick={nextSlide}
-            className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-20 bg-black/70 p-3 rounded-full"
-          >
-            <ChevronRight size={24} />
-          </button>
-
-          {/* VIDEOS */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            {/* VIDEO 1 */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10">
-              <video
-                key={slide.video1}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-[250px] md:h-[420px] object-cover"
-              >
-                <source src={slide.video1} type="video/mp4" />
-              </video>
-
-              <div className="absolute top-4 left-4 bg-black/70 px-4 py-2 rounded-full text-sm font-semibold">
-                ⭐ {slide.game1}
-              </div>
-            </div>
-
-            {/* VIDEO 2 */}
-            <div className="relative rounded-2xl overflow-hidden border border-white/10">
-              <video
-                key={slide.video2}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-[250px] md:h-[420px] object-cover"
-              >
-                <source src={slide.video2} type="video/mp4" />
-              </video>
-
-              <div className="absolute top-4 left-4 bg-black/70 px-4 py-2 rounded-full text-sm font-semibold">
-                ⭐ {slide.game2}
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* DOTS */}
-        <div className="flex justify-center gap-3 mt-6">
-          {slides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrent(index)}
-              className={`w-3 h-3 rounded-full transition ${
-                current === index
-                  ? "bg-[#B50000]"
-                  : "bg-gray-600"
-              }`}
-            />
-          ))}
         </div>
 
       </div>
-    </section>
-  );
+
+    </div>
+
+    {/* DOTS */}
+    <div className="flex justify-center gap-3 mt-6">
+      {slides.map((_, index) => (
+        <button
+          key={index}
+          onClick={() => setCurrent(index)}
+          className={`w-3 h-3 rounded-full transition ${
+            current === index
+              ? "bg-[#B50000]"
+              : "bg-gray-600"
+          }`}
+        />
+      ))}
+    </div>
+
+  </div>
+</section>
+
+);
 }
