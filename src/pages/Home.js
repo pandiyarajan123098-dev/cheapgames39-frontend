@@ -10,8 +10,13 @@ import {
 } from "lucide-react";
 import CategorySlider from "../components/CategorySlider";
 import RecentlyViewed from "../components/RecentlyViewed";
+import publicReviews from "../data/publicReviews";
 
 const Home = () => {
+
+  const row1Reviews = publicReviews.slice(0, 50);
+const row2Reviews = publicReviews.slice(50);
+
   return (
     <div className="bg-black text-white overflow-x-hidden">
 
@@ -82,29 +87,39 @@ const Home = () => {
               How It <span className="text-[#B50000]">Works</span>
             </h2>
 
-            <div className="space-y-6 text-gray-300 text-lg">
+           <div className="space-y-6 text-gray-300 text-lg">
 
-              <div className="flex items-start gap-4">
-                <PlayCircle className="text-[#B50000] mt-1" />
-                <p>Browse and select your favorite game</p>
-              </div>
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Browse our collection and choose your favorite PC game.</p>
+  </div>
 
-              <div className="flex items-start gap-4">
-                <PlayCircle className="text-[#B50000] mt-1" />
-                <p>Add to cart and proceed to checkout</p>
-              </div>
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Add the game to your cart and complete your order securely.</p>
+  </div>
 
-              <div className="flex items-start gap-4">
-                <PlayCircle className="text-[#B50000] mt-1" />
-                <p>Complete secure UPI payment</p>
-              </div>
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Make payment using UPI or your preferred payment method.</p>
+  </div>
 
-              <div className="flex items-start gap-4">
-                <PlayCircle className="text-[#B50000] mt-1" />
-                <p>Receive instant delivery via WhatsApp</p>
-              </div>
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Receive your game details and activation instructions after verification.</p>
+  </div>
 
-            </div>
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Download the game through Steam and follow the provided setup guide.</p>
+  </div>
+
+  <div className="flex items-start gap-4">
+    <PlayCircle className="text-[#B50000] mt-1" />
+    <p>Start playing and contact support anytime if you need assistance.</p>
+  </div>
+
+</div>
 
             <Link to="/games">
               <button className="mt-10 bg-[#B50000] px-8 py-3 rounded-full font-semibold hover:bg-red-700 transition-all hover:scale-105">
@@ -140,45 +155,59 @@ const Home = () => {
       </section>
 
 
-      {/* FEATURES */}
-      <section className="py-28 px-6 bg-black">
-        <div className="max-w-6xl mx-auto">
+   {/* CUSTOMER REVIEWS */}
+<section className="py-24 bg-black overflow-hidden">
 
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-bold uppercase">
-              Why Choose <span className="text-[#B50000]">Us</span>
-            </h2>
-          </div>
+  <div className="text-center mb-12">
+    <h2 className="text-4xl md:text-5xl font-bold">
+      Customer <span className="text-[#B50000]">Reviews</span>
+    </h2>
 
-          <div className="grid md:grid-cols-3 gap-10">
+    <p className="text-gray-400 mt-3">
+      Trusted by gamers across India
+    </p>
+  </div>
 
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-10 text-center hover:border-[#B50000] transition-all duration-300 hover:scale-105">
-              <Zap className="mx-auto text-[#B50000] mb-6 w-10 h-10" />
-              <h3 className="text-xl font-semibold mb-4">Instant Delivery</h3>
-              <p className="text-gray-400">
-                Get your game immediately after payment confirmation.
+  {[0, 1].map((row) => (
+    <div key={row} className="overflow-hidden py-3">
+
+      <div
+      className={`flex gap-4 w-max ${
+  row === 0
+    ? "animate-marquee-left"
+    : "animate-marquee-right"
+}`}
+      >
+      {[
+  ...(row === 0 ? row1Reviews : row2Reviews),
+  ...(row === 0 ? row1Reviews : row2Reviews),
+].map(
+  
+          (review, index) => (
+            <div
+              key={index}
+              className="bg-[#141414] border border-white/10 rounded-xl p-5 min-w-[320px]"
+            >
+              <p className="text-green-400 text-sm mb-2">
+                ✓ Verified Purchase
+              </p>
+
+              <h4 className="font-semibold mb-2">
+                {review.name}
+              </h4>
+
+              <p className="text-gray-300 text-sm">
+                {review.comment}
               </p>
             </div>
+          )
+        )}
+      </div>
 
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-10 text-center hover:border-[#B50000] transition-all duration-300 hover:scale-105">
-              <Shield className="mx-auto text-[#B50000] mb-6 w-10 h-10" />
-              <h3 className="text-xl font-semibold mb-4">Secure Payment</h3>
-              <p className="text-gray-400">
-                Safe, encrypted and reliable transaction system.
-              </p>
-            </div>
+    </div>
+  ))}
 
-            <div className="bg-[#111] border border-white/10 rounded-2xl p-10 text-center hover:border-[#B50000] transition-all duration-300 hover:scale-105">
-              <Sparkles className="mx-auto text-[#B50000] mb-6 w-10 h-10" />
-              <h3 className="text-xl font-semibold mb-4">Best Prices</h3>
-              <p className="text-gray-400">
-                Premium PC titles at unbeatable affordable prices.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
+</section>
 
     </div>
   );

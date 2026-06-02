@@ -113,3 +113,28 @@ code {
         border-bottom-color: inherit;
     }
 }
+@keyframes marqueeLeft {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes marqueeRight {
+  from {
+    transform: translateX(-50%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-marquee-left {
+  animation: marqueeLeft 200s linear infinite;
+}
+
+.animate-marquee-right {
+  animation: marqueeRight 200s linear infinite;
+}
