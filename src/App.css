@@ -73,3 +73,69 @@ h1, h2, h3, h4, h5, h6 {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.hero-swiper .swiper-pagination {
+  bottom: 15px !important;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: white;
+  opacity: 0.35;
+  transition: all 0.3s ease;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+  background: #B50000;
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.hero-card {
+  backdrop-filter: blur(15px);
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+}
+
+.hero-button {
+  transition: all 0.3s ease;
+}
+
+.hero-button:hover {
+  transform: translateY(-2px);
+}
+
+.hero-swiper .swiper-pagination {
+  bottom: -25px !important;
+}
+
+.hero-swiper .swiper-pagination-bullet {
+  width: 10px;
+  height: 10px;
+  background: #ffffff;
+  opacity: 0.35;
+}
+
+.hero-swiper .swiper-pagination-bullet-active {
+  background: #B50000;
+  opacity: 1;
+  transform: scale(1.3);
+}
+
+.hero-swiper {
+  padding-bottom: 40px;
+}
+
+.hero-swiper .swiper-pagination {
+  bottom: 0 !important;
+}

@@ -11,6 +11,7 @@ import {
 import CategorySlider from "../components/CategorySlider";
 import RecentlyViewed from "../components/RecentlyViewed";
 import publicReviews from "../data/publicReviews";
+import HeroSlider from "../components/HeroSlider";
 
 const Home = () => {
 
@@ -19,56 +20,10 @@ const row2Reviews = publicReviews.slice(50);
 
   return (
     <div className="bg-black text-white overflow-x-hidden">
-
-      {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center justify-center px-6">
-
-        <img
-          src="https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1920"
-          alt="Gaming Background"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-
-        <div className="absolute inset-0 bg-black/80"></div>
-
-        <div className="relative z-10 w-full max-w-4xl backdrop-blur-xl bg-white/5 border border-white/20 rounded-3xl p-10 md:p-16 text-center shadow-2xl">
-
-          <motion.h1
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-bold uppercase mb-6 leading-tight"
-          >
-            LEVEL UP YOUR{" "}
-            <span className="text-[#B50000]">GAME</span>
-          </motion.h1>
-
-          <p className="text-gray-300 text-lg md:text-xl max-w-2xl mx-auto mb-10">
-            Get the best PC games at unbeatable prices.
-            Instant delivery. Secure payments.
-          </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-
-            <Link to="/games">
-              <button className="bg-[#B50000] hover:bg-red-700 px-8 py-4 rounded-full font-semibold transition-all hover:scale-105 flex items-center justify-center shadow-lg">
-                Browse Games
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </button>
-            </Link>
-
-            <Link to="/contact">
-              <button className="border border-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-black transition-all">
-                Contact Us
-              </button>
-            </Link>
-
-          </div>
-        </div>
-      </section>
-
+<div className="mt-16 md:mt-20">
+  <HeroSlider />
+</div>
 <CategorySlider />
-
 <RecentlyViewed />
 
       {/* HOW IT WORKS */}
