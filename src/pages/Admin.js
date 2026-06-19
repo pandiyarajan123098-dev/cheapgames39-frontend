@@ -98,10 +98,11 @@ const fetchGames = async () => {
   is_bundle: false,
 });
 
-      fetchGames();
+     await fetchGames();
     } catch (error) {
-      toast.error('Failed to save game');
-    }
+  console.log("Save error:", error.response?.data || error.message);
+  toast.error("Failed to save game");
+}
   };
 
   const handleEdit = (game) => {
