@@ -24,22 +24,26 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
 
   /* ================= FETCH GAMES ================= */
 
-  useEffect(() => {
-    const fetchGames = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get(`${API}/api/games`);
-        setAllGames(res.data || []);
-      } catch (err) {
-        console.error(err);
-        setError("Failed to load games");
-      } finally {
-        setLoading(false);
-      }
-    };
+useEffect(() => {
+  const fetchGames = async () => {
+    try {
+      setLoading(true);
 
-    fetchGames();
-  }, []);
+      const res = await axios.get(`${API}/api/games`);
+
+      console.log("Games API:", res.data); // <-- add here
+
+      setAllGames(res.data || []);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load games");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchGames();
+}, []);
 
   /* ================= FETCH CATEGORIES ================= */
 
@@ -70,6 +74,7 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
   /* ================= FILTER ================= */
 
   const filteredGames = useMemo(() => {
+  
     let filtered = [...allGames];
 
     if (search) {
@@ -94,6 +99,14 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
 
     return filtered;
   }, [allGames, search, categoryFilter, sortBy]);
+
+const newArrivals = allGames.filter(
+  (game) => game.is_new === true || game.is_new === "true"
+);
+
+const bundleGames = allGames.filter(
+  (game) => game.is_bundle === true || game.is_bundle === "true"
+);
 
   const totalPages = Math.ceil(filteredGames.length / limit);
 
@@ -211,6 +224,8 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
           </select>
         </div>
 
+
+
         {/* Loading */}
        {loading && (
   <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
@@ -260,6 +275,48 @@ const [selectedIndex, setSelectedIndex] = useState(-1);
             No games found
           </div>
         )}
+
+{/* NEW ARRIVALS */}
+{!loading && newArrivals.length > 0 && (
+  <>
+    <h2 className="text-3xl font-bold mb-6">
+      NEW <span className="text-[#B50000]">ARRIVALS</span>
+    </h2>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      {newArrivals.map((game) => (
+        <div
+          key={game.id}
+          onClick={() => navigate(`/games/${game.id}`)}
+          className="cursor-pointer"
+        >
+          <GameCard game={game} />
+        </div>
+      ))}
+    </div>
+  </>
+)}
+
+        {/* BUNDLE GAMES */}
+{!loading && bundleGames.length > 0 && (
+  <>
+    <h2 className="text-3xl font-bold mb-6 mt-16">
+      MEGA <span className="text-[#B50000]">BUNDLES</span>
+    </h2>
+
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      {bundleGames.map((game) => (
+        <div
+          key={game.id}
+          onClick={() => navigate(`/games/${game.id}`)}
+          className="cursor-pointer"
+        >
+          <GameCard game={game} />
+        </div>
+      ))}
+    </div>
+  </>
+)}
 
         {/* Pagination */}
         {totalPages > 1 && (

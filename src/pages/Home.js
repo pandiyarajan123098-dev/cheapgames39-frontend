@@ -27,8 +27,9 @@ const row2Reviews = publicReviews.slice(50);
 <RecentlyViewed />
 
       {/* HOW IT WORKS */}
-      <section className="py-28 px-6 bg-[#0d0d0d]">
-        <div className="max-w-6xl mx-auto grid md:grid-cols-2 gap-20 items-center">
+     <section className="py-24 px-4 bg-black">
+        <div className="max-w-6xl mx-auto">
+  <div className="bg-[#0d0d0d] border border-white/10 rounded-[30px] p-8 md:p-14 shadow-[0_0_40px_rgba(181,0,0,0.15)] grid md:grid-cols-2 gap-16 items-center">
 
           {/* LEFT */}
           <motion.div
@@ -38,38 +39,38 @@ const row2Reviews = publicReviews.slice(50);
             viewport={{ once: true }}
           >
 
-            <h2 className="text-4xl md:text-5xl font-bold mb-10 uppercase">
+           <h2 className="text-4xl md:text-5xl font-bold mb-12 uppercase tracking-wide">
               How It <span className="text-[#B50000]">Works</span>
             </h2>
 
-           <div className="space-y-6 text-gray-300 text-lg">
+           <div className="space-y-8 text-gray-300 text-lg">
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Browse our collection and choose your favorite PC game.</p>
   </div>
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Add the game to your cart and complete your order securely.</p>
   </div>
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Make payment using UPI or your preferred payment method.</p>
   </div>
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Receive your game details and activation instructions after verification.</p>
   </div>
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Download the game through Steam and follow the provided setup guide.</p>
   </div>
 
-  <div className="flex items-start gap-4">
+  <div className="flex items-start gap-4 hover:translate-x-2 transition-all duration-300">
     <PlayCircle className="text-[#B50000] mt-1" />
     <p>Start playing and contact support anytime if you need assistance.</p>
   </div>
@@ -91,7 +92,7 @@ const row2Reviews = publicReviews.slice(50);
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="w-full aspect-video rounded-2xl overflow-hidden shadow-2xl border border-white/10"
+            className="w-full aspect-video rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(181,0,0,0.2)] border border-white/10"
           >
 
             <video
@@ -105,7 +106,7 @@ const row2Reviews = publicReviews.slice(50);
             </video>
 
           </motion.div>
-
+</div>
         </div>
       </section>
 

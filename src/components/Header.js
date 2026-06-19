@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import logo from "../logo.png";
 import {
   ShoppingCart,
   User,
@@ -55,16 +56,15 @@ export const Header = () => {
     <header className="fixed top-0 left-0 right-0 z-50 bg-black border-b border-white/20 h-20 shadow-md">
       <div className="container mx-auto px-6 md:px-12 h-full flex items-center justify-between">
 
-        {/* Logo */}
-        <Link
-          to="/"
-          className="text-3xl font-bold tracking-tight"
-          style={{ fontFamily: "Rajdhani, sans-serif" }}
-        >
-          <span className="text-white">CHEAP</span>
-          <span className="text-[#B50000]">GAMES39</span>
-        </Link>
-
+{/* Logo */}
+<Link to="/" className="flex items-center">
+  <img
+    src={logo}
+    alt="CheapGames39"
+    className="w-14 h-14 object-contain
+    drop-shadow-[0_0_20px_rgba(255,0,0,1)]"
+  />
+</Link>
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center space-x-10">
 

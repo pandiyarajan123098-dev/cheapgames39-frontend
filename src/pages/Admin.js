@@ -14,13 +14,15 @@ const Admin = () => {
   const [categories, setCategories] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingGame, setEditingGame] = useState(null);
-  const [formData, setFormData] = useState({
+const [formData, setFormData] = useState({
   title: '',
   description: '',
   steam_price: '',
   price: '',
   category_id: '',
   image_url: '',
+  is_new: false,
+  is_bundle: false,
 });
 
 useEffect(() => {
@@ -33,50 +35,67 @@ useEffect(() => {
   fetchCategories();
 }, [user, navigate]);
 
-  const fetchGames = async () => {
-    const res = await axios.get(`${API}/games?limit=100`);
-setGames(res.data);
-  };
+const fetchGames = async () => {
+  const res = await axios.get(`${API}/games`);
+  console.log("Fetched Games:", res.data);
+  setGames(res.data);
+};
 
   const fetchCategories = async () => {
     const res = await axios.get(`${API}/categories`);
     setCategories(res.data);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
+ const handleSubmit = async (e) => {
+  e.preventDefault();
+  console.log("Sending Full Data:", {
+  ...formData,
+  is_new: formData.is_new,
+  is_bundle: formData.is_bundle
+});
+
+  try {
+
       if (editingGame) {
-        await axios.put(`${API}/games/${editingGame.id}`, {
-          ...formData,
-          steam_price: parseFloat(formData.steam_price),
-          price: parseFloat(formData.price),
-          category_id: formData.category_id,
-         
-        }, {
-          headers: { Authorization: `Bearer ${accessToken}` }
-        });
+      await axios.put(`${API}/games/${editingGame.id}`, {
+  title: formData.title,
+  description: formData.description,
+  steam_price: parseFloat(formData.steam_price),
+  price: parseFloat(formData.price),
+  category_id: formData.category_id,
+  image_url: formData.image_url,
+  is_new: formData.is_new,
+  is_bundle: formData.is_bundle
+}, {
+  headers: { Authorization: `Bearer ${accessToken}` }
+});
         toast.success('Game updated successfully!');
       } else {
-        await axios.post(`${API}/games`, {
-          ...formData,
-          steam_price: parseFloat(formData.steam_price),
-          price: parseFloat(formData.price),
-          category_id: formData.category_id,
-          
-        }, {
+      await axios.post(`${API}/games`, {
+  title: formData.title,
+  description: formData.description,
+  steam_price: parseFloat(formData.steam_price),
+  price: parseFloat(formData.price),
+  category_id: formData.category_id,
+  image_url: formData.image_url,
+  is_new: formData.is_new,
+  is_bundle: formData.is_bundle
+}, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success('Game added successfully!');
       }
       setShowModal(false);
       setEditingGame(null);
-      setFormData({   title: '',
+ setFormData({
+  title: '',
   description: '',
   steam_price: '',
   price: '',
   category_id: '',
   image_url: '',
+  is_new: false,
+  is_bundle: false,
 });
 
       fetchGames();
@@ -87,13 +106,15 @@ setGames(res.data);
 
   const handleEdit = (game) => {
     setEditingGame(game);
-   setFormData({
+setFormData({
   title: game.title,
   description: game.description,
   steam_price: game.steam_price?.toString() || "",
   price: game.price.toString(),
   category_id: game.category_id.toString(),
   image_url: game.image_url,
+  is_new: game.is_new ?? false,
+  is_bundle: game.is_bundle ?? false,
 });
     setShowModal(true);
   };
@@ -113,12 +134,15 @@ setGames(res.data);
 
   const handleAddNew = () => {
     setEditingGame(null);
-    setFormData({ title: '',
+ setFormData({
+  title: '',
   description: '',
   steam_price: '',
   price: '',
   category_id: '',
   image_url: '',
+  is_new: false,
+  is_bundle: false,
 });
 
     setShowModal(true);
@@ -191,6 +215,7 @@ setGames(res.data);
       </div>
 
       {/* Modal */}
+      
       {showModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-6" data-testid="game-modal">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -272,6 +297,39 @@ setGames(res.data);
               </div>
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Image URL</label>
+                <div className="flex gap-6 mt-4">
+
+  <label className="flex items-center gap-2 text-white">
+    <input
+  type="checkbox"
+  name="is_new"
+  checked={formData.is_new}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          is_new: e.target.checked
+        })
+      }
+    />
+    New Arrival
+  </label>
+
+  <label className="flex items-center gap-2 text-white">
+   <input
+  type="checkbox"
+  name="is_bundle"
+  checked={formData.is_bundle}
+      onChange={(e) =>
+        setFormData({
+          ...formData,
+          is_bundle: e.target.checked
+        })
+      }
+    />
+    Bundle Pack
+  </label>
+
+</div>
                 <input
                   type="url"
                   value={formData.image_url}
