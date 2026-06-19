@@ -260,8 +260,12 @@ const bundleGames = allGames.filter(
             {paginatedGames.map((game) => (
               <div
                 key={game.id}
-                onClick={() => navigate(`/games/${game.id}`)}
-                className="cursor-pointer"
+                onClick={() => {
+  if (game.in_stock) {
+    navigate(`/games/${game.id}`);
+  }
+}}
+className={`${game.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
               >
                 <GameCard game={game} />
               </div>
@@ -287,8 +291,12 @@ const bundleGames = allGames.filter(
       {newArrivals.map((game) => (
         <div
           key={game.id}
-          onClick={() => navigate(`/games/${game.id}`)}
-          className="cursor-pointer"
+          onClick={() => {
+  if (game.in_stock) {
+    navigate(`/games/${game.id}`);
+  }
+}}
+          className={`${game.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-60"}`}
         >
           <GameCard game={game} />
         </div>

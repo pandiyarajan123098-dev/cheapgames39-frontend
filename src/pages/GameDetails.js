@@ -33,7 +33,14 @@ const GameDetails = () => {
   const fetchGame = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/games/${id}`);
-      setGame(res.data);
+
+if (res.data.in_stock === false) {
+  toast.error("This game is out of stock");
+  navigate("/games");
+  return;
+}
+
+setGame(res.data);
     } catch {
       toast.error("Game not found");
       navigate("/games");

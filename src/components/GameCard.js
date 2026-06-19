@@ -25,6 +25,8 @@ export const GameCard = ({ game }) => {
   const categoryName =
     game?.categories?.name || "No Category";
 
+    const isOutOfStock = game?.in_stock === false;
+
   /* ================= AUTO DISCOUNT ================= */
 
   const hasDiscount =
@@ -60,22 +62,30 @@ export const GameCard = ({ game }) => {
     <motion.div
       whileHover={{ y: -8 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="
-        relative
-        group
-        bg-[#1a1a1a]
-        rounded-xl
-        overflow-hidden
-        border border-white/5
-        transition-all duration-300
-        cursor-pointer
-        hover:border-[#B50000]
-        hover:shadow-[0_0_35px_rgba(181,0,0,0.55)]
-      "
-      onClick={() => navigate(`/games/${game.id}`)}
+className={`
+  relative
+  group
+  bg-[#1a1a1a]
+  rounded-xl
+  overflow-hidden
+  border border-white/5
+  transition-all duration-300
+  cursor-pointer
+  ${
+    isOutOfStock
+      ? "grayscale opacity-70"
+      : "hover:border-[#B50000] hover:shadow-[0_0_35px_rgba(181,0,0,0.55)]"
+  }
+`}
+    onClick={() => {
+  if (game.in_stock) {
+    navigate(`/games/${game.id}`);
+  }
+}}
     >
       {/* IMAGE SECTION */}
       <div className="relative aspect-[3/4] overflow-hidden">
+
 
         {/* DISCOUNT BADGE */}
         {hasDiscount && (
@@ -83,6 +93,12 @@ export const GameCard = ({ game }) => {
             -{discountPercentage}%
           </div>
         )}
+
+        {!game.in_stock && (
+  <div className="absolute top-3 right-3 z-10 bg-black text-white text-xs font-bold px-3 py-1 rounded-md">
+    OUT OF STOCK
+  </div>
+)}
 
         <img
           src={imageUrl}
@@ -108,6 +124,7 @@ export const GameCard = ({ game }) => {
           {categoryName}
         </p>
 
+
         {/* PRICE + CART */}
         <div className="flex items-center justify-between">
 
@@ -130,21 +147,25 @@ export const GameCard = ({ game }) => {
           </div>
 
           {/* ADD TO CART BUTTON */}
-          <button
-            onClick={handleAddToCart}
-            className="
-              bg-[#B50000]
-              hover:bg-[#FF0000]
-              text-white
-              rounded-full
-              p-2
-              transition-all duration-300
-              hover:shadow-[0_0_20px_rgba(255,0,0,0.8)]
-              hover:scale-110
-            "
-          >
-            <ShoppingCart className="w-5 h-5" />
-          </button>
+     {/* ADD TO CART BUTTON */}
+<button
+  disabled={!game.in_stock}
+  onClick={handleAddToCart}
+  className={`
+    bg-[#B50000]
+    text-white
+    rounded-full
+    p-2
+    transition-all duration-300
+    ${
+      !game.in_stock
+        ? "opacity-50 cursor-not-allowed"
+        : "hover:bg-[#FF0000] hover:shadow-[0_0_20px_rgba(255,0,0,0.8)] hover:scale-110"
+    }
+  `}
+>
+  <ShoppingCart className="w-5 h-5" />
+</button>
 
         </div>
       </div>

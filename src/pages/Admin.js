@@ -23,6 +23,7 @@ const [formData, setFormData] = useState({
   image_url: '',
   is_new: false,
   is_bundle: false,
+  in_stock: true
 });
 
 useEffect(() => {
@@ -57,7 +58,7 @@ const fetchGames = async () => {
   try {
 
       if (editingGame) {
-      await axios.put(`${API}/games/${editingGame.id}`, {
+ await axios.put(`${API}/games/${editingGame.id}`, {
   title: formData.title,
   description: formData.description,
   steam_price: parseFloat(formData.steam_price),
@@ -65,13 +66,14 @@ const fetchGames = async () => {
   category_id: formData.category_id,
   image_url: formData.image_url,
   is_new: formData.is_new,
-  is_bundle: formData.is_bundle
+  is_bundle: formData.is_bundle,
+  in_stock: formData.in_stock
 }, {
   headers: { Authorization: `Bearer ${accessToken}` }
 });
         toast.success('Game updated successfully!');
       } else {
-      await axios.post(`${API}/games`, {
+ await axios.post(`${API}/games`, {
   title: formData.title,
   description: formData.description,
   steam_price: parseFloat(formData.steam_price),
@@ -79,7 +81,8 @@ const fetchGames = async () => {
   category_id: formData.category_id,
   image_url: formData.image_url,
   is_new: formData.is_new,
-  is_bundle: formData.is_bundle
+  is_bundle: formData.is_bundle,
+  in_stock: formData.in_stock
 }, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
@@ -96,6 +99,7 @@ const fetchGames = async () => {
   image_url: '',
   is_new: false,
   is_bundle: false,
+  in_stock: true
 });
 
      await fetchGames();
@@ -116,6 +120,7 @@ setFormData({
   image_url: game.image_url,
   is_new: game.is_new ?? false,
   is_bundle: game.is_bundle ?? false,
+  in_stock: game.in_stock ?? true
 });
     setShowModal(true);
   };
@@ -144,6 +149,7 @@ setFormData({
   image_url: '',
   is_new: false,
   is_bundle: false,
+  in_stock: true
 });
 
     setShowModal(true);
@@ -329,6 +335,20 @@ setFormData({
     />
     Bundle Pack
   </label>
+
+<label className="flex items-center gap-2 text-white">
+  <input
+    type="checkbox"
+    checked={formData.in_stock}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        in_stock: e.target.checked
+      })
+    }
+  />
+  In Stock
+</label>
 
 </div>
                 <input
