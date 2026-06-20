@@ -57,14 +57,20 @@ export const Header = () => {
       <div className="container mx-auto px-6 md:px-12 h-full flex items-center justify-between">
 
 {/* Logo */}
-<Link to="/" className="flex items-center">
-  <img
-    src={logo}
-    alt="CheapGames39"
-    className="w-14 h-14 object-contain
-    drop-shadow-[0_0_20px_rgba(255,0,0,1)]"
-  />
-</Link>
+<div className="flex items-center gap-2">
+  <img src={logo} alt="CG39" className="w-10 h-10" />
+
+  <div className="flex flex-col leading-none">
+    <h1 className="text-2xl font-extrabold tracking-wide">
+      <span className="text-white">CG</span>
+      <span className="text-[#B50000]">39</span>
+    </h1>
+
+    <span className="text-[10px] text-gray-400 uppercase tracking-[3px]">
+      Game Store
+    </span>
+  </div>
+</div>
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center space-x-10">
 

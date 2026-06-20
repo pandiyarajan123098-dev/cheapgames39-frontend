@@ -115,7 +115,7 @@ const Cart = () => {
                             </span>
                           )}
 
-                          <span className="text-2xl font-bold text-[#B50000]">
+                          <span className="text-2xl font-bold text-white">
                             ₹{salePrice.toLocaleString()}
                           </span>
 

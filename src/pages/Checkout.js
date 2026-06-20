@@ -171,9 +171,9 @@ Amount: ₹${total}
     <div className="min-h-screen bg-[#0f0f0f] pt-24 pb-20 px-6 text-white">
       <div className="container mx-auto max-w-4xl">
 
-        <h1 className="text-5xl font-bold uppercase mb-12">
-          <span className="text-[#B50000]">Checkout</span>
-        </h1>
+       <h1 className="text-5xl font-bold uppercase mb-12 text-white">
+  CHECK<span className="text-[#B50000]">OUT</span>
+</h1>
 
         {!showQR ? (
           <form

@@ -542,7 +542,7 @@ const reviewCount =
     </span>
   )}
 
-  <span className="text-[#B50000] font-bold text-lg">
+  <span className="text-white font-bold text-lg">
     ₹{related.price}
   </span>
 </div>
