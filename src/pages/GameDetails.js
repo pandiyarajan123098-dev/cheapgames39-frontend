@@ -7,6 +7,7 @@ import { ShoppingCart, Heart, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import publicReviews from "../data/publicReviews";
+import steamLogo from "../assets/steam.png";
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -331,9 +332,21 @@ const reviewCount =
             <div className="flex justify-between items-start mb-6">
               <div>
                 <h1 className="text-5xl font-bold uppercase">{game.title}</h1>
-                <p className="text-[#B50000] uppercase mt-3">
-                  {game.categories?.name}
-                </p>
+        <div className="flex items-center gap-3 mt-3">
+  <img
+    src={steamLogo}
+    alt="Steam"
+    className="w-5 h-5"
+  />
+
+  <span className="text-gray-400 text-sm">
+    Steam Account
+  </span>
+
+  <span className="text-[#B50000] uppercase text-sm font-semibold">
+    {game.categories?.name}
+  </span>
+</div>
               </div>
 
               <button onClick={handleToggleWishlist} disabled={wishlistLoading}>
@@ -522,9 +535,18 @@ const reviewCount =
             {related.title}
           </h3>
 
-          <p className="text-[#B50000] font-bold mt-auto">
-            ₹{related.price}
-          </p>
+<div className="mt-auto">
+  {related.steam_price > related.price && (
+    <span className="text-gray-500 line-through text-xs block">
+      ₹{related.steam_price}
+    </span>
+  )}
+
+  <span className="text-[#B50000] font-bold text-lg">
+    ₹{related.price}
+  </span>
+</div>
+
         </div>
       </div>
     ))}

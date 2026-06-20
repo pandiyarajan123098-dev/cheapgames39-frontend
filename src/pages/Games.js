@@ -228,7 +228,7 @@ const bundleGames = allGames.filter(
 
         {/* Loading */}
        {loading && (
-  <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
+  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-16">
     {[...Array(8)].map((_, index) => (
       <div
         key={index}
@@ -256,7 +256,7 @@ const bundleGames = allGames.filter(
 
         {/* Grid */}
         {!loading && paginatedGames.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-16">
             {paginatedGames.map((game) => (
               <div
                 key={game.id}
