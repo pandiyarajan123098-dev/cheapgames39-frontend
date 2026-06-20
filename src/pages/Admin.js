@@ -306,8 +306,29 @@ setFormData({
                 </div>
               </div>
               <div>
+
+                <div>
+  <label className="block text-sm text-gray-400 mb-2">
+    Display Order
+  </label>
+
+  <input
+    type="number"
+    value={formData.display_order}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        display_order: e.target.value,
+      })
+    }
+    className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3 text-white"
+  />
+</div>
+
                 <label className="block text-sm text-gray-400 mb-2">Image URL</label>
                 <div className="flex gap-6 mt-4">
+
+
 
   <label className="flex items-center gap-2 text-white">
     <input
@@ -355,23 +376,7 @@ setFormData({
 
 </div>
 
-<div>
-  <label className="block text-sm text-gray-400 mb-2">
-    Display Order
-  </label>
 
-  <input
-    type="number"
-    value={formData.display_order}
-    onChange={(e) =>
-      setFormData({
-        ...formData,
-        display_order: e.target.value,
-      })
-    }
-    className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3 text-white"
-  />
-</div>
                 <input
                   type="url"
                   value={formData.image_url}
@@ -397,6 +402,8 @@ setFormData({
                 >
                   Cancel
                 </button>
+
+              
               </div>
             </form>
           </div>
