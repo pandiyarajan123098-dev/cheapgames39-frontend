@@ -23,7 +23,8 @@ const [formData, setFormData] = useState({
   image_url: '',
   is_new: false,
   is_bundle: false,
-  in_stock: true
+  in_stock: true,
+  display_order: "",
 });
 
 useEffect(() => {
@@ -67,7 +68,8 @@ const fetchGames = async () => {
   image_url: formData.image_url,
   is_new: formData.is_new,
   is_bundle: formData.is_bundle,
-  in_stock: formData.in_stock
+  in_stock: formData.in_stock,
+  display_order: parseInt(formData.display_order),
 }, {
   headers: { Authorization: `Bearer ${accessToken}` }
 });
@@ -82,7 +84,8 @@ const fetchGames = async () => {
   image_url: formData.image_url,
   is_new: formData.is_new,
   is_bundle: formData.is_bundle,
-  in_stock: formData.in_stock
+  in_stock: formData.in_stock,
+   display_order: parseInt(formData.display_order),
 }, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
@@ -350,6 +353,24 @@ setFormData({
   In Stock
 </label>
 
+</div>
+
+<div>
+  <label className="block text-sm text-gray-400 mb-2">
+    Display Order
+  </label>
+
+  <input
+    type="number"
+    value={formData.display_order}
+    onChange={(e) =>
+      setFormData({
+        ...formData,
+        display_order: e.target.value,
+      })
+    }
+    className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3 text-white"
+  />
 </div>
                 <input
                   type="url"
