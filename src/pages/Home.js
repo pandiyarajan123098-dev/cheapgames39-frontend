@@ -12,6 +12,7 @@ import CategorySlider from "../components/CategorySlider";
 import RecentlyViewed from "../components/RecentlyViewed";
 import publicReviews from "../data/publicReviews";
 import HeroSlider from "../components/HeroSlider";
+import ProofSlider from "../components/ProofSlider";
 
 const Home = () => {
 
@@ -109,6 +110,9 @@ const row2Reviews = publicReviews.slice(50);
 </div>
         </div>
       </section>
+
+
+<ProofSlider />
 
 
    {/* CUSTOMER REVIEWS */}
