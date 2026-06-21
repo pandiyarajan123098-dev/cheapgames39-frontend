@@ -19,7 +19,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 const [captchaToken, setCaptchaToken] = useState(null);
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (!captchaToken) {
@@ -28,15 +28,22 @@ const [captchaToken, setCaptchaToken] = useState(null);
   }
 
   setLoading(true);
-    try {
-      await login(formData.email, formData.password);
-      toast.success('Login successful!');
-      navigate('/');
-    } catch (error) {
-      toast.error(error.message || 'Invalid email or password');
-      setLoading(false);
-    }
-  };
+
+  try {
+    await login(formData.email, formData.password);
+
+    toast.success("Login successful!");
+
+    setTimeout(() => {
+      navigate("/");
+    }, 1000);
+
+  } catch (error) {
+    toast.error(error.message || "Invalid email or password");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGoogleLogin = async () => {
   try {

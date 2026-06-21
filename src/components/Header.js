@@ -19,7 +19,7 @@ import {
 } from "react-icons/fa";
 
 export const Header = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, logoutLoading } = useAuth();
   const { cartCount } = useCart();
   const navigate = useNavigate();
 
@@ -27,11 +27,10 @@ export const Header = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const dropdownRef = useRef();
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
-
+const handleLogout = async () => {
+  await logout();
+  navigate("/");
+};
   // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e) => {
@@ -176,15 +175,17 @@ export const Header = () => {
                       </Link>
                     )}
 
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setUserMenuOpen(false);
-                      }}
+                  <button
+  onClick={async () => {
+   setUserMenuOpen(false);
+await handleLogout();
+  }}
+  disabled={logoutLoading}
+
                       className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-white/5 flex items-center"
                     >
                       <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                      {logoutLoading ? "Logging out..." : "Logout"}
                     </button>
                   </>
                 ) : (

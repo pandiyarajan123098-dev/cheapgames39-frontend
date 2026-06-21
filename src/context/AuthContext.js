@@ -14,6 +14,7 @@ const [user, setUser] = useState(null);
 const [session, setSession] = useState(null);
 const [accessToken, setAccessToken] = useState(null);
 const [loading, setLoading] = useState(true);
+const [logoutLoading, setLogoutLoading] = useState(false);
 
 // ================= INITIAL SESSION =================
 
@@ -110,17 +111,23 @@ const loginWithGoogle = async () => {
 // ================= LOGOUT =================
 
 const logout = async () => {
-const { error } = await supabase.auth.signOut();
+  try {
+    setLogoutLoading(true);
 
-if (error) {  
-  console.error("Logout error:", error.message);  
-  throw error;  
-}  
+    const { error } = await supabase.auth.signOut();
 
-setUser(null);  
-setSession(null);  
-setAccessToken(null);
+    if (error) throw error;
 
+    setUser(null);
+    setSession(null);
+    setAccessToken(null);
+
+  } catch (error) {
+    console.error("Logout error:", error.message);
+    throw error;
+  } finally {
+    setLogoutLoading(false);
+  }
 };
 
 // ================= CONTEXT VALUE =================
@@ -131,12 +138,13 @@ const value = useMemo(
     session,
     accessToken,
     loading,
+    logoutLoading,
     signup,
     login,
     loginWithGoogle,
     logout,
   }),
-  [user, session, accessToken, loading]
+  [user, session, accessToken, loading, logoutLoading]
 );
 
 return (
