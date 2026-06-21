@@ -4,9 +4,10 @@ const Terms = () => {
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-[#B50000]">
-          Terms & Conditions
-        </h1>
+       <h1 className="text-4xl font-bold">
+  <span className="text-white">Terms &</span>{" "}
+  <span className="text-[#B50000]">Conditions</span>
+</h1>
 
         <p className="text-gray-400 mb-6">
           By using CheapGames39 Store, you agree to the following terms and

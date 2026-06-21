@@ -4,9 +4,10 @@ const Privacy = () => {
   return (
     <div className="min-h-screen bg-black text-white pt-28 pb-20 px-6">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-[#B50000]">
-          Privacy Policy
-        </h1>
+       <h1 className="text-4xl font-bold">
+  <span className="text-white">Privacy</span>{" "}
+  <span className="text-[#B50000]">Policy</span>
+</h1>
 
         <p className="text-gray-400 mb-6">
           At CheapGames39 Store, we value your privacy. This Privacy Policy
