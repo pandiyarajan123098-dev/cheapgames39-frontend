@@ -96,13 +96,8 @@ const row2Reviews = publicReviews.slice(50);
             className="w-full aspect-video rounded-3xl overflow-hidden shadow-[0_0_30px_rgba(181,0,0,0.2)] border border-white/10"
           >
 
-            <video
-              className="w-full h-full object-cover"
-              controls
-              autoPlay
-              muted
-              loop
-            >
+            <video controls muted loop preload="none">
+              
               <source src="/videos/trailer1.mp4" type="video/mp4" />
             </video>
 
