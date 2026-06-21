@@ -497,11 +497,11 @@ const reviewCount =
     </h3>
 
     <ul className="space-y-3 text-gray-300">
-      <li>★ Account details are delivered after payment verification.</li>
-      <li>★ Detailed activation instructions are provided with every purchase.</li>
-      <li>★ Customer support is available if you need assistance.</li>
-      <li>★ Follow the provided steps carefully before launching the game.</li>
-      <li>★ Most orders are processed and delivered within a short time.</li>
+      <li>‣ Account details are delivered after payment verification.</li>
+      <li>‣ Detailed activation instructions are provided with every purchase.</li>
+      <li>‣ Customer support is available if you need assistance.</li>
+      <li>‣ Follow the provided steps carefully before launching the game.</li>
+      <li>‣ Most orders are processed and delivered within a short time.</li>
     </ul>
 
   </div>

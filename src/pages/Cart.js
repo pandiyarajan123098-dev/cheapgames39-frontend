@@ -4,12 +4,14 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { Trash2, Plus, Minus } from "lucide-react";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
 
 const Cart = () => {
   const { user } = useAuth();
   const { cart, updateCartItem, removeFromCart } = useCart();
   const navigate = useNavigate();
-
+const [deletingId, setDeletingId] = useState(null);
   /* ================= DISCOUNT ================= */
 
   const calculateDiscount = (steamPrice, salePrice) => {
@@ -153,10 +155,24 @@ const Cart = () => {
                         </div>
 
                         <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="text-gray-400 hover:text-[#B50000] transition"
+  disabled={deletingId === item.id}
+  onClick={async () => {
+
+  setDeletingId(item.id);
+
+  try {
+    await removeFromCart(item.id);
+  } finally {
+    setDeletingId(null);
+  }
+}}
+                          className="text-gray-400 hover:text-[#B50000] transition disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <Trash2 size={18} />
+                       {deletingId === item.id ? (
+  <Loader2 size={18} className="animate-spin" />
+) : (
+  <Trash2 size={18} />
+)}
                         </button>
 
                       </div>

@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { Trash2 } from "lucide-react";
+import { Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
+
 
 const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 
@@ -14,7 +15,7 @@ const Wishlist = () => {
 
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(true);
-
+const [removingId, setRemovingId] = useState(null);
   // ================= FETCH WISHLIST =================
   const fetchWishlist = useCallback(async () => {
     if (!user || !accessToken) return;
@@ -48,24 +49,28 @@ const Wishlist = () => {
   }, [user, fetchWishlist, navigate]);
 
   // ================= REMOVE =================
-  const handleRemove = async (gameId) => {
-    try {
-      await axios.delete(`${API}/wishlist/${gameId}`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+const handleRemove = async (gameId) => {
+  try {
+    setRemovingId(gameId);
 
-      setWishlist((prev) =>
-        prev.filter((item) => item.games.id !== gameId)
-      );
+    await axios.delete(`${API}/wishlist/${gameId}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
 
-      toast.success("Removed from wishlist");
-    } catch (error) {
-      console.error(error);
-      toast.error("Failed to remove item");
-    }
-  };
+    setWishlist((prev) =>
+      prev.filter((item) => item.games.id !== gameId)
+    );
+
+    toast.success("Removed from wishlist");
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to remove item");
+  } finally {
+    setRemovingId(null);
+  }
+};
 
   // ================= LOADING =================
   if (loading) {
@@ -131,11 +136,16 @@ const Wishlist = () => {
                       ₹{item.games.price}
                     </span>
 
-                    <button
-                      onClick={() => handleRemove(item.games.id)}
-                      className="text-gray-400 hover:text-red-500 transition"
-                    >
-                      <Trash2 size={18} />
+                   <button
+  disabled={removingId === item.games.id}
+  onClick={() => handleRemove(item.games.id)}
+  className="text-gray-400 hover:text-red-500 transition disabled:opacity-50 disabled:cursor-not-allowed"
+>
+                     {removingId === item.games.id ? (
+  <Loader2 size={18} className="animate-spin" />
+) : (
+  <Trash2 size={18} />
+)}
                     </button>
                   </div>
                 </div>
