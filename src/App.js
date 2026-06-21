@@ -34,15 +34,21 @@ import { useEffect } from "react";
 import ReactGA from "react-ga4";
 
 
-function App() {
+function AnalyticsTracker() {
   const location = useLocation();
 
-useEffect(() => {
-  ReactGA.send({
-    hitType: "pageview",
-    page: location.pathname,
-  });
-}, [location]);
+  useEffect(() => {
+    ReactGA.send({
+      hitType: "pageview",
+      page: location.pathname,
+    });
+  }, [location]);
+
+  return null;
+}
+
+function App() {
+ 
 
   return (
     <BrowserRouter>
