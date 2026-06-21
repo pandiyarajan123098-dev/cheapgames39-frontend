@@ -54,7 +54,7 @@ const ProofSlider = () => {
             }
 
             return (
-              <img
+              <img loading="lazy"
                 key={index}
                 src={proof}
                 alt="Proof"

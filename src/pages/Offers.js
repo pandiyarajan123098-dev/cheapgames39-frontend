@@ -37,7 +37,7 @@ const Offers = () => {
           transition={{ duration: 0.5 }}
           className="relative rounded-3xl overflow-hidden mb-20 group"
         >
-          <img
+          <img loading="lazy"
             src="https://images.unsplash.com/photo-1636036704268-017faa3b6557?w=1920"
             alt="Mega Sale"
             className="w-full h-[420px] object-cover group-hover:scale-105 transition-transform duration-700"

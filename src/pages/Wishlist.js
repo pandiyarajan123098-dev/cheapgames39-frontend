@@ -118,7 +118,7 @@ const handleRemove = async (gameId) => {
                   className="h-48 cursor-pointer overflow-hidden"
                   onClick={() => navigate(`/games/${item.games.id}`)}
                 >
-                  <img
+                  <img loading="lazy"
                     src={item.games.image_url}
                     alt={item.games.title}
                     className="w-full h-full object-cover hover:scale-105 transition duration-300"

@@ -100,7 +100,7 @@ className={`
         )}
 
         <div className="absolute bottom-3 right-3 z-10 bg-white rounded-full p-1 shadow-lg">
-  <img
+  <img loading="lazy"
     src={steamLogo}
     alt="Steam"
     className="w-6 h-6"
@@ -113,7 +113,7 @@ className={`
   </div>
 )}
 
-        <img
+        <img loading="lazy"
           src={imageUrl}
           alt={game?.title || "Game Image"}
           className="

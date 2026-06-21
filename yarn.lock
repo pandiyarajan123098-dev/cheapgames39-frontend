@@ -9048,6 +9048,11 @@ react-fast-marquee@^1.6.5:
   resolved "https://registry.npmjs.org/react-fast-marquee/-/react-fast-marquee-1.6.5.tgz"
   integrity sha512-swDnPqrT2XISAih0o74zQVE2wQJFMvkx+9VZXYYNSLb/CUcAzU9pNj637Ar2+hyRw6b4tP6xh4GQZip2ZCpQpg==
 
+react-ga4@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.npmjs.org/react-ga4/-/react-ga4-3.0.1.tgz"
+  integrity sha512-GyCc01bSheWXjzGDyHsXMOqk/SP5Cf/JrcJTg4hcpKx4eeSwaJKpJUc+ipF4ffLTZkmabmf3ZGBv4OKHTXNXyA==
+
 react-google-recaptcha@^3.1.0:
   version "3.1.0"
   resolved "https://registry.npmjs.org/react-google-recaptcha/-/react-google-recaptcha-3.1.0.tgz"

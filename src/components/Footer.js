@@ -112,7 +112,7 @@ export const Footer = () => {
   rel="noopener noreferrer"
   className="fixed bottom-8 right-8 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full p-4 shadow-lg hover:shadow-xl transition-all z-50"
 >
-  <img
+  <img loading="lazy"
     src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
     alt="WhatsApp"
     className="w-7 h-7"

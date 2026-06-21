@@ -90,7 +90,7 @@ const [deletingId, setDeletingId] = useState(null);
                     key={item.id}
                     className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 flex gap-6 mb-6 transition hover:border-[#B50000]/40"
                   >
-                    <img
+                    <img loading="lazy"
                       src={item.games?.image_url}
                       alt={item.games?.title}
                       className="w-28 h-36 object-cover rounded-lg"

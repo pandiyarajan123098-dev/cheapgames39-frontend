@@ -252,7 +252,7 @@ Amount: ₹${total}
               Scan & Pay via UPI
             </h2>
 
-            <img
+            <img loading="lazy"
               src="/upi-qr.png"
               alt="UPI QR"
               className="w-60 mx-auto mb-6"

@@ -57,7 +57,7 @@ const handleLogout = async () => {
 
 {/* Logo */}
 <div className="flex items-center gap-2">
-  <img src={logo} alt="CG39" className="w-10 h-10" />
+  <img loading="lazy" src={logo} alt="CG39" className="w-10 h-10" />
 
   <div className="flex flex-col leading-none">
     <h1 className="text-2xl font-extrabold tracking-wide">

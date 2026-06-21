@@ -306,7 +306,7 @@ const reviewCount =
 
       {/* HERO */}
       <div className="relative h-[32vh] overflow-hidden">
-        <img
+        <img loading="lazy"
           src={game.image_url}
           alt={game.title}
           className="w-full h-full object-cover blur-md scale-105"
@@ -320,7 +320,7 @@ const reviewCount =
         <div className="grid lg:grid-cols-3 gap-12">
 
           <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
-            <img
+            <img loading="lazy"
               src={game.image_url}
               alt={game.title}
               className="w-full rounded-2xl shadow-2xl border border-white/10"
@@ -333,7 +333,7 @@ const reviewCount =
               <div>
                 <h1 className="text-5xl font-bold uppercase">{game.title}</h1>
         <div className="flex items-center gap-3 mt-3">
-  <img
+  <img loading="lazy"
     src={steamLogo}
     alt="Steam"
     className="w-5 h-5"
@@ -523,7 +523,7 @@ const reviewCount =
         className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition h-[260px] flex flex-col"
       >
         <div className="h-36 overflow-hidden">
-          <img
+          <img loading="lazy"
             src={related.image_url}
             alt={related.title}
             className="w-full h-full object-cover"

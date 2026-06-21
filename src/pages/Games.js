@@ -183,7 +183,7 @@ const bundleGames = allGames.filter(
     : "hover:bg-[#B50000]"
 }`}
         >
-          <img
+          <img loading="lazy"
             src={game.image_url}
             alt={game.title}
             className="w-12 h-12 rounded object-cover"

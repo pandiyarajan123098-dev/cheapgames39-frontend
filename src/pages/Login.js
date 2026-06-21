@@ -144,7 +144,7 @@ const handleSubmit = async (e) => {
   onClick={handleGoogleLogin}
   className="w-full bg-white text-black rounded-full py-3 font-semibold flex items-center justify-center gap-3 hover:bg-gray-200 transition-all"
 >
-  <img
+  <img loading="lazy"
     src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
     alt="Google"
     className="w-5 h-5"

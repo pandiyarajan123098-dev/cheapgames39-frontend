@@ -57,7 +57,7 @@ const RecentlyViewed = () => {
               to={`/games/${game.id}`}
               className="min-w-[220px] bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(181,0,0,0.25)]"
             >
-              <img
+              <img loading="lazy"
                 src={game.image}
                 alt={game.title}
                 className="w-full h-32 object-cover"

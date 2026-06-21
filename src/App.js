@@ -28,10 +28,25 @@ import Giveaway from "./pages/Giveaway";
 import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
+import NotFound from "./pages/NotFound";
+import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import ReactGA from "react-ga4";
+
 
 function App() {
+  const location = useLocation();
+
+useEffect(() => {
+  ReactGA.send({
+    hitType: "pageview",
+    page: location.pathname,
+  });
+}, [location]);
+
   return (
     <BrowserRouter>
+  <AnalyticsTracker />
       <AuthProvider>
         <CartProvider>
           <div className="App min-h-screen bg-[#0f0f0f] text-white">
@@ -71,6 +86,9 @@ function App() {
   path="/reset-password"
   element={<ResetPassword />}
 />
+
+<Route path="*" element={<NotFound />} />
+
             </Routes>
             <Footer />
           </div>
