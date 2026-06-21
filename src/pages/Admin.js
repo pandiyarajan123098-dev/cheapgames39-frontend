@@ -121,6 +121,7 @@ setFormData({
   price: game.price.toString(),
   category_id: game.category_id.toString(),
   image_url: game.image_url,
+  display_order: game.display_order?.toString() || "",
   is_new: game.is_new ?? false,
   is_bundle: game.is_bundle ?? false,
   in_stock: game.in_stock ?? true
@@ -152,7 +153,8 @@ setFormData({
   image_url: '',
   is_new: false,
   is_bundle: false,
-  in_stock: true
+  in_stock: true,
+  display_order: ""
 });
 
     setShowModal(true);
