@@ -27,13 +27,13 @@ const Checkout = () => {
   const [showQR, setShowQR] = useState(false);
   const [transactionId, setTransactionId] = useState("");
 
-  const [formData, setFormData] = useState({
-    billing_name: "",
-    billing_email: "",
-    billing_address: "",
-    billing_city: "",
-    billing_zip: "",
-  });
+const [formData, setFormData] = useState({
+  billing_name: user?.user_metadata?.full_name || "",
+  billing_email: user?.email || "",
+  billing_address: "",
+  billing_city: "",
+  billing_zip: "",
+});
 
   /* =========================================
      TOTAL CALCULATION (optimized)
@@ -248,30 +248,89 @@ Amount: ₹${total}
           </form>
         ) : (
           <div className="bg-[#1a1a1a] border border-white/10 rounded-2xl p-8 text-center">
-            <h2 className="text-2xl font-bold mb-6">
-              Scan & Pay via UPI
-            </h2>
+            <div className="bg-[#141414] rounded-xl p-4 mb-6 text-left border border-white/10">
+  <h3 className="font-bold mb-3">Order Summary</h3>
 
-            <img loading="lazy"
-              src="/upi-qr.png"
-              alt="UPI QR"
-              className="w-60 mx-auto mb-6"
-            />
+  {cart.map((item) => (
+    <div
+      key={item.id}
+      className="flex justify-between text-sm mb-2 text-gray-300"
+    >
+      <span>
+        {item.games?.title} × {item.quantity}
+      </span>
 
-            <input
-              type="text"
-              placeholder="Enter UPI Transaction ID"
-              value={transactionId}
-              onChange={(e) => setTransactionId(e.target.value)}
-              className="w-full bg-[#141414] border border-white/10 rounded-lg px-4 py-3"
-            />
+      <span>
+        ₹{(item.games?.price || 0) * item.quantity}
+      </span>
+    </div>
+  ))}
+
+  <div className="border-t border-white/10 mt-3 pt-3 font-bold flex justify-between">
+    <span>Total</span>
+    <span>₹{total}</span>
+  </div>
+</div>
+       <div className="bg-yellow-500/10 text-yellow-400 px-4 py-2 rounded-lg mb-4 text-sm">
+  Payment Status: Pending
+</div>
+
+<h2 className="text-2xl font-bold mb-4">
+  Scan & Pay via UPI
+</h2>
+
+<p className="text-gray-400 mb-2">
+  Pay exactly <span className="text-white font-bold text-xl">₹{total}</span>
+</p>
+
+<p className="text-red-400 text-sm mb-5 animate-pulse">
+  Complete payment within 10 minutes
+</p>
+
+<img
+  loading="lazy"
+  src="/upi-qr.png"
+  
+  alt="UPI QR"
+  className="w-60 mx-auto mb-4"
+/>
+<div className="flex justify-center gap-3 mb-4">
+  <span className="text-gray-400">
+    pandiyarajan39@ptyes
+  </span>
+
+  <button
+    onClick={() => {
+      navigator.clipboard.writeText("pandiyarajan39@ptyes");
+      toast.success("UPI ID Copied");
+    }}
+    className="text-[#B50000] font-semibold"
+  >
+    Copy
+  </button>
+</div>
+
+<div className="flex justify-center gap-4 text-sm text-gray-400 mb-6">
+  <span>GPay</span>
+  <span>PhonePe</span>
+  <span>Paytm</span>
+  <span>UPI</span>
+</div>
+
+<input
+  type="text"
+  placeholder="Enter UPI Transaction ID"
+  value={transactionId}
+  onChange={(e) => setTransactionId(e.target.value)}
+  className="w-full bg-[#141414] border border-white/10 rounded-xl px-4 py-4 focus:border-[#B50000] outline-none"
+/>
 
             <button
               onClick={handleConfirmPayment}
               disabled={confirmLoading}
               className="w-full mt-6 bg-green-600 hover:bg-green-700 rounded-full py-4 font-bold disabled:opacity-50"
             >
-              {confirmLoading ? "Submitting..." : "I Have Paid"}
+            {confirmLoading ? "Submitting..." : "Submit Payment"}
             </button>
           </div>
         )}
