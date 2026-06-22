@@ -28,7 +28,15 @@ const [formData, setFormData] = useState({
 });
 
 useEffect(() => {
+  const ADMIN_EMAIL = "pandiyarajan007123@gmail.com";
+
   if (!user) {
+    navigate("/");
+    return;
+  }
+
+  if (user.email !== ADMIN_EMAIL) {
+    toast.error("Access Denied");
     navigate("/");
     return;
   }

@@ -78,7 +78,14 @@ function App() {
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/admin" element={<Admin />} />
+             <Route
+  path="/admin"
+  element={
+    user?.email === "pandiyarajan007123@gmail.com"
+      ? <Admin />
+      : <Navigate to="/" />
+  }
+/>
               <Route path="/privacy" element={<Privacy />} />
 <Route path="/terms" element={<Terms />} />
 <Route path="/faq" element={<FAQ />} />
