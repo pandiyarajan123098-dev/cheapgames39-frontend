@@ -18,6 +18,8 @@ import {
   FaPhoneAlt,
 } from "react-icons/fa";
 
+import { Truck, Shield, Download } from "lucide-react";
+
 export const Header = () => {
   const { user, logout, logoutLoading } = useAuth();
   const { cartCount } = useCart();
@@ -228,73 +230,158 @@ await handleLogout();
       </div>
 
      {/* Mobile Menu */}
+{/* Mobile Menu */}
+{/* Mobile Menu */}
 {mobileMenuOpen && (
-  <div className="md:hidden bg-[#111111] border-t border-white/10">
-    <nav className="container mx-auto px-4 py-4 flex flex-col gap-2">
+  <div className="fixed inset-0 z-50 flex">
 
-      <NavLink
-        to="/"
-        onClick={() => setMobileMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
-            isActive
-              ? "bg-[#B50000] text-white shadow-lg"
-              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
-          }`
-        }
-      >
-        <FaHome size={18} />
-        <span>HOME</span>
-      </NavLink>
+    {/* Overlay */}
+    <div
+      className="flex-1 bg-black/50"
+      onClick={() => setMobileMenuOpen(false)}
+    />
 
-      <NavLink
-        to="/games"
-        onClick={() => setMobileMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
-            isActive
-              ? "bg-[#B50000] text-white shadow-lg"
-              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
-          }`
-        }
-      >
-        <FaGamepad size={18} />
-        <span>GAMES</span>
-      </NavLink>
+    {/* Left Drawer */}
+    <div className="w-[78%] max-w-[300px] h-full bg-[#111111] border-r border-white/10 shadow-2xl flex flex-col animate-slide-in-left">
 
-      <NavLink
-        to="/offers"
-        onClick={() => setMobileMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
-            isActive
-              ? "bg-[#B50000] text-white shadow-lg"
-              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
-          }`
-        }
-      >
-        <FaGift size={18} />
-        <span>OFFERS</span>
-      </NavLink>
+      {/* Top */}
+      <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
+        <div>
+          <h3 className="text-white font-semibold text-base">
+            {user ? "Game Hub" : "CheapGames39"}
+          </h3>
+          <p className="text-gray-400 text-xs">
+            {user ? user.email : "Best deals on PC games"}
+          </p>
+        </div>
 
-      <NavLink
-        to="/contact"
-        onClick={() => setMobileMenuOpen(false)}
-        className={({ isActive }) =>
-          `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
-            isActive
-              ? "bg-[#B50000] text-white shadow-lg"
-              : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
-          }`
-        }
-      >
-        <FaPhoneAlt size={18} />
-        <span>CONTACT</span>
-      </NavLink>
+        <button
+          onClick={() => setMobileMenuOpen(false)}
+          className="text-white"
+        >
+          <X className="w-6 h-6" />
+        </button>
+      </div>
 
-    </nav>
+      {/* Menu */}
+      <nav className="px-4 py-5 flex flex-col gap-3 flex-1">
+
+        <NavLink
+          to="/"
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+              isActive
+              ? "bg-[#B50000] text-white shadow-lg border-l-4 border-white"
+                : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+            }`
+          }
+        >
+          <FaHome size={17} />
+          <span>HOME</span>
+        </NavLink>
+
+        <NavLink
+          to="/games"
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+              isActive
+                ? "bg-[#B50000] text-white shadow-lg border-l-4 border-white"
+                : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+            }`
+          }
+        >
+          <FaGamepad size={17} />
+          <span>GAMES</span>
+        </NavLink>
+
+        <NavLink
+          to="/offers"
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+              isActive
+               ? "bg-[#B50000] text-white shadow-lg border-l-4 border-white"
+                : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+            }`
+          }
+        >
+          <FaGift size={17} />
+          <span>OFFERS</span>
+        </NavLink>
+
+        <NavLink
+          to="/contact"
+          onClick={() => setMobileMenuOpen(false)}
+          className={({ isActive }) =>
+            `flex items-center gap-3 rounded-lg p-3 text-sm font-semibold transition-all ${
+              isActive
+               ? "bg-[#B50000] text-white shadow-lg border-l-4 border-white"
+                : "bg-[#1a1a1a] text-gray-300 border border-white/10 hover:border-[#B50000]"
+            }`
+          }
+        >
+          <FaPhoneAlt size={17} />
+          <span>CONTACT</span>
+        </NavLink>
+
+      </nav>
+{/* Store Status */}
+<div className="px-5 py-4 border-t border-white/10 border-b border-white/10">
+
+  <p className="text-white text-center text-base font-bold italic mb-4">
+    "Play More. Pay Less."
+  </p>
+
+  <div className="space-y-3 text-sm text-gray-400">
+
+    <div className="flex items-center gap-2">
+      <span className="w-2.5 h-2.5 rounded-full bg-green-500"></span>
+      <span>Online Now</span>
+    </div>
+
+    <div className="flex items-center gap-2">
+     <span className="w-2.5 h-2.5 rounded-full bg-[#B50000]"></span>
+      <span>Orders Open</span>
+    </div>
+
+    <div className="flex items-center gap-2">
+      <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+      <span>Support Active</span>
+    </div>
+
+  </div>
+</div>
+
+      {/* Bottom Trust */}
+      <div className="px-5 py-5 border-t border-white/10">
+        <div className="flex flex-col gap-3 text-xs text-gray-400">
+
+          <div className="flex items-center gap-3">
+            <Truck className="w-4 h-4 text-white/80" />
+            <span>Fast Delivery</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Shield className="w-4 h-4 text-white/80" />
+            <span>Secure Checkout</span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Download className="w-4 h-4 text-white/80" />
+            <span>Instant Access</span>
+          </div>
+
+        </div>
+
+
+      </div>
+    </div>
+
   </div>
 )}
+
     </header>
   );
 };
