@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { Header } from './components/Header';
@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
+import { useAuth } from "./context/AuthContext";
 
 
 function AnalyticsTracker() {
@@ -45,6 +46,14 @@ function AnalyticsTracker() {
   }, [location]);
 
   return null;
+}
+
+function AdminRoute() {
+  const { user } = useAuth();
+
+  return user?.email === "pandiyarajan007123@gmail.com"
+    ? <Admin />
+    : <Navigate to="/" />;
 }
 
 function App() {
@@ -78,14 +87,7 @@ function App() {
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/offers" element={<Offers />} />
               <Route path="/contact" element={<Contact />} />
-             <Route
-  path="/admin"
-  element={
-    user?.email === "pandiyarajan007123@gmail.com"
-      ? <Admin />
-      : <Navigate to="/" />
-  }
-/>
+<Route path="/admin" element={<AdminRoute />} />
               <Route path="/privacy" element={<Privacy />} />
 <Route path="/terms" element={<Terms />} />
 <Route path="/faq" element={<FAQ />} />
