@@ -248,7 +248,7 @@ await handleLogout();
       <div className="flex items-center justify-between px-5 py-5 border-b border-white/10">
         <div>
           <h3 className="text-white font-semibold text-base">
-            {user ? "Game Hub" : "CheapGames39"}
+           {user ? "CG39 Store" : "CG39 Store"}
           </h3>
           <p className="text-gray-400 text-xs">
             {user ? user.email : "Best deals on PC games"}
@@ -327,6 +327,30 @@ await handleLogout();
         </NavLink>
 
       </nav>
+      {/* Trust Proof */}
+<div className="px-5 py-4">
+  <div className="grid grid-cols-2 gap-3">
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-4 text-center">
+      <p className="text-white text-lg font-bold">500+</p>
+      <span className="text-gray-400 text-xs uppercase tracking-wide">
+        Orders Done
+      </span>
+    </div>
+
+    <div className="bg-[#141414] border border-white/10 rounded-xl p-4 text-center">
+  <h3 className="text-2xl font-bold flex items-center justify-center gap-1">
+  4.9 <span className="text-[#FFA500]">★</span>
+</h3>
+      <span className="text-gray-400 text-xs uppercase tracking-wide">
+        Customer Rating
+      </span>
+    </div>
+
+  </div>
+</div>
+
+
 {/* Store Status */}
 <div className="px-5 py-4 border-t border-white/10 border-b border-white/10">
 

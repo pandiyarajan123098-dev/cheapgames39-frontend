@@ -330,7 +330,13 @@ className={`${game.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-60"
         {totalPages > 1 && (
           <div className="flex justify-center gap-6 mt-10">
             <button
-              onClick={() => setPage((p) => Math.max(0, p - 1))}
+           onClick={() => {
+  setPage((p) => Math.max(0, p - 1));
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}}
               disabled={page === 0}
               className="bg-[#141414] text-white px-6 py-3 rounded-xl border border-white/10 disabled:opacity-40"
             >
@@ -342,9 +348,13 @@ className={`${game.in_stock ? "cursor-pointer" : "cursor-not-allowed opacity-60"
             </span>
 
             <button
-              onClick={() =>
-                setPage((p) => Math.min(totalPages - 1, p + 1))
-              }
+            onClick={() => {
+  setPage((p) => Math.min(totalPages - 1, p + 1));
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+}}
               disabled={page >= totalPages - 1}
               className="bg-[#141414] text-white px-6 py-3 rounded-xl border border-white/10 disabled:opacity-40"
             >

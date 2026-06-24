@@ -33,7 +33,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
 import { useAuth } from "./context/AuthContext";
-
+import ScrollToTop from "./components/ScrollToTop";
 
 function AnalyticsTracker() {
   const location = useLocation();
@@ -61,6 +61,7 @@ function App() {
 
   return (
     <BrowserRouter>
+    <ScrollToTop />
   <AnalyticsTracker />
       <AuthProvider>
         <CartProvider>
