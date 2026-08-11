@@ -1,190 +1,223 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart } from "lucide-react";
+import { ShoppingCart, Heart, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
-import { toast } from "sonner";
+import { useWishlist } from "../context/WishlistContext";
+import { notify } from "../utils/notify";
 import steamLogo from "../assets/steam.png";
-import { Loader2 } from "lucide-react";
 
 export const GameCard = ({ game }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
-const [cartLoading, setCartLoading] = useState(false);
+  const { toggleWishlist, isGameInWishlist } = useWishlist();
+  
+  const [cartLoading, setCartLoading] = useState(false);
+
   /* ================= SAFE VALUES ================= */
-
-  const steamPrice =
-    typeof game?.steam_price === "number" ? game.steam_price : 0;
-
-  const salePrice =
-    typeof game?.price === "number" ? game.price : 0;
-
-  const imageUrl =
-    game?.image_url || "/placeholder.jpg";
-
-  const categoryName =
-    game?.categories?.name || "No Category";
-
-    const isOutOfStock = game?.in_stock === false;
+  const steamPrice = typeof game?.steam_price === "number" ? game.steam_price : 0;
+  const salePrice = typeof game?.price === "number" ? game.price : 0;
+  const imageUrl = game?.image_url || "/placeholder.jpg";
+  const categoryName = game?.categories?.name || "No Category";
+  const isOutOfStock = game?.in_stock === false;
+  const wishlisted = isGameInWishlist(game.id);
 
   /* ================= AUTO DISCOUNT ================= */
-
-  const hasDiscount =
-    steamPrice > 0 && steamPrice > salePrice;
-
+  const hasDiscount = steamPrice > 0 && steamPrice > salePrice;
   const discountPercentage = hasDiscount
     ? Math.round(((steamPrice - salePrice) / steamPrice) * 100)
     : 0;
+  const savings = steamPrice - salePrice;
 
   /* ================= ADD TO CART ================= */
-
   const handleAddToCart = async (e) => {
     e.stopPropagation();
 
     if (!user) {
-      toast.error("Please login to add items to cart");
+      notify.loginRequiredCart();
       navigate("/login");
       return;
     }
 
-  try {
-  setCartLoading(true);
-  await addToCart(game.id);
-  toast.success("Added to cart");
-} catch (error) {
-  console.error(error);
-  toast.error("Failed to add to cart");
-} finally {
-  setCartLoading(false);
-}
+    try {
+      setCartLoading(true);
+      await addToCart(game.id);
+      notify.addedToCart(game?.title);
+    } catch (error) {
+      console.error(error);
+      notify.actionFailed('add to cart');
+    } finally {
+      setCartLoading(false);
+    }
   };
 
-  /* ================= UI ================= */
+  /* ================= TOGGLE WISHLIST ================= */
+  const handleWishlistToggle = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      notify.loginRequiredWishlist();
+      navigate("/login");
+      return;
+    }
+    const wasWishlisted = wishlisted;
+    await toggleWishlist(game.id);
+    if (wasWishlisted) {
+      notify.removedFromWishlist(game?.title);
+    } else {
+      notify.addedToWishlist(game?.title);
+    }
+  };
 
   return (
     <motion.div
-      whileHover={{ y: -8 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
-className={`
-  relative
-  group
-  bg-[#1a1a1a]
-  rounded-xl
-  overflow-hidden
-  border border-white/5
-  transition-all duration-300
-  cursor-pointer
-  ${
-    isOutOfStock
-      ? "grayscale opacity-70"
-      : "hover:border-[#B50000] hover:shadow-[0_0_35px_rgba(181,0,0,0.55)]"
-  }
-`}
-    onClick={() => {
-  if (game.in_stock) {
-    navigate(`/games/${game.id}`);
-  }
-}}
+      whileHover={{ y: -2 }}
+      whileTap={{ scale: 0.98 }}
+      transition={{ duration: 0.2, ease: "easeOut" }}
+      className={`
+        relative
+        group
+        bg-white
+        rounded-2xl
+        overflow-hidden
+        border border-[#E5E5E5]
+        shadow-[0_2px_8px_rgba(0,0,0,0.06)]
+        hover:shadow-[0_6px_20px_rgba(0,0,0,0.10)]
+        transition-all duration-200
+        h-full
+        flex
+        flex-col
+        ${
+          isOutOfStock
+            ? "grayscale opacity-75 cursor-not-allowed"
+            : "hover:border-[#E10600]/30 cursor-pointer"
+        }
+      `}
+      onClick={() => {
+        if (!isOutOfStock) {
+          navigate(`/games/${game.id}`);
+        }
+      }}
     >
       {/* IMAGE SECTION */}
-    <div className="relative aspect-[16/10] overflow-hidden">
-
+      <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+        
+        {/* WISH LIST HEART */}
+        <button
+          onClick={handleWishlistToggle}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className="absolute top-2.5 right-2.5 z-20 p-2 bg-white rounded-full text-[#999999] hover:text-[#E10600] border border-[#E5E5E5] shadow-sm transition"
+        >
+          <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-[#E10600] text-[#E10600]" : ""}`} />
+        </button>
 
         {/* DISCOUNT BADGE */}
         {hasDiscount && (
-          <div className="absolute top-3 left-3 z-10 bg-[#B50000] text-white text-xs font-bold px-3 py-1 rounded-md shadow-lg">
+          <div className="absolute top-2.5 left-2.5 z-10 bg-[#E10600] text-white text-[10px] font-black px-2.5 py-0.5 rounded-lg">
             -{discountPercentage}%
           </div>
         )}
 
-        <div className="absolute bottom-3 right-3 z-10 bg-white rounded-full p-1 shadow-lg">
-  <img loading="lazy"
-    src={steamLogo}
-    alt="Steam"
-    className="w-6 h-6"
-  />
-</div>
+        {/* STEAM LOGO */}
+        <div className="absolute bottom-2.5 right-2.5 z-10 bg-white/90 rounded-full p-1 border border-[#E5E5E5]">
+          <img 
+            loading="lazy"
+            src={steamLogo}
+            alt="Steam Platform"
+            className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity"
+          />
+        </div>
 
-        {!game.in_stock && (
-  <div className="absolute top-3 right-3 z-10 bg-black text-white text-xs font-bold px-3 py-1 rounded-md">
-    OUT OF STOCK
-  </div>
-)}
+        {isOutOfStock && (
+          <div className="absolute top-2.5 left-2.5 z-10 bg-black/80 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg">
+            OUT OF STOCK
+          </div>
+        )}
 
-        <img loading="lazy"
+        <img 
+          loading="lazy"
           src={imageUrl}
-          alt={game?.title || "Game Image"}
+          alt={game?.title || "Game Cover"}
           className="
             w-full h-full object-cover
             transition-transform duration-500
-            group-hover:scale-110
+            group-hover:scale-[1.02]
           "
         />
       </div>
 
       {/* CONTENT */}
-      <div className="p-3">
-
-        {/* TITLE */}
-       <h3 className="text-white font-semibold text-xs md:text-base mb-1 line-clamp-2 min-h-[42px]">
-          {game?.title}
-        </h3>
-
+      <div className="p-4 flex flex-col flex-1">
+        
         {/* CATEGORY */}
-    <p className="text-[11px] text-[#B50000] mb-2 font-medium">
+        <p className="text-[10px] text-[#E10600] font-semibold uppercase tracking-wider mb-1 block">
           {categoryName}
         </p>
 
+        {/* TITLE */}
+        <h3 className="text-[#111111] font-bold text-sm md:text-base line-clamp-2 h-10 md:h-12 mb-2 group-hover:text-[#E10600] transition-colors duration-200">
+          {game?.title}
+        </h3>
 
-        {/* PRICE + CART */}
-        <div className="flex items-center justify-between">
+        {/* PRICE BLOCK */}
+        <div className="flex flex-col mt-auto h-12 justify-center">
+          {hasDiscount ? (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-extrabold text-[#111111]">₹{salePrice.toLocaleString()}</span>
+                <span className="text-[#AAAAAA] line-through text-[11px]">₹{steamPrice.toLocaleString()}</span>
+              </div>
+              <span className="text-[9px] text-[#16A34A] font-semibold mt-0.5 block">Save ₹{savings.toLocaleString()}</span>
+            </>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5">
+                <span className="text-lg font-extrabold text-[#111111]">₹{salePrice.toLocaleString()}</span>
+              </div>
+              <span className="text-[9px] text-transparent mt-0.5 block select-none">No Discount</span>
+            </>
+          )}
+        </div>
 
-          {/* PRICE BLOCK */}
-          <div className="flex flex-col">
-            {hasDiscount ? (
-              <>
-                <span className="text-gray-400 line-through text-xs">
-                  ₹{steamPrice.toLocaleString()}
-                </span>
-              <span className="text-lg md:text-xl font-bold text-white">
-                  ₹{salePrice.toLocaleString()}
-                </span>
-              </>
+        {/* ACTIONS */}
+        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[#F0F0F0]">
+            <button
+              onClick={() => navigate(`/games/${game.id}`)}
+              className="flex-1 bg-white hover:bg-[#F5F5F5] active:scale-[0.98] border border-[#E5E5E5] hover:border-[#D4D4D4] text-[#111111] rounded-xl h-11 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-200"
+          >
+            Details
+          </button>
+          
+          <button
+            disabled={isOutOfStock || cartLoading}
+            onClick={handleAddToCart}
+            className={`
+              bg-[#E10600]
+              hover:bg-[#ff1a13]
+              active:scale-[0.98]
+              text-white
+              rounded-xl
+              h-11
+              w-11
+              shrink-0
+              transition-all duration-200
+              flex
+              items-center
+              justify-center
+              ${
+                isOutOfStock
+                  ? "opacity-40 cursor-not-allowed bg-gray-800"
+                  : ""
+              }
+            `}
+          >
+            {cartLoading ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <span className="text-lg md:text-xl font-bold text-white">
-                ₹{salePrice.toLocaleString()}
-              </span>
+              <ShoppingCart className="w-4 h-4" />
             )}
-          </div>
-
-          {/* ADD TO CART BUTTON */}
-     {/* ADD TO CART BUTTON */}
-<button
-  disabled={!game.in_stock}
-  onClick={handleAddToCart}
-  className={`
-    bg-[#B50000]
-    text-white
-    rounded-full
-    p-1.5
-    transition-all duration-300
-    ${
-      !game.in_stock
-        ? "opacity-50 cursor-not-allowed"
-        : "hover:bg-[#FF0000] hover:shadow-[0_0_20px_rgba(255,0,0,0.8)] hover:scale-110"
-    }
-  `}
->
-  {cartLoading ? (
-  <Loader2 className="w-4 h-4 animate-spin" />
-) : (
-  <ShoppingCart className="w-4 h-4" />
-)}
-
-</button>
-
+          </button>
         </div>
       </div>
     </motion.div>

@@ -1,10 +1,13 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { WishlistProvider } from './context/WishlistContext';
 import { CartProvider } from './context/CartContext';
 import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Toaster } from 'sonner';
+import ErrorBoundary from './components/ErrorBoundary';
+import OfflineIndicator from './components/OfflineIndicator';
 import './App.css';
 
 import Home from './pages/Home';
@@ -48,67 +51,121 @@ function AnalyticsTracker() {
   return null;
 }
 
+// P7: AdminRoute uses ProtectedRoute to handle auth loading state properly
 function AdminRoute() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading) return null;
+
+  if (!user) return <Navigate to="/login" />;
 
   return user?.email === "pandiyarajan007123@gmail.com"
     ? <Admin />
     : <Navigate to="/" />;
 }
 
-function App() {
- 
+function MainLayout({ children }) {
+  const location = useLocation();
+  const isAdminRoute = location.pathname.startsWith("/admin");
 
   return (
+    <div className="App min-h-screen bg-white text-[#111111]">
+      {!isAdminRoute && <Header />}
+      {children}
+      {!isAdminRoute && <Footer />}
+    </div>
+  );
+}
+
+function App() {
+  return (
     <BrowserRouter>
-    <ScrollToTop />
-  <AnalyticsTracker />
+      <ScrollToTop />
+      <AnalyticsTracker />
       <AuthProvider>
-        <CartProvider>
-          <div className="App min-h-screen bg-[#0f0f0f] text-white">
-            <Toaster position="top-right" theme="dark" />
-            <Header />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/games" element={<Games />} />
-              <Route path="/games/:id" element={<GameDetails />} />
-             <Route
-  path="/cart"
-  element={
-    <ProtectedRoute>
-      <Cart />
-    </ProtectedRoute>
-  }
-/>
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/success" element={<Success />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/offers" element={<Offers />} />
-              <Route path="/contact" element={<Contact />} />
-<Route path="/admin" element={<AdminRoute />} />
-              <Route path="/privacy" element={<Privacy />} />
-<Route path="/terms" element={<Terms />} />
-<Route path="/faq" element={<FAQ />} />
-<Route path="/order-status" element={<OrderStatus />} />
-<Route path="/giveaway" element={<Giveaway />} />
-<Route
-  path="/forgot-password"
-  element={<ForgotPassword />}
-/>
-<Route
-  path="/reset-password"
-  element={<ResetPassword />}
-/>
-
-<Route path="*" element={<NotFound />} />
-
-            </Routes>
-            <Footer />
-          </div>
-        </CartProvider>
+        <WishlistProvider>
+          <CartProvider>
+            <ErrorBoundary>
+              <MainLayout>
+                <Toaster
+                  position="top-right"
+                  theme="light"
+                  richColors
+                  closeButton
+                  duration={3000}
+                  gap={10}
+                  offset={20}
+                  visibleToasts={4}
+                  toastOptions={{
+                    style: {
+                      borderRadius: '12px',
+                      fontSize: '13px',
+                      fontFamily: 'inherit',
+                      boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
+                      padding: '14px 16px',
+                      maxWidth: '380px',
+                    },
+                    className: 'cg39-toast',
+                  }}
+                />
+                <OfflineIndicator />
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/games" element={<Games />} />
+                  <Route path="/games/:id" element={<GameDetails />} />
+                  <Route path="/cart" element={<Cart />} />
+                  {/* P5: Checkout handles authentication dynamically */}
+                  <Route path="/checkout" element={<Checkout />} />
+                  <Route
+                    path="/success"
+                    element={
+                      <ProtectedRoute>
+                        <Success />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/signup" element={<Signup />} />
+                  {/* P6: Dashboard requires authentication */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <ProtectedRoute>
+                        <Dashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* P7: Order status requires authentication (order ownership checked on backend) */}
+                  <Route
+                    path="/order-status"
+                    element={
+                      <ProtectedRoute>
+                        <OrderStatus />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route path="/wishlist" element={<Wishlist />} />
+                  <Route path="/offers" element={<Offers />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/admin" element={<AdminRoute />} />
+                  <Route path="/privacy" element={<Privacy />} />
+                  <Route path="/terms" element={<Terms />} />
+                  <Route path="/faq" element={<FAQ />} />
+                  <Route path="/giveaway" element={<Giveaway />} />
+                  <Route
+                    path="/forgot-password"
+                    element={<ForgotPassword />}
+                  />
+                  <Route
+                    path="/reset-password"
+                    element={<ResetPassword />}
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </MainLayout>
+            </ErrorBoundary>
+          </CartProvider>
+        </WishlistProvider>
       </AuthProvider>
     </BrowserRouter>
   );

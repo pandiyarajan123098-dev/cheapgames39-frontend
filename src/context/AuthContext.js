@@ -99,7 +99,7 @@ const loginWithGoogle = async () => {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: "https://cheapgames39store.shop"
+      redirectTo: window.location.origin
     },
   });
 
@@ -120,6 +120,9 @@ const logout = async () => {
     setUser(null);
     setSession(null);
     setAccessToken(null);
+    
+    // Clear all temporary checkout/cart state variables on logout
+    sessionStorage.clear();
 
   } catch (error) {
     console.error("Logout error:", error.message);

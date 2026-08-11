@@ -1,76 +1,79 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import { Trash2 } from "lucide-react";
 
 const RecentlyViewed = () => {
+  const { user } = useAuth();
   const [games, setGames] = useState([]);
 
- useEffect(() => {
-  const loadRecent = () => {
-    const recent =
-      JSON.parse(localStorage.getItem("recentGames")) || [];
-
-    setGames(recent.slice(0, 5));
+  const getStorageKey = () => {
+    return user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
   };
 
-  loadRecent();
-
-  const interval = setInterval(loadRecent, 1000);
-
-  return () => clearInterval(interval);
-}, []);
+  useEffect(() => {
+    const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
+    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+    setGames(recent.slice(0, 4)); // Show 2-4 products
+  }, [user]);
 
   const clearHistory = () => {
-    localStorage.removeItem("recentGames");
+    const storageKey = getStorageKey();
+    localStorage.removeItem(storageKey);
     setGames([]);
   };
 
   if (games.length === 0) return null;
 
   return (
-    <section className="py-12 px-6 bg-[#0d0d0d] border-t border-white/5">
+    <section className="py-8 px-4 sm:px-6 bg-white border-b border-[#E5E5E5] animate-fade-in">
       <div className="max-w-7xl mx-auto">
-
+        
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6 pb-2 border-b border-[#E5E5E5] relative select-none">
           <div>
-            <h2 className="text-3xl font-bold text-white">
-              Continue Browsing
-            </h2>
-            <p className="text-gray-400 text-sm mt-1">
-              Pick up where you left off
-            </p>
+            <span className="text-[#E10600] text-[10px] uppercase font-black tracking-widest block mb-0.5">Your History</span>
+            <div className="relative inline-block">
+              <h2 className="text-base md:text-lg font-black uppercase tracking-tight text-[#1A1A1A]">
+                Recently Viewed
+              </h2>
+              <div className="absolute -bottom-[9px] left-0 w-12 h-[2px] bg-[#E10600]" />
+            </div>
           </div>
 
           <button
             onClick={clearHistory}
-            className="text-sm text-red-500 hover:text-red-400 transition"
+            className="text-xs text-gray-500 hover:text-[#E10600] transition flex items-center gap-1 uppercase tracking-wider font-bold"
           >
-            Clear History
+            <Trash2 className="w-3.5 h-3.5" /> Clear History
           </button>
         </div>
 
-        {/* Games */}
-        <div className="flex gap-5 overflow-x-auto scrollbar-hide pb-2">
+        {/* Games Grid (responsive layout, max 4) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {games.map((game) => (
             <Link
               key={game.id}
               to={`/games/${game.id}`}
-              className="min-w-[220px] bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition-all duration-300 hover:scale-105 hover:shadow-[0_0_20px_rgba(181,0,0,0.25)]"
+              className="bg-[#F8F8F8] rounded-2xl overflow-hidden border border-[#E5E5E5] hover:border-[#E10600]/30 hover:shadow-sm transition-all duration-200 flex flex-col hover:-translate-y-0.5 h-[220px]"
             >
-              <img loading="lazy"
-                src={game.image}
-                alt={game.title}
-                className="w-full h-32 object-cover"
-              />
+              <div className="h-28 overflow-hidden bg-black/5">
+                <img 
+                  loading="lazy"
+                  src={game.image}
+                  alt={game.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
 
-              <div className="p-3">
-                <h3 className="text-white text-sm font-semibold line-clamp-2 min-h-[40px]">
+              <div className="p-3 flex flex-col flex-1 justify-between">
+                <h4 className="text-[#1A1A1A] text-[11px] font-bold line-clamp-2 leading-snug">
                   {game.title}
-                </h3>
+                </h4>
 
-                <p className="text-xs text-gray-500 mt-2">
-                  Continue Playing →
-                </p>
+                <div className="text-[10px] text-[#E10600] font-semibold mt-1">
+                  View Details →
+                </div>
               </div>
             </Link>
           ))}

@@ -1,699 +1,990 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-import { ShoppingCart, Heart, ArrowRight } from "lucide-react";
+import { useWishlist } from "../context/WishlistContext";
+import { 
+  ShoppingCart, 
+  Heart, 
+  ArrowRight, 
+  Star, 
+  ShieldCheck, 
+  Zap, 
+  MessageCircle, 
+  Info,
+  Clock,
+  ChevronRight,
+  Sparkles,
+  Gamepad2,
+  FileText,
+  Check,
+  Eye,
+  EyeOff,
+  Clock3,
+  Copy,
+  Play
+} from "lucide-react";
 import { toast } from "sonner";
-import { motion } from "framer-motion";
-import publicReviews from "../data/publicReviews";
 import steamLogo from "../assets/steam.png";
+import { GameCard } from "../components/GameCard";
 
-const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
+
+const getDiscountPercent = (steamPrice, price) => {
+  if (!steamPrice || steamPrice <= price) return 0;
+  return Math.round(((steamPrice - price) / steamPrice) * 100);
+};
 
 const GameDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, accessToken } = useAuth();
   const { addToCart } = useCart();
+  const { toggleWishlist, isGameInWishlist, loading: wishlistLoading } = useWishlist();
 
   const [game, setGame] = useState(null);
-  
- 
-  const [relatedGames, setRelatedGames] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [cartLoading, setCartLoading] = useState(false);
+  const [buyNowLoading, setBuyNowLoading] = useState(false);
+
+  // Recommendations state
+  const [recommendedLike, setRecommendedLike] = useState([]);
+  const [recommendedCategory, setRecommendedCategory] = useState([]);
+  const [recommendedViewed, setRecommendedViewed] = useState([]);
+  const [recommendedDeals, setRecommendedDeals] = useState([]);
+
+  // Review states
   const [reviewLoading, setReviewLoading] = useState(false);
   const [comment, setComment] = useState("");
-  const [myReview, setMyReview] = useState("");
- 
-  const [inWishlist, setInWishlist] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [dbReviews, setDbReviews] = useState([]);
+  const [eligibility, setEligibility] = useState({
+    eligible: false,
+    hasPurchased: false,
+    alreadyReviewed: false,
+    existingReview: null
+  });
 
-  /* ================= FETCH GAME ================= */
+  const inWishlist = isGameInWishlist(id);
 
+  /* ================= RATING STATS ================= */
+  const reviewsStats = useMemo(() => {
+    if (dbReviews.length === 0) return { avg: 0, count: 0, dist: [0, 0, 0, 0, 0] };
+    const count = dbReviews.length;
+    const total = dbReviews.reduce((sum, r) => sum + r.rating, 0);
+    const avg = (total / count).toFixed(1);
+    
+    const dist = [0, 0, 0, 0, 0];
+    dbReviews.forEach(r => {
+      const idx = Math.max(1, Math.min(5, r.rating)) - 1;
+      dist[idx] += 1;
+    });
+
+    return { avg, count, dist };
+  }, [dbReviews]);
+
+  // Count verified ratings
+  const verifiedCount = useMemo(() => {
+    return dbReviews.filter(r => r.is_verified).length;
+  }, [dbReviews]);
+
+  /* ================= DATA LOADING ================= */
   const fetchGame = useCallback(async () => {
     try {
       const res = await axios.get(`${API}/games/${id}`);
-
-if (res.data.in_stock === false) {
-  toast.error("This game is out of stock");
-  navigate("/games");
-  return;
-}
-
-setGame(res.data);
-    } catch {
-      toast.error("Game not found");
-      navigate("/games");
+      if (res.data.in_stock === false) {
+        toast.error("This game is out of stock");
+        navigate("/games");
+        return;
+      }
+      setGame(res.data);
+      setError("");
+    } catch (err) {
+      console.error("Fetch game error:", err);
+      setError("GAME NOT FOUND");
     }
   }, [id, navigate]);
 
-
-  const fetchRelatedGames = useCallback(async () => {
-  if (!game?.category_id) return;
-
-  try {
-    const res = await axios.get(`${API}/games`);
-
-    const filtered = (res.data || [])
-      .filter(
-        (g) =>
-          g.category_id === game.category_id &&
-          g.id !== game.id
-      )
-      .slice(0, 4);
-
-    setRelatedGames(filtered);
-  } catch (err) {
-    console.error(err);
-  }
-}, [game]);
-  
-  const checkWishlist = useCallback(async () => {
-    if (!user || !accessToken) return;
-
+  const fetchReviews = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/wishlist`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+      const res = await axios.get(`${API}/reviews/${id}`);
+      setDbReviews(res.data || []);
+    } catch (err) {
+      console.error("Fetch reviews error:", err);
+    }
+  }, [id]);
+
+  const checkEligibility = useCallback(async () => {
+    if (!user || !accessToken) return;
+    try {
+      const res = await axios.get(`${API}/reviews/eligible/${id}`, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      setEligibility(res.data);
+    } catch (err) {
+      console.error("Check review eligibility error:", err);
+    }
+  }, [id, user, accessToken]);
+
+  // Generate deterministic scored recommendations
+  const generateRecommendations = useCallback(async (currentGame) => {
+    try {
+      const res = await axios.get(`${API}/games`);
+      const allGames = (res.data || []).filter(g => g.id !== currentGame.id && g.in_stock !== false);
+      
+      const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
+      const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+      const recentIds = recent.map(r => String(r.id));
+
+      // Calculate score for all products
+      const scoredGames = allGames.map(g => {
+        let score = 0;
+        if (g.category_id === currentGame.category_id) score += 5;
+        
+        // Price proximity (within 30% of current game price)
+        const priceDiff = Math.abs(g.price - currentGame.price);
+        if (priceDiff <= currentGame.price * 0.3) {
+          score += 2;
+        }
+
+        // Recently viewed
+        if (recentIds.includes(String(g.id))) {
+          score += 3;
+        }
+
+        if (g.is_new) score += 1;
+        if (g.is_bundle) score += 1;
+
+        // Discount points
+        const disc = getDiscountPercent(g.steam_price, g.price);
+        score += (disc / 20); // +0.5 for every 10% discount
+
+        return { game: g, score };
       });
 
-      const exists = res.data.some(
-        (item) => String(item.game_id) === String(id)
-      );
+      scoredGames.sort((a, b) => b.score - a.score);
 
-      setInWishlist(exists);
+      const selectedIds = new Set();
+
+      // 1. You May Also Like (top scored)
+      const like = [];
+      for (const item of scoredGames) {
+        if (like.length >= 4) break;
+        like.push(item.game);
+        selectedIds.add(item.game.id);
+      }
+      setRecommendedLike(like);
+
+      // 2. More from this Category (same category, not in like)
+      const cat = [];
+      const sameCatGames = allGames.filter(g => g.category_id === currentGame.category_id && !selectedIds.has(g.id));
+      sameCatGames.slice(0, 4).forEach(g => {
+        cat.push(g);
+        selectedIds.add(g.id);
+      });
+      setRecommendedCategory(cat);
+
+      // 3. Players Also Viewed (next highest scored)
+      const viewed = [];
+      const remainingScored = scoredGames.filter(item => !selectedIds.has(item.game.id));
+      for (const item of remainingScored) {
+        if (viewed.length >= 4) break;
+        viewed.push(item.game);
+        selectedIds.add(item.game.id);
+      }
+      setRecommendedViewed(viewed);
+
+      // 4. More Great Deals (highest discount %, not selected)
+      const deals = allGames
+        .filter(g => !selectedIds.has(g.id))
+        .map(g => ({ game: g, discount: getDiscountPercent(g.steam_price, g.price) }))
+        .sort((a, b) => b.discount - a.discount)
+        .slice(0, 4)
+        .map(item => item.game);
+      setRecommendedDeals(deals);
+
     } catch (err) {
-      console.error(err);
+      console.error("Error generating recommendations:", err);
     }
-  }, [user, accessToken, id]);
+  }, [user]);
 
+  // Main load lifecycle
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-     await Promise.all([
-  fetchGame(),
-  checkWishlist()
-]);
+      await Promise.all([
+        fetchGame(),
+        fetchReviews()
+      ]);
       setLoading(false);
     };
     load();
-  }, [fetchGame, checkWishlist]);
+  }, [fetchGame, fetchReviews]);
 
- /* ================= RECENTLY VIEWED ================= */
+  // Dependency loads
+  useEffect(() => {
+    if (game) {
+      generateRecommendations(game);
+    }
+  }, [game, generateRecommendations]);
 
-useEffect(() => {
-  console.log("Game Data:", game);
-  if (!game?.id) return;
+  useEffect(() => {
+    if (user && accessToken) {
+      checkEligibility();
+    }
+  }, [user, accessToken, id, checkEligibility]);
 
-  const recent =
-    JSON.parse(localStorage.getItem("recentGames")) || [];
+  // Page title and meta tags SEO setting
+  useEffect(() => {
+    const updateMetaTag = (name, value, isProperty = false) => {
+      const attribute = isProperty ? "property" : "name";
+      let element = document.querySelector(`meta[${attribute}="${name}"]`);
+      if (!element) {
+        element = document.createElement("meta");
+        element.setAttribute(attribute, name);
+        document.head.appendChild(element);
+      }
+      element.setAttribute("content", value);
+    };
 
-  const updated = [
-    {
-      id: String(game.id),
-      title: game.title,
-      image: game.image_url,
-    },
-    ...recent.filter(
-      (g) => String(g.id) !== String(game.id)
-    ),
-  ].slice(0, 20);
+    if (game?.title) {
+      document.title = `${game.title} | CheapGames39`;
+      updateMetaTag("description", game.description || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`);
+      updateMetaTag("og:title", `${game.title} | CheapGames39`, true);
+      updateMetaTag("og:description", game.description || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`, true);
+      updateMetaTag("og:image", game.image_url || "", true);
 
-  localStorage.setItem(
-    "recentGames",
-    JSON.stringify(updated)
-  );
-}, [game]);
+      // Update canonical link
+      let canonical = document.querySelector("link[rel='canonical']");
+      if (!canonical) {
+        canonical = document.createElement("link");
+        canonical.setAttribute("rel", "canonical");
+        document.head.appendChild(canonical);
+      }
+      canonical.setAttribute("href", window.location.href);
+    }
+    return () => {
+      document.title = "CheapGames39 — Affordable PC Games & Digital Game Deals";
+      updateMetaTag("description", "Buy premium PC games at up to 98% discount on CheapGames39. Enjoy secure UPI checkouts and fast digital account delivery.");
+    };
+  }, [game]);
 
+  // Dynamic structured data schema markup
+  useEffect(() => {
+    if (!game) return;
 
-/* ================= RELATED GAMES ================= */
+    const priceVal = typeof game.price === "number" ? game.price : 0;
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": game.title,
+      "image": game.image_url,
+      "description": game.description,
+      "offers": {
+        "@type": "Offer",
+        "priceCurrency": "INR",
+        "price": priceVal,
+        "itemCondition": "https://schema.org/NewCondition",
+        "availability": game.in_stock !== false ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "url": window.location.href
+      }
+    };
 
-useEffect(() => {
-  if (game) {
-    fetchRelatedGames();
-  }
-}, [game, fetchRelatedGames]);
-
-
-useEffect(() => {
-  if (!user) return;
-
-  const savedReview = localStorage.getItem(
-    `myReview_${user.id}_${id}`
-  );
-
-  if (savedReview) {
-    setMyReview(savedReview);
-  } else {
-    setMyReview("");
-  }
-}, [id, user]);
-
-
-
-  /* ================= AUTO DISCOUNT ================= */
-
-  const steamPrice =
-    typeof game?.steam_price === "number" ? game.steam_price : 0;
-
-  const salePrice =
-    typeof game?.price === "number" ? game.price : 0;
-
-  let discountPercentage = 0;
-
-  if (steamPrice > salePrice && steamPrice > 0) {
-    discountPercentage = Math.round(
-      ((steamPrice - salePrice) / steamPrice) * 100
-    );
-  }
-
-  const savings =
-    discountPercentage > 0 ? steamPrice - salePrice : 0;
-
-  /* ================= ADD TO CART ================= */
-
-  const handleAddToCart = async () => {
-    if (!user) {
-      toast.error("Please login first");
-      navigate("/login");
-      return;
+    if (reviewsStats.count > 0 && reviewsStats.avg > 0) {
+      schemaData.aggregateRating = {
+        "@type": "AggregateRating",
+        "ratingValue": reviewsStats.avg,
+        "reviewCount": reviewsStats.count,
+        "bestRating": "5",
+        "worstRating": "1"
+      };
     }
 
+    let script = document.getElementById("structured-data-jsonld");
+    if (!script) {
+      script = document.createElement("script");
+      script.id = "structured-data-jsonld";
+      script.type = "application/ld+json";
+      document.body.appendChild(script);
+    }
+    script.text = JSON.stringify(schemaData);
+
+    return () => {
+      const existing = document.getElementById("structured-data-jsonld");
+      if (existing) {
+        existing.remove();
+      }
+    };
+  }, [game, reviewsStats]);
+
+  // Update Recently Viewed storage with timestamp (up to 10 entries)
+  useEffect(() => {
+    if (!game?.id) return;
+    const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
+    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+    const updated = [
+      {
+        id: String(game.id),
+        title: game.title,
+        image: game.image_url,
+        price: game.price,
+        steam_price: game.steam_price,
+        timestamp: new Date().toISOString()
+      },
+      ...recent.filter(g => String(g.id) !== String(game.id)),
+    ].slice(0, 10);
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+  }, [game, user]);
+
+  /* ================= PRICING CALCULATIONS ================= */
+  const steamPrice = typeof game?.steam_price === "number" ? game.steam_price : 0;
+  const salePrice = typeof game?.price === "number" ? game.price : 0;
+  const hasDiscount = steamPrice > 0 && steamPrice > salePrice;
+  const discountPercentage = hasDiscount ? Math.round(((steamPrice - salePrice) / steamPrice) * 100) : 0;
+  const savings = hasDiscount ? steamPrice - salePrice : 0;
+
+  /* ================= ACTION HANDLERS ================= */
+  const handleAddToCart = async () => {
     try {
+      setCartLoading(true);
       await addToCart(game.id);
       toast.success("Added to cart");
-    } catch {
-      toast.error("Failed to add to cart");
+    } catch (err) {
+      toast.error(err.message || "Failed to add to cart");
+    } finally {
+      setCartLoading(false);
     }
   };
 
-  /* ================= TOGGLE WISHLIST ================= */
+  const handleBuyNow = async () => {
+    try {
+      setBuyNowLoading(true);
+      await addToCart(game.id);
+      toast.success("Added to cart");
+      navigate("/checkout");
+    } catch (err) {
+      toast.error(err.message || "Failed to purchase game");
+    } finally {
+      setBuyNowLoading(false);
+    }
+  };
 
   const handleToggleWishlist = async () => {
     if (!user) {
-      toast.error("Please login first");
+      toast.error("Please login to manage your wishlist");
       navigate("/login");
+      return;
+    }
+    toggleWishlist(game.id);
+  };
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    if (!comment.trim() || comment.trim().length < 5 || comment.trim().length > 1000) {
+      toast.error("Comment must be between 5 and 1000 characters");
       return;
     }
 
     try {
-      setWishlistLoading(true);
-
-      if (inWishlist) {
-        await axios.delete(`${API}/wishlist/${id}`, {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        });
-        setInWishlist(false);
-        toast.success("Removed from wishlist");
-      } else {
-        await axios.post(
-          `${API}/wishlist/${id}`,
-          {},
-          { headers: { Authorization: `Bearer ${accessToken}` } }
-        );
-        setInWishlist(true);
-        toast.success("Added to wishlist");
-      }
-    } catch {
-      toast.error("Wishlist action failed");
+      setReviewLoading(true);
+      await axios.post(
+        `${API}/reviews`,
+        { game_id: id, rating: parseInt(rating, 10), comment: comment.trim() },
+        { headers: { Authorization: `Bearer ${accessToken}` } }
+      );
+      toast.success("Verified review submitted!");
+      setComment("");
+      fetchReviews();
+      checkEligibility();
+    } catch (err) {
+      toast.error(err.response?.data?.error || "Failed to submit review");
     } finally {
-      setWishlistLoading(false);
+      setReviewLoading(false);
     }
   };
 
-  /* ================= SUBMIT REVIEW ================= */
+  /* ================= BREADCRUMBS RENDERER ================= */
+  const renderBreadcrumbs = () => {
+    if (!game) return null;
+    return (
+      <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 mb-6 select-none uppercase tracking-wider">
+        <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
+        <ChevronRight className="w-3 h-3 text-zinc-700" />
+        <Link to="/games" className="hover:text-[#E00000] transition">Games</Link>
+        {game.categories?.name && (
+          <>
+            <ChevronRight className="w-3 h-3 text-zinc-700" />
+            <Link to={`/games?category=${game.category_id}`} className="hover:text-[#E00000] transition">
+              {game.categories.name}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="w-3 h-3 text-zinc-700" />
+        <span className="text-white font-bold truncate max-w-[150px] md:max-w-none">{game.title}</span>
+      </nav>
+    );
+  };
 
- const handleSubmitReview = (e) => {
-  e.preventDefault();
+  /* ================= SKELETON SHIMMER LOAD STATE ================= */
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-white pt-28 pb-20 px-4 sm:px-6 font-sans select-none">
+        <div className="max-w-6xl mx-auto space-y-12 animate-pulse">
+          {/* Breadcrumbs Shimmer */}
+          <div className="h-4 bg-[#151515] rounded-lg w-1/4"></div>
 
-  if (!user) {
-    toast.error("Login required");
-    navigate("/login");
-    return;
-  }
-
-localStorage.setItem(
-  `myReview_${user.id}_${id}`,
-  comment
-);
-
-  setMyReview(comment);
-
-  toast.success("Review Saved");
-
-  setComment("");
-};
-
-
-  if (loading || !game) {
-    
-  return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white animate-pulse">
-      <div className="h-[32vh] bg-[#1a1a1a]" />
-
-      <div className="container mx-auto px-6 mt-8">
-        <div className="grid lg:grid-cols-3 gap-12">
-
-          <div className="h-[500px] bg-[#1a1a1a] rounded-2xl"></div>
-
-          <div className="lg:col-span-2">
-            <div className="h-12 bg-[#1a1a1a] rounded w-2/3 mb-6"></div>
-
-            <div className="h-6 bg-[#1a1a1a] rounded w-1/4 mb-8"></div>
-
-            <div className="h-4 bg-[#1a1a1a] rounded mb-3"></div>
-            <div className="h-4 bg-[#1a1a1a] rounded mb-3"></div>
-            <div className="h-4 bg-[#1a1a1a] rounded w-3/4 mb-8"></div>
-
-            <div className="h-12 bg-[#1a1a1a] rounded w-40 mb-8"></div>
-
-            <div className="h-14 bg-[#1a1a1a] rounded w-56"></div>
+          {/* Product Hero Shimmer */}
+          <div className="grid md:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="md:col-span-5 aspect-[16/10] bg-[#151515] rounded-2xl"></div>
+            <div className="md:col-span-7 space-y-6">
+              <div className="h-4 bg-[#151515] rounded w-1/6"></div>
+              <div className="h-10 bg-[#151515] rounded w-3/4"></div>
+              <div className="h-5 bg-[#151515] rounded w-1/3"></div>
+              <div className="h-28 bg-[#151515] rounded-2xl w-full"></div>
+              <div className="h-14 bg-[#151515] rounded-xl w-1/2"></div>
+              <div className="h-12 bg-[#151515] rounded-xl w-3/4"></div>
+            </div>
           </div>
-
         </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
-const startIndex =
-  id
-    .split("")
-    .reduce(
-      (sum, char) => sum + char.charCodeAt(0),
-      0
-    ) %
-  publicReviews.length;
+  /* ================= ERROR STATE ================= */
+  if (error || !game) {
+    return (
+      <div className="min-h-screen bg-[#080808] text-white flex flex-col items-center justify-center p-6 font-sans">
+        <div className="text-center max-w-sm space-y-5 select-none">
+          <div className="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2 border border-white/8 shadow-xl">
+            <Info className="w-8 h-8 text-[#E00000]" />
+          </div>
+          <h2 className="text-2xl font-bold uppercase tracking-tight text-white font-sans">GAME NOT FOUND</h2>
+          <p className="text-[#A1A1AA] text-xs uppercase tracking-wider leading-relaxed">
+            The game you are looking for is currently unavailable.
+          </p>
+          <Link
+            to="/games"
+            className="inline-block bg-[#E00000] hover:bg-[#F00000] text-white px-6 py-3 rounded-xl font-bold uppercase text-xs tracking-wider transition active:scale-[0.98] min-h-[44px] flex items-center justify-center"
+          >
+            Browse Games
+          </Link>
+        </div>
+      </div>
+    );
+  }  const gameRating = game?.game_rating || game?.rating;
 
-const rotatedReviews = [
-  ...publicReviews,
-  ...publicReviews,
-].slice(startIndex, startIndex + 5);
-
-const reviewCount =
-  8 +
-  (
-    id
-      .split("")
-      .reduce(
-        (sum, char) => sum + char.charCodeAt(0),
-        0
-      ) % 46
-  );
+  const getGameRatingStars = (ratingVal) => {
+    const val = parseFloat(ratingVal);
+    if (isNaN(val)) return 5;
+    if (val > 5) return Math.round(val / 2);
+    return Math.round(val);
+  };
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white pb-20">
+    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-16 px-4 sm:px-6 font-sans">
+      <div className="max-w-[1320px] mx-auto animate-page-section">
+        
+        {/* BREADCRUMB */}
+        {renderBreadcrumbs()}
 
-      {/* HERO */}
-      <div className="relative h-[32vh] overflow-hidden">
-        <img loading="lazy"
-          src={game.image_url}
-          alt={game.title}
-          className="w-full h-full object-cover blur-md scale-105"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black" />
-      </div>
-
-      <div className="container mx-auto px-6 mt-8 relative z-10">
-
-        {/* TOP SECTION */}
-        <div className="grid lg:grid-cols-3 gap-12">
-
-          <motion.div initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }}>
-            <img loading="lazy"
-              src={game.image_url}
-              alt={game.title}
-              className="w-full rounded-2xl shadow-2xl border border-white/10"
-            />
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} className="lg:col-span-2">
-
-            <div className="flex justify-between items-start mb-6">
-              <div>
-                <h1 className="text-5xl font-bold uppercase">{game.title}</h1>
-        <div className="flex items-center gap-3 mt-3">
-  <img loading="lazy"
-    src={steamLogo}
-    alt="Steam"
-    className="w-5 h-5"
-  />
-
-  <span className="text-gray-400 text-sm">
-    Steam Account
-  </span>
-
-  <span className="text-[#B50000] uppercase text-sm font-semibold">
-    {game.categories?.name}
-  </span>
-</div>
-              </div>
-
-              <button onClick={handleToggleWishlist} disabled={wishlistLoading}>
-                <Heart
-                  className={`w-8 h-8 ${
-                    inWishlist
-                      ? "fill-[#B50000] text-[#B50000]"
-                      : "text-gray-400"
-                  }`}
-                />
-              </button>
+        {/* TWO-COLUMN PRODUCT HERO */}
+        <section className="grid md:grid-cols-12 gap-8 lg:gap-12 items-start mb-16">
+          {/* Left Column: Image Banner */}
+          <div className="md:col-span-5 space-y-4">
+            <div className="relative aspect-[16/10] bg-[#111111] border border-white/8 rounded-2xl overflow-hidden group shadow-2xl">
+              <img 
+                src={game.image_url || "/placeholder.jpg"} 
+                alt={game.title}
+                className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
+              />
+              {hasDiscount && (
+                <span className="absolute top-4 left-4 bg-[#E00000] text-white text-[10px] font-black px-2.5 py-1.5 rounded-lg uppercase tracking-wider">
+                  SAVE {discountPercentage}%
+                </span>
+              )}
             </div>
+            
+            {/* Delivery / Format label */}
+            <div className="bg-[#111111] border border-white/8 rounded-xl p-4 flex items-center justify-between select-none">
+              <div className="flex flex-col">
+                <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Platform format</span>
+                <span className="text-xs font-bold text-white mt-0.5">Steam Digital Coordinates</span>
+              </div>
+              <img src={steamLogo} alt="Steam" className="h-5 opacity-80 object-contain" />
+            </div>
+          </div>
 
-            <p className="text-gray-300 text-lg mb-8 leading-relaxed">
-              {game.description}
-            </p>
+          {/* Right Column: Meta details & actions */}
+          <div className="md:col-span-7 space-y-6">
+            <div className="border-b border-white/8 pb-6 space-y-3">
+              <span className="text-[10px] text-[#E00000] font-black uppercase tracking-widest block">
+                {game.categories?.name || "PC Game"}
+              </span>
+              <h1 className="text-3xl sm:text-[44px] font-extrabold uppercase tracking-tight leading-none text-white">
+                {game.title}
+              </h1>
 
-            {/* PRICE SECTION */}
-            <div className="mb-8">
-
-              {discountPercentage > 0 && (
-                <div className="flex items-center gap-4 mb-2">
-                  <span className="bg-[#B50000] text-white px-3 py-1 rounded text-sm font-bold">
-                    -{discountPercentage}%
-                  </span>
-                  <span className="text-gray-400 line-through text-xl">
-                    ₹{steamPrice}
+              {/* Game Rating (Official Rating - if exists in database) */}
+              {gameRating && (
+                <div className="flex items-center gap-2 mt-1 select-none">
+                  <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Game Rating:</span>
+                  <div className="flex text-yellow-500 gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3 h-3 ${i < getGameRatingStars(gameRating) ? "fill-yellow-500 text-yellow-500" : "text-zinc-700"}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-zinc-300 font-bold">
+                    {gameRating}{String(gameRating).includes("/10") ? "" : "/10"}
                   </span>
                 </div>
               )}
 
-              <div className="flex items-center gap-6">
-                <span className="text-5xl font-bold">
-                  ₹{salePrice}
-                </span>
-
-                {discountPercentage > 0 && (
-                  <span className="text-green-400 text-lg">
-                    You save ₹{savings}
+              {/* Review metrics rating (CG39 Customer Rating) */}
+              {reviewsStats.count > 0 ? (
+                <div className="flex items-center flex-wrap gap-2.5 mt-2 select-none">
+                  <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider">Customer Rating:</span>
+                  <div className="flex text-yellow-500 gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(reviewsStats.avg) ? "fill-yellow-500 text-yellow-500" : "text-zinc-700"}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-zinc-300 font-bold">
+                    {reviewsStats.avg}
                   </span>
-                )}
+                  <span className="text-xs text-zinc-500 font-semibold tracking-wider">
+                    · Based on {reviewsStats.count} verified {reviewsStats.count === 1 ? "purchase" : "purchases"}
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 mt-2 text-zinc-500 text-xs font-bold uppercase tracking-wider select-none">
+                  <span>No customer reviews yet</span>
+                </div>
+              )}
+            </div>
+
+            {/* Description intro */}
+            <p className="text-zinc-300 text-sm leading-relaxed max-w-2xl font-medium">
+              {game.description}
+            </p>
+
+            {/* Platform characteristics indicators */}
+            <div className="grid grid-cols-2 gap-3 max-w-md select-none">
+              <div className="flex items-center gap-2 bg-[#111111] border border-white/8 rounded-xl p-3 text-xs text-zinc-300">
+                <Gamepad2 className="w-4 h-4 text-[#E00000] shrink-0" />
+                <span className="font-bold">PC / Steam Account</span>
+              </div>
+              <div className="flex items-center gap-2 bg-[#111111] border border-white/8 rounded-xl p-3 text-xs text-zinc-300">
+                <Zap className="w-4 h-4 text-[#E00000] shrink-0" />
+                <span className="font-bold">Digital delivery format</span>
               </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              className="bg-[#B50000] hover:bg-red-600 text-white rounded-full px-10 py-4 font-bold flex items-center gap-3 transition"
-            >
-              <ShoppingCart size={20} />
-              Add to Cart
-            </button>
+            {/* PRICING BLOCK */}
+            <div className="bg-[#111111] border border-white/8 rounded-2xl p-5 max-w-md select-none">
+              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block mb-2">Deal Price</span>
+              
+              {hasDiscount ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-3xl font-extrabold text-white">₹{salePrice.toLocaleString()}</span>
+                    <span className="text-zinc-500 line-through text-base">₹{steamPrice.toLocaleString()}</span>
+                    <span className="bg-[#E00000] text-white text-[9px] font-black px-2 py-0.5 rounded">
+                      -{discountPercentage}% OFF
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-500/5 px-2.5 py-1 rounded w-fit border border-emerald-500/10">
+                    <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                    <span>Save ₹{savings.toLocaleString()} compared to Steam Store</span>
+                  </div>
+                </div>
+              ) : (
+                <span className="text-3xl font-extrabold text-white">₹{salePrice.toLocaleString()}</span>
+              )}
+            </div>
 
-          </motion.div>
-        </div>
-
-
-{/* STEAM GUIDE */}
-<div className="mt-24 bg-[#111] border border-white/10 rounded-2xl p-10 shadow-xl">
-
-  <h2 className="text-4xl font-bold mb-10">
-    Steam Account Activation Guide
-  </h2>
-
-  <div className="grid md:grid-cols-2 gap-6">
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
-      <h3 className="text-[#B50000] font-bold text-xl mb-3">
-        Step 1
-      </h3>
-
-      <p className="text-gray-300">
-        Download and install Steam from the official website if it is not already installed on your PC.
-      </p>
-    </div>
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
-      <h3 className="text-[#B50000] font-bold text-xl mb-3">
-        Step 2
-      </h3>
-
-      <p className="text-gray-300">
-        Login using the Steam account credentials provided after your purchase is verified.
-      </p>
-    </div>
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
-      <h3 className="text-[#B50000] font-bold text-xl mb-3">
-        Step 3
-      </h3>
-
-      <p className="text-gray-300">
-        Open your Steam Library and start downloading the purchased game directly to your PC.
-      </p>
-    </div>
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5">
-      <h3 className="text-[#B50000] font-bold text-xl mb-3">
-        Step 4
-      </h3>
-
-      <p className="text-gray-300">
-        After installation is complete, switch Steam to Offline Mode and enjoy uninterrupted gameplay.
-      </p>
-    </div>
-
-  </div>
-
-  {/* TRUST STATS */}
-  <div className="grid grid-cols-3 gap-4 mt-10">
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
-      <h3 className="text-3xl font-bold text-[#B50000]">
-        500+
-      </h3>
-
-      <p className="text-gray-400 text-sm mt-1">
-        Orders Delivered
-      </p>
-    </div>
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
-      <h3 className="text-3xl font-bold text-[#B50000]">
-        24/7
-      </h3>
-
-      <p className="text-gray-400 text-sm mt-1">
-        Customer Support
-      </p>
-    </div>
-
-    <div className="bg-[#141414] border border-white/10 rounded-xl p-5 text-center">
-      <h3 className="text-3xl font-bold text-[#B50000]">
-        99%
-      </h3>
-
-      <p className="text-gray-400 text-sm mt-1">
-        Positive Feedback
-      </p>
-    </div>
-
-  </div>
-
-  {/* IMPORTANT NOTES */}
-  <div className="mt-10 bg-[#141414] border border-[#B50000]/30 rounded-xl p-6">
-
-    <h3 className="text-[#B50000] font-bold text-xl mb-4">
-      Important Information
-    </h3>
-
-    <ul className="space-y-3 text-gray-300">
-      <li>‣ Account details are delivered after payment verification.</li>
-      <li>‣ Detailed activation instructions are provided with every purchase.</li>
-      <li>‣ Customer support is available if you need assistance.</li>
-      <li>‣ Follow the provided steps carefully before launching the game.</li>
-      <li>‣ Most orders are processed and delivered within a short time.</li>
-    </ul>
-
-  </div>
-
-</div>
-      </div>
-
-     {/* RELATED GAMES */}
-<div className="mt-24 px-4">
-  <h2 className="text-4xl font-bold mb-8">
-    Related <span className="text-[#B50000]">Games</span>
-  </h2>
-{relatedGames.length > 0 ? (
-  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-    {relatedGames.map((related) => (
-      <div
-        key={related.id}
-        onClick={() => navigate(`/games/${related.id}`)}
-        className="cursor-pointer bg-[#141414] rounded-xl overflow-hidden border border-white/10 hover:border-[#B50000] transition h-[260px] flex flex-col"
-      >
-        <div className="h-36 overflow-hidden">
-          <img loading="lazy"
-            src={related.image_url}
-            alt={related.title}
-            className="w-full h-full object-cover"
-          />
-        </div>
-
-        <div className="p-3 flex flex-col flex-1">
-          <h3 className="text-white text-sm font-semibold line-clamp-2 min-h-[42px]">
-            {related.title}
-          </h3>
-
-<div className="mt-auto">
-  {related.steam_price > related.price && (
-    <span className="text-gray-500 line-through text-xs block">
-      ₹{related.steam_price}
-    </span>
-  )}
-
-  <span className="text-white font-bold text-lg">
-    ₹{related.price}
-  </span>
-</div>
-
-        </div>
-      </div>
-    ))}
-  </div>
-) : (
-  <div className="bg-[#141414] border border-white/10 rounded-xl p-8 text-center">
-    <h3 className="text-xl font-bold mb-3">
-      Looking for More Games?
-    </h3>
-
-    <p className="text-gray-400 mb-5">
-      Browse our complete collection and discover hundreds of affordable PC games.
-    </p>
-
-    <button
-      onClick={() => navigate("/games")}
-      className="bg-[#B50000] px-6 py-3 rounded-full font-bold"
-    >
-      Browse All Games
-    </button>
-  </div>
-)}
-
-</div>
-
-        {/* REVIEWS (Stars removed visually only) */}
-       <div className="mt-24 px-4">
-      <h2 className="text-4xl font-bold mb-8">
-  Customer{" "}
-  <span className="text-[#B50000]">
-    Reviews
-  </span>
-
-  <span className="text-gray-400 text-2xl ml-2">
-    ({reviewCount})
-  </span>
-</h2>
-
-          {user && (
-            <form
-              onSubmit={handleSubmitReview}
-              className="
-bg-[#1a1a1a]
-border border-white/10
-rounded-xl
-p-6
-mb-6
-min-h-[140px]
-hover:border-[#B50000]
-transition
-"
-            >
-              <textarea
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                required
-                rows={4}
-                placeholder="Write your review..."
-                className="w-full bg-[#141414] border border-white/10 rounded-lg p-3 text-white mb-4"
-              />
+            {/* CTAS AND ACTIONS */}
+            <div className="flex flex-col sm:flex-row items-center gap-3 max-w-md pt-2">
+              <button
+                onClick={handleBuyNow}
+                disabled={buyNowLoading}
+                className="w-full sm:flex-1 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl min-h-[46px] font-bold uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                aria-label={`Buy ${game.title} now`}
+              >
+                <Zap className="w-4 h-4" />
+                {buyNowLoading ? "Processing..." : "Buy Now"}
+              </button>
 
               <button
-                type="submit"
-                disabled={reviewLoading}
-                className="bg-[#B50000] px-6 py-2 rounded-full font-bold flex items-center gap-2"
+                onClick={handleAddToCart}
+                disabled={cartLoading}
+                className="w-full sm:flex-1 bg-[#111111] hover:bg-[#151515] border border-white/8 hover:border-white/20 text-white rounded-xl min-h-[46px] font-bold uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
+                aria-label={`Add ${game.title} to cart`}
               >
-                Submit Review
-                <ArrowRight size={16} />
+                <ShoppingCart className="w-4 h-4 text-zinc-400" />
+                {cartLoading ? "Adding..." : "Add to Cart"}
               </button>
-            </form>
+
+              <button 
+                onClick={handleToggleWishlist} 
+                disabled={wishlistLoading}
+                className="w-full sm:w-auto bg-[#111111] hover:bg-[#151515] border border-white/8 hover:border-white/20 min-h-[46px] px-4 rounded-xl text-zinc-400 hover:text-[#E00000] transition flex items-center justify-center gap-2 active:scale-[0.98] text-xs font-bold uppercase tracking-wider"
+                aria-label={inWishlist ? `Remove ${game.title} from wishlist` : `Add ${game.title} to wishlist`}
+              >
+                <Heart className={`w-4 h-4 shrink-0 ${inWishlist ? "fill-[#E00000] text-[#E00000]" : ""}`} />
+                <span>{inWishlist ? "SAVED" : "ADD TO WISHLIST"}</span>
+              </button>
+            </div>
+
+            {/* TRUST BLOCK */}
+            <div className="grid grid-cols-2 gap-4 border-t border-white/8 pt-6 mt-6 select-none max-w-xl">
+              <div className="flex gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                <div className="leading-tight">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Secure Payment</span>
+                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">UPI and Bank transfers verified</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                <div className="leading-tight">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Digital Delivery</span>
+                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Delivered via secure credentials</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <MessageCircle className="w-4 h-4 text-[#E00000] shrink-0 mt-0.5" />
+                <div className="leading-tight">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">WhatsApp Support</span>
+                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Direct chat support 24/7</span>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Star className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
+                <div className="leading-tight">
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Verified Reviews</span>
+                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Only verified buyers write reviews</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </section>
+
+        {/* SPECS AND ABOUT THE GAME */}
+        <section className="flex flex-col md:grid md:grid-cols-12 gap-8 items-start mb-16 border-t border-white/8 pt-12">
+          {/* About section */}
+          <div className="order-2 md:order-1 md:col-span-8 space-y-4">
+            <h3 className="text-lg font-bold uppercase tracking-wide text-white flex items-center gap-2 select-none">
+              <FileText className="w-4.5 h-4.5 text-[#E00000]" /> About This Game
+            </h3>
+            <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-line pr-4">
+              {game.description}
+            </p>
+          </div>
+
+          {/* Specs panel */}
+          <div className="order-1 md:order-2 md:col-span-4 w-full bg-[#111111] border border-white/8 rounded-2xl p-6 select-none">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-white border-b border-white/5 pb-3 mb-4">
+              Game Information
+            </h3>
+            
+            <div className="space-y-4 text-xs">
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-zinc-500 uppercase font-bold">Platform</span>
+                <span className="text-white font-medium">PC (Steam)</span>
+              </div>
+              {game.categories?.name && (
+                <div className="flex justify-between items-center py-0.5">
+                  <span className="text-zinc-500 uppercase font-bold">Genre</span>
+                  <span className="text-white font-medium">{game.categories.name}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-zinc-500 uppercase font-bold">Delivery format</span>
+                <span className="text-white font-medium">Digital Coordinates</span>
+              </div>
+              <div className="flex justify-between items-center py-0.5">
+                <span className="text-zinc-500 uppercase font-bold">Availability</span>
+                <span className="text-emerald-400 font-bold uppercase">In Stock</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* TIMELINE SETUP & INSTRUCTIONS */}
+        <section className="grid md:grid-cols-12 gap-8 items-start mb-16 border-t border-white/8 pt-12">
+          {/* How it Works Activation Timeline */}
+          <div className="md:col-span-7 bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-8">
+            <h3 className="text-lg font-bold uppercase tracking-wide mb-6 flex items-center gap-2 select-none">
+              <Gamepad2 className="w-5 h-5 text-[#E00000]" /> Steam Setup & Activation
+            </h3>
+            <div className="relative pl-6 border-l border-white/5 space-y-6 text-xs text-zinc-300">
+              <div className="relative flex flex-col gap-0.5">
+                <span className="absolute -left-[35px] w-5 h-5 rounded-full bg-[#080808] border border-[#E00000] text-white flex items-center justify-center text-[10px] font-black">1</span>
+                <span className="font-bold text-white uppercase">Download Steam app</span>
+                <span className="text-zinc-400">Install the official Steam desktop client on your Windows gaming PC.</span>
+              </div>
+              <div className="relative flex flex-col gap-0.5">
+                <span className="absolute -left-[35px] w-5 h-5 rounded-full bg-[#080808] border border-[#E00000] text-white flex items-center justify-center text-[10px] font-black">2</span>
+                <span className="font-bold text-white uppercase">Log in using credentials</span>
+                <span className="text-zinc-400">Enter the Steam account credentials shared in your delivery coordinates.</span>
+              </div>
+              <div className="relative flex flex-col gap-0.5">
+                <span className="absolute -left-[35px] w-5 h-5 rounded-full bg-[#080808] border border-[#E00000] text-white flex items-center justify-center text-[10px] font-black">3</span>
+                <span className="font-bold text-white uppercase">Install your game</span>
+                <span className="text-zinc-400">Locate the game inside your Steam library and download all files.</span>
+              </div>
+              <div className="relative flex flex-col gap-0.5">
+                <span className="absolute -left-[35px] w-5 h-5 rounded-full bg-[#080808] border border-[#E00000] text-white flex items-center justify-center text-[10px] font-black">4</span>
+                <span className="font-bold text-white uppercase">Switch Steam to Offline</span>
+                <span className="text-zinc-400">Enter Offline Mode on Steam client to enjoy uninterrupted offline gameplay.</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Disclaimers */}
+          <div className="md:col-span-5 bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-8 flex flex-col justify-between h-full min-h-[300px]">
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold uppercase tracking-wide text-white flex items-center gap-2 select-none">
+                <FileText className="w-5 h-5 text-[#E00000]" /> Product Disclaimers
+              </h3>
+              <ul className="space-y-4 text-xs text-zinc-400">
+                <li className="flex gap-2">
+                  <ChevronRight className="w-3.5 h-3.5 text-[#E00000] shrink-0 mt-0.5 animate-pulse" />
+                  <span>Account coordinates are delivered after manual payment validation check.</span>
+                </li>
+                <li className="flex gap-2">
+                  <ChevronRight className="w-3.5 h-3.5 text-[#E00000] shrink-0 mt-0.5 animate-pulse" />
+                  <span>This is a digital coordinates delivery. No physical boxes or CD media are sent.</span>
+                </li>
+                <li className="flex gap-2">
+                  <ChevronRight className="w-3.5 h-3.5 text-[#E00000] shrink-0 mt-0.5 animate-pulse" />
+                  <span>Unrestricted offline play access is supported permanently. Online modes are locked.</span>
+                </li>
+              </ul>
+            </div>
+            
+            <div className="mt-8 border-t border-white/5 pt-4 select-none">
+              <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider block mb-1">Specs Requirements</span>
+              <p className="text-xs text-zinc-400">Hardware specs are not provided. Please refer to Steam Store listings.</p>
+            </div>
+          </div>
+        </section>
+
+        {/* VERIFIED CUSTOMER REVIEWS */}
+        <section className="grid lg:grid-cols-12 gap-8 lg:gap-12 border-t border-white/8 pt-12 mb-16">
+          {/* Summary and review entry form */}
+          <div className="lg:col-span-4 space-y-6">
+            <h3 className="text-xl font-bold uppercase tracking-tight text-white select-none">Reviews Summary</h3>
+            
+            {reviewsStats.count > 0 ? (
+              <div className="bg-[#111111] border border-white/8 rounded-2xl p-5 space-y-4 select-none">
+                <div className="flex items-center gap-4">
+                  <span className="text-5xl font-black text-[#E00000]">{reviewsStats.avg}</span>
+                  <div>
+                    <div className="flex gap-0.5 text-yellow-500 mb-0.5">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(reviewsStats.avg) ? "fill-yellow-500" : "text-zinc-700"}`} />
+                      ))}
+                    </div>
+                    <span className="text-[10px] text-zinc-500 uppercase font-bold tracking-wider">{reviewsStats.count} Reviews</span>
+                  </div>
+                </div>
+
+                {/* Rating bars distribution list */}
+                <div className="space-y-1.5 text-xs text-zinc-400">
+                  {reviewsStats.dist.map((cnt, idx) => {
+                    const stars = idx + 1;
+                    const percent = Math.round((cnt / reviewsStats.count) * 100);
+                    return (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className="w-3 text-right">{stars}★</span>
+                        <div className="flex-1 bg-black/40 rounded-full h-2 overflow-hidden border border-white/5">
+                          <div className="bg-[#E00000] h-full" style={{ width: `${percent}%` }} />
+                        </div>
+                        <span className="w-8 text-right text-zinc-500">{percent}%</span>
+                      </div>
+                    );
+                  }).reverse()}
+                </div>
+              </div>
+            ) : (
+              <div className="bg-[#111111]/30 border border-white/8 rounded-2xl p-5 text-center text-xs text-zinc-500 select-none">
+                No reviews yet. Share your feedback after checking out.
+              </div>
+            )}
+
+            {/* Submission Block */}
+            <div className="bg-[#111111] border border-white/8 rounded-2xl p-5">
+              {!user ? (
+                <div className="text-center py-4 space-y-3">
+                  <p className="text-xs text-zinc-500">Please log in to submit a verified review.</p>
+                  <button onClick={() => navigate("/login")} className="bg-[#E00000] hover:bg-[#F00000] text-xs font-bold px-4 py-2 rounded-lg uppercase transition min-h-[44px] w-full" aria-label="Login to leave review">Login</button>
+                </div>
+              ) : eligibility.alreadyReviewed ? (
+                <div className="text-center py-4 select-none">
+                  <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
+                  <p className="text-xs text-green-400 font-bold">Review Already Submitted</p>
+                  <p className="text-[10px] text-zinc-500 mt-1">Thank you for sharing your feedback with the community!</p>
+                </div>
+              ) : !eligibility.hasPurchased ? (
+                <div className="text-center py-4 select-none">
+                  <Info className="w-8 h-8 text-[#E00000] mx-auto mb-2" />
+                  <p className="text-xs text-zinc-400 font-bold uppercase tracking-wider">Verified Buyer Required</p>
+                  <p className="text-[10px] text-zinc-500 mt-1.5 leading-normal max-w-xs mx-auto">Only clients who purchased this specific game can submit reviews.</p>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmitReview} className="space-y-4">
+                  <span className="text-[10px] text-zinc-500 uppercase font-black block select-none">Write a Review</span>
+                  
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-zinc-400 font-bold select-none">Rating:</span>
+                    <div className="flex gap-0.5">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          className="text-yellow-500 transition"
+                          aria-label={`Rate ${star} Stars`}
+                        >
+                          <Star className={`w-5 h-5 ${star <= rating ? "fill-yellow-500 text-yellow-500" : "text-zinc-600"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <textarea
+                    value={comment}
+                    onChange={(e) => setComment(e.target.value)}
+                    required
+                    maxLength={1000}
+                    rows={4}
+                    placeholder="Provide your experience with the account delivery coordinates and offline setup..."
+                    className="w-full bg-[#080808] border border-white/8 rounded-xl p-3 text-xs text-white focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/30 outline-none transition"
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={reviewLoading}
+                    className="w-full bg-[#E00000] hover:bg-[#F00000] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 transition min-h-[44px]"
+                    aria-label="Submit Verified Review"
+                  >
+                    {reviewLoading ? "Submitting..." : "Submit Review"}
+                  </button>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* Right: reviews list */}
+          <div className="lg:col-span-8 space-y-6">
+            <h3 className="text-xl font-bold uppercase tracking-tight text-white flex items-center gap-2 select-none">
+              Customer Reviews <span className="text-xs bg-white/5 border border-white/8 text-zinc-500 px-2 py-0.5 rounded">{dbReviews.length}</span>
+            </h3>
+
+            {dbReviews.length > 0 ? (
+              <div className="space-y-4 max-h-[600px] overflow-y-auto pr-1">
+                {dbReviews.map((rev) => (
+                  <div key={rev.id} className="bg-[#111111] border border-white/8 rounded-2xl p-5 hover:border-white/20 transition">
+                    <div className="flex justify-between items-start gap-4 mb-2.5">
+                      <div>
+                        <h4 className="font-extrabold text-sm text-white">{rev.profiles?.full_name || "Verified Client"}</h4>
+                        <div className="flex gap-0.5 mt-1 select-none">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-3 h-3 ${i < rev.rating ? "fill-yellow-500 text-yellow-500" : "text-zinc-700"}`} />
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-zinc-500 font-mono select-none">
+                        {new Date(rev.created_at).toLocaleDateString(undefined, {
+                          year: "numeric", month: "short", day: "numeric"
+                        })}
+                      </span>
+                    </div>
+
+                    {rev.is_verified && (
+                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded mb-3 select-none">
+                        <Check className="w-3 h-3" /> Verified Purchase
+                      </span>
+                    )}
+
+                    <p className="text-zinc-300 text-xs leading-relaxed italic">
+                      "{rev.comment}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-[#111111]/30 border border-white/8 rounded-2xl p-8 text-center text-xs text-zinc-500 select-none">
+                No reviews yet. Share your experience with the community.
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* RELATED PRODUCTS */}
+        <section className="border-t border-white/8 pt-12 space-y-16">
+          {/* YOU MAY ALSO LIKE */}
+          {recommendedLike.length > 0 && (
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+                You <span className="text-[#E00000]">May Also Like</span>
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+                {recommendedLike.map(g => (
+                  <GameCard key={g.id} game={g} />
+                ))}
+              </div>
+            </div>
           )}
 
-        {rotatedReviews.map((review, index) => (
-<div
-  key={index}
-  className="
-bg-[#1a1a1a]
-border
-border-white/10
-rounded-xl
-p-6
-mb-6
-min-h-[140px]
-w-full
-shadow-lg
-"
+          {/* MORE FROM THIS CATEGORY */}
+          {recommendedCategory.length > 0 && (
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+                More From <span className="text-[#E00000]">This Category</span>
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+                {recommendedCategory.map(g => (
+                  <GameCard key={g.id} game={g} />
+                ))}
+              </div>
+            </div>
+          )}
 
->
-    <h4 className="font-semibold mb-2">
-      {review.name}
-    </h4>
+          {/* PLAYERS ALSO VIEWED */}
+          {recommendedViewed.length > 0 && (
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+                Players <span className="text-[#E00000]">Also Viewed</span>
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+                {recommendedViewed.map(g => (
+                  <GameCard key={g.id} game={g} />
+                ))}
+              </div>
+            </div>
+          )}
 
-<p className="text-green-400 text-sm mb-1">
-  ✓ Verified Purchase
-</p>
+          {/* MORE GREAT DEALS */}
+          {recommendedDeals.length > 0 && (
+            <div>
+              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+                More Great <span className="text-[#E00000]">Deals</span>
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
+                {recommendedDeals.map(g => (
+                  <GameCard key={g.id} game={g} />
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
 
-<p className="text-gray-500 text-xs mb-3">
-  {
-    [
-      "3 hours ago",
-      "8 hours ago",
-      "12 hours ago",
-      "1 day ago",
-      "2 days ago",
-      "4 days ago",
-      "6 days ago",
-      "1 week ago",
-      "2 weeks ago",
-      "3 weeks ago",
-    ][index % 10]
-  }
-</p>
-
-    <p className="text-gray-300">
-      {review.comment}
-    </p>
-  </div>
-))}
-
-<p className="text-[#B50000] text-sm mt-3 cursor-pointer">
-  Read More →
-</p>
-
-{myReview && (
-  <div className="mt-10">
-    <h3 className="text-2xl font-bold mb-4">
-      My Review
-    </h3>
-
-    <div className="
-bg-[#141414]
-border
-border-[#B50000]
-rounded-xl
-p-6
-min-h-[140px]
-w-full
-shadow-lg
-">
-
-      <p>{myReview}</p>
-    </div>
-  </div>
-)}
-        </div>
-
-        
+      </div>
     </div>
   );
 };

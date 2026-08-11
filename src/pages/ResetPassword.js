@@ -38,25 +38,25 @@ if (error) {
 };
 
 return (
-<div className="min-h-screen bg-[#0f0f0f] flex items-center justify-center px-6">
+<div className="min-h-screen bg-white text-[#111111] flex items-center justify-center px-6">
 <div className="w-full max-w-md">
 
     <div className="text-center mb-8">
-      <h1 className="text-5xl font-bold text-white">
-        CHEAP<span className="text-[#B50000]">GAMES39</span>
+      <h1 className="text-5xl font-bold text-[#111111]">
+        CHEAP<span className="text-[#E00000]">GAMES39</span>
       </h1>
-      <p className="text-gray-400 mt-2">
+      <p className="text-[#555555] mt-2">
         Secure Password Reset
       </p>
     </div>
 
-    <div className="bg-[#1a1a1a] border border-white/10 rounded-3xl p-8">
+    <div className="bg-white border border-[#E5E5E5] rounded-3xl p-8 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
 
-      <h2 className="text-3xl font-bold text-white mb-2">
+      <h2 className="text-3xl font-bold text-[#111111] mb-2">
          Reset Password
       </h2>
 
-      <p className="text-gray-400 mb-6">
+      <p className="text-[#555555] mb-6">
         Create a new password for your account.
       </p>
 
@@ -69,13 +69,13 @@ return (
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full bg-[#141414] border border-white/10 rounded-xl px-4 py-3 text-white"
+            className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl px-4 py-3 text-[#111111] placeholder-[#AAAAAA] focus:outline-none focus:border-[#E00000]"
           />
 
           <button
             type="button"
             onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-4 top-3 text-gray-400"
+            className="absolute right-4 top-3 text-[#777777]"
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
@@ -87,12 +87,12 @@ return (
           required
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
-          className="w-full bg-[#141414] border border-white/10 rounded-xl px-4 py-3 text-white"
+          className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl px-4 py-3 text-[#111111] placeholder-[#AAAAAA] focus:outline-none focus:border-[#E00000]"
         />
 
         <button
           type="submit"
-          className="w-full bg-yellow-500 hover:bg-yellow-400 text-black py-3 rounded-full font-bold"
+          className="w-full bg-[#E00000] hover:bg-[#F00000] text-white py-3 rounded-full font-bold transition active:scale-[0.98]"
         >
           Update Password
         </button>
@@ -101,6 +101,5 @@ return (
     </div>
   </div>
 </div>
-
 );
 }

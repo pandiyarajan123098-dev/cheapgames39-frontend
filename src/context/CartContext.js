@@ -17,25 +17,140 @@ export const CartProvider = ({ children }) => {
   const [cartCount, setCartCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  /* =====================================================
-     ================= FETCH CART ========================
-  ===================================================== */
+  // Helper to fetch latest games from DB to validate pricing/stale items
+  const fetchLatestGamesMap = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("games")
+        .select("id, title, price, steam_price, image_url");
+      if (error) throw error;
+      const map = {};
+      data.forEach(g => {
+        map[g.id] = g;
+      });
+      return map;
+    } catch (err) {
+      console.error("Error fetching latest games map:", err.message);
+      return null;
+    }
+  };
 
-  const fetchCart = useCallback(async () => {
-    if (!user) {
-      setCart([]);
-      setCartCount(0);
+  /* =====================================================
+     ================= ABANDONED CART TRACKING ===========
+  ===================================================== */
+  const updateAbandonedCartTracking = useCallback((items) => {
+    if (items.length === 0) {
+      if (user) {
+        localStorage.removeItem(`cg39_abandoned_cart_${user.id}`);
+      } else {
+        localStorage.removeItem("cg39_guest_abandoned_cart");
+      }
       return;
     }
 
+    const payload = {
+      user_id: user ? user.id : "guest",
+      items: items.map(i => ({
+        game_id: i.games?.id || i.game_id,
+        quantity: i.quantity,
+        title: i.games?.title,
+        price: i.games?.price
+      })),
+      last_updated: new Date().toISOString()
+    };
+
+    if (user) {
+      localStorage.setItem(`cg39_abandoned_cart_${user.id}`, JSON.stringify(payload));
+    } else {
+      localStorage.setItem("cg39_guest_abandoned_cart", JSON.stringify(payload));
+    }
+  }, [user]);
+
+  /* =====================================================
+     ================= FETCH/SYNC CART ===================
+  ===================================================== */
+
+  const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
+      const latestGames = await fetchLatestGamesMap();
 
+      if (!user) {
+        // Guest user: read from localStorage
+        const localCartRaw = localStorage.getItem("cg39_guest_cart");
+        let localCart = [];
+        if (localCartRaw) {
+          try {
+            localCart = JSON.parse(localCartRaw);
+          } catch (e) {
+            localCart = [];
+          }
+        }
+
+        // Refresh prices & filter out stale games
+        if (latestGames) {
+          localCart = localCart
+            .map(item => {
+              const liveGame = latestGames[item.game_id];
+              if (!liveGame) return null; // Stale game
+              return {
+                ...item,
+                games: liveGame // Always use DB details
+              };
+            })
+            .filter(Boolean);
+        }
+
+        localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+        setCart(localCart);
+        setCartCount(localCart.reduce((sum, item) => sum + item.quantity, 0));
+        updateAbandonedCartTracking(localCart);
+        return;
+      }
+
+      // Authenticated user: Sync local guest cart first if exists
+      const localCartRaw = localStorage.getItem("cg39_guest_cart");
+      if (localCartRaw) {
+        let localCart = [];
+        try {
+          localCart = JSON.parse(localCartRaw);
+        } catch (e) {}
+
+        if (localCart.length > 0) {
+          for (const item of localCart) {
+            // Check if already in user's DB cart
+            const { data: existing } = await supabase
+              .from("cart")
+              .select("id, quantity")
+              .eq("user_id", user.id)
+              .eq("game_id", item.game_id)
+              .maybeSingle();
+
+            if (existing) {
+              await supabase
+                .from("cart")
+                .update({ quantity: existing.quantity + item.quantity })
+                .eq("id", existing.id);
+            } else {
+              await supabase.from("cart").insert({
+                user_id: user.id,
+                game_id: item.game_id,
+                quantity: item.quantity,
+              });
+            }
+          }
+          // Clear guest cart
+          localStorage.removeItem("cg39_guest_cart");
+        }
+      }
+
+      // Fetch from Supabase
       const { data, error } = await supabase
         .from("cart")
         .select(`
           id,
           quantity,
+          game_id,
           games (
             id,
             title,
@@ -47,17 +162,41 @@ export const CartProvider = ({ children }) => {
         .eq("user_id", user.id);
 
       if (error) throw error;
-console.log("CART DATA", data);
-      setCart(data || []);
-      setCartCount(
-        (data || []).reduce((sum, item) => sum + item.quantity, 0)
-      );
+
+      let verifiedCart = data || [];
+
+      // Filter out stale games & sync prices
+      if (latestGames) {
+        const staleItemIds = [];
+        verifiedCart = verifiedCart
+          .map(item => {
+            const liveGame = latestGames[item.game_id];
+            if (!liveGame) {
+              staleItemIds.push(item.id);
+              return null;
+            }
+            return {
+              ...item,
+              games: liveGame // Always use DB price
+            };
+          })
+          .filter(Boolean);
+
+        // Delete stale cart items from database in background
+        if (staleItemIds.length > 0) {
+          supabase.from("cart").delete().in("id", staleItemIds).then(() => {});
+        }
+      }
+
+      setCart(verifiedCart);
+      setCartCount(verifiedCart.reduce((sum, item) => sum + item.quantity, 0));
+      updateAbandonedCartTracking(verifiedCart);
     } catch (error) {
       console.error("Fetch cart error:", error.message);
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, updateAbandonedCartTracking]);
 
   useEffect(() => {
     fetchCart();
@@ -68,19 +207,44 @@ console.log("CART DATA", data);
   ===================================================== */
 
   const addToCart = async (game_id, quantity = 1) => {
-    if (!user) throw new Error("Please login first");
+    if (!user) {
+      // Guest Cart implementation
+      const localCartRaw = localStorage.getItem("cg39_guest_cart");
+      let localCart = [];
+      if (localCartRaw) {
+        try {
+          localCart = JSON.parse(localCartRaw);
+        } catch (e) {}
+      }
+
+      const existingIndex = localCart.findIndex(item => item.game_id === game_id);
+      if (existingIndex > -1) {
+        localCart[existingIndex].quantity += quantity;
+      } else {
+        // Fetch the game item locally or temporarily populate to refresh on render
+        localCart.push({
+          id: `guest-${Date.now()}-${Math.random()}`,
+          game_id,
+          quantity,
+          games: null // Will be populated dynamically during fetchCart
+        });
+      }
+
+      localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+      await fetchCart();
+      return;
+    }
 
     try {
-      // Check if already exists
+      // Check if already exists in DB
       const { data: existing } = await supabase
         .from("cart")
         .select("id, quantity")
         .eq("user_id", user.id)
         .eq("game_id", game_id)
-        .single();
+        .maybeSingle();
 
       if (existing) {
-        // Update quantity instead of duplicate insert
         const { error } = await supabase
           .from("cart")
           .update({ quantity: existing.quantity + quantity })
@@ -114,6 +278,21 @@ console.log("CART DATA", data);
       return;
     }
 
+    if (!user) {
+      // Guest local update
+      const localCartRaw = localStorage.getItem("cg39_guest_cart");
+      if (localCartRaw) {
+        let localCart = JSON.parse(localCartRaw);
+        const idx = localCart.findIndex(item => item.id === cart_id);
+        if (idx > -1) {
+          localCart[idx].quantity = quantity;
+          localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+          await fetchCart();
+        }
+      }
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("cart")
@@ -134,6 +313,18 @@ console.log("CART DATA", data);
   ===================================================== */
 
   const removeFromCart = async (cart_id) => {
+    if (!user) {
+      // Guest local remove
+      const localCartRaw = localStorage.getItem("cg39_guest_cart");
+      if (localCartRaw) {
+        let localCart = JSON.parse(localCartRaw);
+        localCart = localCart.filter(item => item.id !== cart_id);
+        localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+        await fetchCart();
+      }
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from("cart")
@@ -154,7 +345,13 @@ console.log("CART DATA", data);
   ===================================================== */
 
   const clearCart = async () => {
-    if (!user) return;
+    if (!user) {
+      localStorage.removeItem("cg39_guest_cart");
+      setCart([]);
+      setCartCount(0);
+      updateAbandonedCartTracking([]);
+      return;
+    }
 
     try {
       await supabase
@@ -164,8 +361,42 @@ console.log("CART DATA", data);
 
       setCart([]);
       setCartCount(0);
+      updateAbandonedCartTracking([]);
     } catch (error) {
       console.error("Clear cart error:", error.message);
+    }
+  };
+
+  /* =====================================================
+     ================= REMOVE ITEMS BY GAME IDS ===========
+  ===================================================== */
+
+  const removeItemsByGameIds = async (gameIds) => {
+    if (!gameIds || !Array.isArray(gameIds) || gameIds.length === 0) return;
+
+    if (!user) {
+      const localCartRaw = localStorage.getItem("cg39_guest_cart");
+      if (localCartRaw) {
+        let localCart = JSON.parse(localCartRaw);
+        localCart = localCart.filter(item => !gameIds.includes(item.game_id));
+        localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+        await fetchCart();
+      }
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("cart")
+        .delete()
+        .eq("user_id", user.id)
+        .in("game_id", gameIds);
+
+      if (error) throw error;
+
+      await fetchCart();
+    } catch (error) {
+      console.error("Remove game items from cart error:", error.message);
     }
   };
 
@@ -199,6 +430,7 @@ console.log("CART DATA", data);
         updateCartItem,
         removeFromCart,
         clearCart,
+        removeItemsByGameIds,
         refreshCart: fetchCart,
       }}
     >

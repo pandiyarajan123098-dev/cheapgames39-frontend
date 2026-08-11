@@ -100,6 +100,9 @@ webpackConfig.devServer = (devServerConfig) => {
     };
   }
 
+  // Fix Webpack Dev Server allowedHosts schema validation error on CRA v5
+  devServerConfig.allowedHosts = ["localhost", "127.0.0.1"];
+
   return devServerConfig;
 };
 

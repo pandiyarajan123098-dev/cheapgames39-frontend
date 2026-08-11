@@ -1,4 +1,13 @@
 User-agent: *
 Allow: /
+Allow: /games
+Allow: /games/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /checkout
+Disallow: /order-status
+Disallow: /success
+Disallow: /login
+Disallow: /signup
 
 Sitemap: https://cheapgames39store.shop/sitemap.xml

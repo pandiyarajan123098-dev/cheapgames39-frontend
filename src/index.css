@@ -19,30 +19,42 @@ code {
 
 @layer base {
     :root {
+        --primary-bg: #FFFFFF;
+        --secondary-bg: #F7F7F7;
+        --tertiary-bg: #F2F2F2;
+        --card-bg: #FFFFFF;
+        --elevated-bg: #FFFFFF;
+        --border-color: #E5E5E5;
+        --strong-border-color: #D5D5D5;
+        --brand-red: #E10600;
+        --dark-red: #B50000;
+        --success: #16A34A;
+        --warning: #D97706;
+        --error: #DC2626;
+        --text-primary: #1A1A1A;
+        --text-secondary: #555555;
+        --text-muted: #777777;
+        --text-disabled: #A0A0A0;
+
         --background: 0 0% 100%;
-        --foreground: 0 0% 3.9%;
+        --foreground: 0 0% 10%;
         --card: 0 0% 100%;
-        --card-foreground: 0 0% 3.9%;
+        --card-foreground: 0 0% 10%;
         --popover: 0 0% 100%;
-        --popover-foreground: 0 0% 3.9%;
-        --primary: 0 0% 9%;
+        --popover-foreground: 0 0% 10%;
+        --primary: 0 72% 44%;
         --primary-foreground: 0 0% 98%;
-        --secondary: 0 0% 96.1%;
+        --secondary: 0 0% 96%;
         --secondary-foreground: 0 0% 9%;
-        --muted: 0 0% 96.1%;
-        --muted-foreground: 0 0% 45.1%;
-        --accent: 0 0% 96.1%;
+        --muted: 0 0% 96%;
+        --muted-foreground: 0 0% 45%;
+        --accent: 0 0% 96%;
         --accent-foreground: 0 0% 9%;
-        --destructive: 0 84.2% 60.2%;
+        --destructive: 0 84% 60%;
         --destructive-foreground: 0 0% 98%;
-        --border: 0 0% 89.8%;
-        --input: 0 0% 89.8%;
-        --ring: 0 0% 3.9%;
-        --chart-1: 12 76% 61%;
-        --chart-2: 173 58% 39%;
-        --chart-3: 197 37% 24%;
-        --chart-4: 43 74% 66%;
-        --chart-5: 27 87% 67%;
+        --border: 0 0% 90%;
+        --input: 0 0% 90%;
+        --ring: 0 72% 44%;
         --radius: 0.5rem;
     }
     .dark {
@@ -65,11 +77,6 @@ code {
         --border: 0 0% 14.9%;
         --input: 0 0% 14.9%;
         --ring: 0 0% 83.1%;
-        --chart-1: 220 70% 50%;
-        --chart-2: 160 60% 45%;
-        --chart-3: 30 80% 55%;
-        --chart-4: 280 65% 60%;
-        --chart-5: 340 75% 55%;
     }
 }
 
@@ -79,8 +86,11 @@ code {
     }
     body {
         @apply bg-background text-foreground;
+        background-color: #FFFFFF;
+        color: #111111;
     }
 }
+
 
 @layer base {
     [data-debug-wrapper="true"] {
@@ -137,4 +147,37 @@ code {
 
 .animate-marquee-right {
   animation: marqueeRight 200s linear infinite;
+}
+
+/* Premium Glow Utilities */
+.shadow-red-glow {
+  box-shadow: 0 0 20px rgba(181, 0, 0, 0.15);
+}
+
+.shadow-red-glow-strong {
+  box-shadow: 0 0 35px rgba(181, 0, 0, 0.35);
+}
+
+.hover-glow-red:hover {
+  box-shadow: 0 0 25px rgba(181, 0, 0, 0.3);
+  border-color: rgba(181, 0, 0, 0.4) !important;
+}
+
+.border-white-10 {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Scale and custom smooth transition */
+.transition-premium {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Visible Keyboard Focus States globally for Accessibility */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #E10600 !important;
+  outline-offset: 3px !important;
 }
