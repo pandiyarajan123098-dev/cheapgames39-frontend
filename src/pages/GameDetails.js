@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import steamLogo from "../assets/steam.png";
 import { GameCard } from "../components/GameCard";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -408,23 +409,15 @@ const GameDetails = () => {
   /* ================= BREADCRUMBS RENDERER ================= */
   const renderBreadcrumbs = () => {
     if (!game) return null;
-    return (
-      <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 mb-6 select-none uppercase tracking-wider">
-        <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
-        <ChevronRight className="w-3 h-3 text-zinc-700" />
-        <Link to="/games" className="hover:text-[#E00000] transition">Games</Link>
-        {game.categories?.name && (
-          <>
-            <ChevronRight className="w-3 h-3 text-zinc-700" />
-            <Link to={`/games?category=${game.category_id}`} className="hover:text-[#E00000] transition">
-              {game.categories.name}
-            </Link>
-          </>
-        )}
-        <ChevronRight className="w-3 h-3 text-zinc-700" />
-        <span className="text-white font-bold truncate max-w-[150px] md:max-w-none">{game.title}</span>
-      </nav>
-    );
+    const paths = [{ label: "Games", path: "/games" }];
+    if (game.categories?.name) {
+      paths.push({
+        label: game.categories.name,
+        path: `/games?category=${game.category_id}`
+      });
+    }
+    paths.push({ label: game.title });
+    return <Breadcrumbs paths={paths} />;
   };
 
   /* ================= SKELETON SHIMMER LOAD STATE ================= */
@@ -483,7 +476,7 @@ const GameDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-16 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}

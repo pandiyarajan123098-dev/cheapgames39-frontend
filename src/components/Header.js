@@ -25,7 +25,11 @@ import {
   Skull,
   Tag,
   MessageCircle,
-  Headphones
+  Headphones,
+  Home,
+  ChevronDown,
+  HelpCircle,
+  Monitor
 } from "lucide-react";
 
 export const Header = () => {
@@ -45,7 +49,23 @@ export const Header = () => {
   const [allGames, setAllGames] = useState([]);
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [openAccordion, setOpenAccordion] = useState(null);
+  const [categories, setCategories] = useState([]);
   const searchRef = useRef(null);
+
+  // Fetch categories dynamically on mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/categories`);
+        const data = await res.json();
+        setCategories(data || []);
+      } catch (err) {
+        console.error("Header categories loading error:", err);
+      }
+    };
+    loadCategories();
+  }, []);
 
   // Scroll Lock & Escape listener for mobile menu drawer
   useEffect(() => {
@@ -157,6 +177,257 @@ export const Header = () => {
     }
   };
 
+  const getCategoryPath = (name) => {
+    const match = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+    return match ? `/games?category=${match.id}` : "/games";
+  };
+
+  const isItemActive = (path) => {
+    if (path === "/") {
+      return location.pathname === "/";
+    }
+    if (path === "/games") {
+      return location.pathname === "/games" && !location.search;
+    }
+    if (path.includes("?")) {
+      const [basePath, searchStr] = path.split("?");
+      const searchParams = new URLSearchParams(searchStr);
+      const currentParams = new URLSearchParams(location.search);
+      if (location.pathname !== basePath) return false;
+      for (const [key, val] of searchParams.entries()) {
+        if (currentParams.get(key) !== val) return false;
+      }
+      return true;
+    }
+    return location.pathname === path;
+  };
+
+  useEffect(() => {
+    const isPlatformActive = categories.some(cat => isItemActive(`/games?category=${cat.id}`));
+    const isSteamActive = isItemActive("/games");
+    if (isPlatformActive || isSteamActive) {
+      setOpenAccordion("platforms");
+    } else if (
+      isItemActive("/offers") ||
+      isItemActive("/games?maxPrice=49") ||
+      isItemActive("/games?maxPrice=99") ||
+      isItemActive("/games?maxPrice=199") ||
+      isItemActive("/games?minSteamPrice=1500")
+    ) {
+      setOpenAccordion("deals");
+    } else if (
+      isItemActive("/dashboard") ||
+      isItemActive("/wishlist") ||
+      isItemActive("/cart")
+    ) {
+      setOpenAccordion("account");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search, categories]);
+
+  const renderMenuItem = ({ label, path, icon: Icon, isSubmenu = false, onClick }) => {
+    const active = isItemActive(path);
+    const itemHeight = isSubmenu ? "h-10" : "h-11";
+    const textSize = isSubmenu ? "text-[13px]" : "text-sm";
+    const iconSize = isSubmenu ? "w-4 h-4" : "w-[18px] h-[18px]";
+    const paddingLeft = isSubmenu 
+      ? (active ? "pl-[26px]" : "pl-7")
+      : (active ? "pl-[14px]" : "px-4");
+    const borderLeft = active ? "border-l-2 border-[#B50000]" : "";
+    const bgClass = active ? "bg-[#F8F8F8]" : "bg-transparent hover:bg-[#F8F8F8]";
+    const textClass = active ? "text-[#222222] font-semibold" : "text-[#555555] hover:text-[#222222] font-medium";
+    const iconColor = active ? "text-[#B50000]" : "text-[#666666]";
+
+    const content = (
+      <div className="flex items-center gap-3">
+        {Icon && <Icon className={`${iconSize} ${iconColor} stroke-[1.8] transition-colors shrink-0`} />}
+        <span className={textSize}>{label}</span>
+      </div>
+    );
+
+    if (path.startsWith("http")) {
+      return (
+        <a
+          href={path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${itemHeight} flex items-center justify-between pr-4 rounded-lg ${paddingLeft} ${borderLeft} ${bgClass} ${textClass} transition-all duration-150 select-none cursor-pointer`}
+        >
+          {content}
+          <ChevronRight className="w-3.5 h-3.5 stroke-[1.8] text-[#999999]" />
+        </a>
+      );
+    }
+
+    return (
+      <Link
+        to={path}
+        onClick={() => {
+          setMobileMenuOpen(false);
+          if (onClick) onClick();
+        }}
+        className={`${itemHeight} flex items-center justify-between pr-4 rounded-lg ${paddingLeft} ${borderLeft} ${bgClass} ${textClass} transition-all duration-150 select-none`}
+      >
+        {content}
+        <ChevronRight className="w-3.5 h-3.5 stroke-[1.8] text-[#999999]" />
+      </Link>
+    );
+  };
+
+  const renderAccordionHeader = ({ label, icon: Icon, id }) => {
+    const isOpen = openAccordion === id;
+    let isActiveChild = false;
+    if (id === "platforms") {
+      isActiveChild = categories.some(cat => isItemActive(`/games?category=${cat.id}`)) || isItemActive("/games");
+    } else if (id === "deals") {
+      isActiveChild = [
+        "/offers", 
+        "/games?maxPrice=49", 
+        "/games?maxPrice=99", 
+        "/games?maxPrice=199", 
+        "/games?minSteamPrice=1500"
+      ].some(p => isItemActive(p));
+    } else if (id === "account") {
+      isActiveChild = ["/dashboard", "/wishlist", "/cart"].some(p => isItemActive(p));
+    }
+
+    const itemHeight = "h-11";
+    const paddingLeft = "px-4";
+    const textClass = "text-[#555555] hover:text-[#222222] font-medium";
+    const iconColor = isActiveChild ? "text-[#B50000]" : "text-[#666666]";
+
+    return (
+      <button
+        onClick={() => setOpenAccordion(isOpen ? null : id)}
+        className={`${itemHeight} w-full flex items-center justify-between pr-4 rounded-lg ${paddingLeft} ${textClass} hover:bg-[#F8F8F8] transition-all duration-150 select-none text-left`}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon className={`w-[18px] h-[18px] ${iconColor} stroke-[1.8] shrink-0`} />}
+          <span className="text-sm">{label}</span>
+        </div>
+        <ChevronDown className={`w-3.5 h-3.5 stroke-[1.8] text-[#999999] transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+      </button>
+    );
+  };
+
+  const renderDropdownItem = ({ label, path, icon: Icon, onClick }) => {
+    const active = isItemActive(path);
+    const itemHeight = "h-11";
+    const textSize = "text-sm";
+    const iconSize = "w-[18px] h-[18px]";
+    const paddingLeft = active ? "pl-[14px]" : "px-4";
+    const borderLeft = active ? "border-l-2 border-[#B50000]" : "";
+    const bgClass = active ? "bg-[#F8F8F8]" : "bg-transparent hover:bg-[#F8F8F8]";
+    const textClass = active ? "text-[#222222] font-semibold" : "text-[#555555] hover:text-[#222222] font-medium";
+    const iconColor = active ? "text-[#B50000]" : "text-[#666666]";
+
+    const content = (
+      <div className="flex items-center gap-3">
+        {Icon && <Icon className={`${iconSize} ${iconColor} stroke-[1.8] transition-colors shrink-0`} />}
+        <span className={textSize}>{label}</span>
+      </div>
+    );
+
+    if (path.startsWith("http")) {
+      return (
+        <a
+          href={path}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${itemHeight} flex items-center justify-between pr-4 rounded-lg ${paddingLeft} ${borderLeft} ${bgClass} ${textClass} transition-all duration-150 select-none cursor-pointer mx-1 my-0.5`}
+        >
+          {content}
+          <ChevronRight className="w-3.5 h-3.5 stroke-[1.8] text-[#999999] opacity-0 group-hover:opacity-100 transition-opacity" />
+        </a>
+      );
+    }
+
+    return (
+      <Link
+        to={path}
+        onClick={() => {
+          if (onClick) onClick();
+        }}
+        className={`${itemHeight} flex items-center justify-between pr-4 rounded-lg ${paddingLeft} ${borderLeft} ${bgClass} ${textClass} transition-all duration-150 select-none mx-1 my-0.5`}
+      >
+        {content}
+        <ChevronRight className="w-3.5 h-3.5 stroke-[1.8] text-[#999999] opacity-0 group-hover:opacity-100 transition-opacity" />
+      </Link>
+    );
+  };
+
+  const renderPlatformsSubmenu = () => {
+    return (
+      <div className={`overflow-hidden transition-all duration-200 ease-in-out ${openAccordion === "platforms" ? "max-h-[350px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+        <div className="flex flex-col gap-0.5 ml-4 border-l border-[#E5E5E5]/70 py-1">
+          {renderMenuItem({ label: "Steam Deals", path: "/games", icon: Gamepad2, isSubmenu: true })}
+          {categories
+            .filter(cat => ["Action", "Open World", "RPG", "Racing", "Horror", "Adventure", "Fighting"].includes(cat.name))
+            .map((cat, idx) => 
+              renderMenuItem({
+                key: idx,
+                label: cat.name,
+                path: `/games?category=${cat.id}`,
+                icon: Gamepad2,
+                isSubmenu: true
+              })
+            )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderDealsSubmenu = () => {
+    return (
+      <div className={`overflow-hidden transition-all duration-200 ease-in-out ${openAccordion === "deals" ? "max-h-[300px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
+        <div className="flex flex-col gap-0.5 ml-4 border-l border-[#E5E5E5]/70 py-1">
+          {[
+            { label: "Today's Deals", path: "/offers", icon: Tag },
+            { label: "Under ₹49", path: "/games?maxPrice=49", icon: Tag },
+            { label: "Under ₹99", path: "/games?maxPrice=99", icon: Tag },
+            { label: "Under ₹199", path: "/games?maxPrice=199", icon: Tag },
+            { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tag }
+          ].map((item, idx) => 
+            renderMenuItem({
+              key: idx,
+              label: item.label,
+              path: item.path,
+              icon: item.icon,
+              isSubmenu: true
+            })
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderAccountSection = () => {
+    return (
+      <div className="flex flex-col gap-0.5">
+        {user ? (
+          <>
+            {renderMenuItem({ label: "Dashboard", path: "/dashboard", icon: User })}
+            {renderMenuItem({ label: "Wishlist", path: "/wishlist", icon: Heart })}
+            {renderMenuItem({ label: "Shopping Cart", path: "/cart", icon: ShoppingCart })}
+            {renderMenuItem({ 
+              label: "Log Out", 
+              path: "#logout", 
+              icon: LogOut,
+              onClick: async () => {
+                await handleLogout();
+              }
+            })}
+          </>
+        ) : (
+          <>
+            {renderMenuItem({ label: "Login", path: "/login", icon: User })}
+            {renderMenuItem({ label: "Sign Up", path: "/signup", icon: User })}
+          </>
+        )}
+      </div>
+    );
+  };
+
   return (
     <>
       <header className="sticky top-0 z-50 bg-white border-b border-[#E5E5E5] h-16 md:h-[70px] shadow-sm">
@@ -174,6 +445,129 @@ export const Header = () => {
               </span>
             </div>
           </Link>
+
+          {/* Desktop Navigation Menus */}
+          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-[#555555] select-none h-full">
+            
+            {/* STEAM Dropdown */}
+            {(() => {
+              const active = categories.some(cat => isItemActive(`/games?category=${cat.id}`)) || isItemActive("/games");
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Steam</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.08em] uppercase px-4 py-1.5 block select-none border-b border-[#F5F5F5] mb-1">Steam Catalog</span>
+                    {categories
+                      .filter(c => ["Action", "Open World", "RPG", "Racing", "Horror", "Adventure", "Fighting"].includes(c.name))
+                      .map(cat => 
+                        renderDropdownItem({
+                          key: cat.id,
+                          label: cat.name,
+                          path: `/games?category=${cat.id}`,
+                          icon: Gamepad2
+                        })
+                      )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* CATEGORIES Dropdown */}
+            {(() => {
+              const active = categories.some(cat => isItemActive(`/games?category=${cat.id}`));
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Categories</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-52 max-h-[300px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
+                    {categories.map(cat => 
+                      renderDropdownItem({
+                        key: cat.id,
+                        label: cat.name,
+                        path: `/games?category=${cat.id}`,
+                        icon: Gamepad2
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* DEALS Dropdown */}
+            {(() => {
+              const active = ["/offers", "/games?maxPrice=49", "/games?maxPrice=99", "/games?maxPrice=199", "/games?minSteamPrice=1500"].some(p => isItemActive(p));
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Deals</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-48 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    {[
+                      { label: "Today's Deals", path: "/offers", icon: Tag },
+                      { label: "Under ₹49", path: "/games?maxPrice=49", icon: Tag },
+                      { label: "Under ₹99", path: "/games?maxPrice=99", icon: Tag },
+                      { label: "Under ₹199", path: "/games?maxPrice=199", icon: Tag },
+                      { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tag }
+                    ].map((item, idx) => 
+                      renderDropdownItem({
+                        key: idx,
+                        label: item.label,
+                        path: item.path,
+                        icon: item.icon
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ALL Games */}
+            {(() => {
+              const active = isItemActive("/games");
+              return (
+                <Link to="/games" className={`hover:text-[#B50000] py-4 transition h-full flex items-center ${active ? "text-[#222222] font-semibold" : ""}`}>
+                  All Games
+                </Link>
+              );
+            })()}
+
+            {/* SUPPORT Dropdown */}
+            {(() => {
+              const active = ["/contact", "/faq"].some(p => isItemActive(p));
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Support</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
+                    {renderDropdownItem({
+                      label: "WhatsApp Support",
+                      path: "https://wa.me/916379490178",
+                      icon: MessageCircle
+                    })}
+                    {renderDropdownItem({
+                      label: "Contact Us",
+                      path: "/contact",
+                      icon: HelpCircle
+                    })}
+                    {renderDropdownItem({
+                      label: "FAQ",
+                      path: "/faq",
+                      icon: HelpCircle
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
+
+          </nav>
 
           {/* Search bar desktop */}
           <div ref={searchRef} className="hidden md:block flex-1 max-w-lg relative">
@@ -403,10 +797,10 @@ export const Header = () => {
               )}
             </Link>
 
-            {/* Hamburger — single unified button for all viewports */}
+            {/* Hamburger menu button — hidden on desktop, visible on mobile/tablet */}
             <button
               onClick={() => setMobileMenuOpen(true)}
-              className="p-2.5 text-[#555555] hover:text-[#111111] transition active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="p-2.5 text-[#555555] hover:text-[#111111] transition active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center lg:hidden"
               aria-label="Open navigation menu"
             >
               <Menu className="w-5 h-5" />
@@ -414,44 +808,44 @@ export const Header = () => {
 
           </div>
         </div>
-
-
       </header>
 
       {/* MOBILE FULL-SCREEN NAVIGATION DRAWER */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 flex">
+        <div className="fixed inset-0 z-50 flex lg:hidden">
           {/* Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/65 transition-opacity duration-300"
+            className="absolute inset-0 bg-black/35 transition-opacity duration-300"
             onClick={() => setMobileMenuOpen(false)}
           />
 
           {/* Drawer Panel */}
-          <div className="relative z-10 w-[85vw] max-w-[360px] h-full bg-white border-r border-[#E5E5E5] shadow-2xl flex flex-col justify-between overflow-y-auto animate-slide-in-left">
+          <div className="relative z-10 w-[85vw] max-w-[320px] h-screen bg-white border-r border-[#E5E5E5] shadow-xl flex flex-col justify-between overflow-y-auto font-sans select-none text-[#222222]">
             
-            {/* Header / Brand */}
-            <div>
-              <div className="flex items-center justify-between p-5 border-b border-[#E5E5E5] mb-4">
+            {/* Upper scrollable portion */}
+            <div className="flex-1 overflow-y-auto px-2 py-4 flex flex-col gap-0.5">
+              
+              {/* STICKY HEADER */}
+              <div className="sticky top-0 bg-white z-20 flex items-center justify-between p-2 pb-4 border-b border-[#E5E5E5] mb-4">
                 <Link to="/" className="flex items-center gap-2" onClick={() => setMobileMenuOpen(false)}>
                   <img loading="lazy" src={logo} alt="CG39" className="w-8 h-8 object-contain" />
-                  <span className="text-base font-bold text-[#111111] uppercase tracking-tight">
-                    CG<span className="text-[#E00000]">39</span> <span className="text-[10px] text-[#999999] font-bold uppercase tracking-wider ml-1">GAME STORE</span>
+                  <span className="text-sm font-extrabold text-[#222222] uppercase tracking-tight">
+                    CG<span className="text-[#B50000]">39</span> <span className="text-[9px] text-[#999999] font-black uppercase tracking-wider ml-1">GAME STORE</span>
                   </span>
                 </Link>
                 <button 
                   onClick={() => setMobileMenuOpen(false)}
-                  className="text-[#555555] hover:text-[#111111] p-1 animate-pulse-none"
+                  className="text-[#666666] hover:text-[#222222] p-1.5"
                   aria-label="Close menu"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
-              {/* Mobile Search Bar inside Drawer */}
-              <div className="px-5 mb-4">
+              {/* SEARCH INPUT BAR */}
+              <div className="px-2 mb-4">
                 <form onSubmit={(e) => { handleSearchSubmit(e); setMobileMenuOpen(false); }} className="relative">
-                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#999999]" />
                   <input
                     type="text"
                     placeholder="Search games..."
@@ -461,7 +855,8 @@ export const Header = () => {
                       setSearchQuery(e.target.value);
                       setSearchFocused(true);
                     }}
-                    className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-10 py-2.5 text-xs text-[#111111] placeholder-[#AAAAAA] focus:outline-none focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 transition"
+                    className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-9 pr-8 py-2 text-xs text-[#222222] placeholder-[#999999] focus:outline-none focus:border-[#B50000] transition"
+                    style={{ height: "44px" }}
                   />
                   {searchQuery && (
                     <button 
@@ -472,7 +867,7 @@ export const Header = () => {
                         setSearchResults([]);
                         setSelectedIndex(-1);
                       }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 text-zinc-500 hover:text-white"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 text-[#999999] hover:text-[#222222]"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -480,7 +875,7 @@ export const Header = () => {
                 </form>
                 {/* Mobile live results */}
                 {searchQuery && searchResults.length > 0 && (
-                  <div className="mt-2 bg-white border border-[#E5E5E5] rounded-xl overflow-hidden">
+                  <div className="mt-2 bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-lg">
                     {searchResults.slice(0, 3).map((game) => {
                       const disc = game.steam_price && game.steam_price > game.price
                         ? Math.round(((game.steam_price - game.price) / game.steam_price) * 100) : 0;
@@ -492,15 +887,15 @@ export const Header = () => {
                             setSearchQuery("");
                             setMobileMenuOpen(false);
                           }}
-                          className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F5F5F5] border-b border-[#F0F0F0] last:border-0 transition"
+                          className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-[#F8F8F8] border-b border-[#E5E5E5] last:border-0 transition"
                         >
-                          <img src={game.image_url} alt={game.title} className="w-9 h-[26px] object-cover rounded-lg shrink-0" />
+                          <img src={game.image_url} alt={game.title} className="w-9 h-[26px] object-cover rounded shrink-0 bg-black/5" />
                           <div className="flex-1 min-w-0">
-                            <p className="text-[#111111] text-xs font-bold truncate">{game.title}</p>
+                            <p className="text-[#222222] text-xs font-bold truncate">{game.title}</p>
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
-                            {disc > 0 && <span className="text-[9px] bg-[#E00000] text-white font-black px-1 py-0.5 rounded">-{disc}%</span>}
-                            <span className="text-xs font-black text-[#E00000]">₹{game.price?.toLocaleString()}</span>
+                            {disc > 0 && <span className="text-[9px] bg-[#B50000] text-white font-black px-1 py-0.5 rounded-md">-{disc}%</span>}
+                            <span className="text-xs font-black text-[#B50000]">₹{game.price?.toLocaleString()}</span>
                           </div>
                         </div>
                       );
@@ -510,199 +905,44 @@ export const Header = () => {
                         navigate(`/games?search=${encodeURIComponent(searchQuery)}`);
                         setMobileMenuOpen(false);
                       }}
-                      className="w-full flex items-center justify-center gap-1 p-2.5 text-[10px] text-[#555555] hover:text-[#111111] font-bold uppercase tracking-wider bg-[#F5F5F5] transition"
+                      className="w-full flex items-center justify-center gap-1 p-2 text-[10px] text-[#666666] hover:text-[#222222] font-extrabold uppercase tracking-wider bg-[#F7F7F7] border-t border-[#E5E5E5] transition"
                     >
                       View all results <ArrowRight className="w-3 h-3" />
                     </button>
                   </div>
                 )}
                 {searchQuery && searchResults.length === 0 && (
-                  <p className="mt-2 text-[10px] text-zinc-600 text-center font-bold uppercase tracking-wide select-none">No games found</p>
+                  <p className="mt-2 text-[10px] text-[#999999] text-center font-bold uppercase tracking-wide select-none">No games found</p>
                 )}
               </div>
 
-              {/* Navigation Group 1: BROWSE CATEGORIES */}
-              <div className="px-5 mb-6">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 px-3 block">BROWSE STORE</span>
-                <nav className="flex flex-col gap-1">
-                  {[
-                    { label: "Steam Deals", path: "/games?category=Steam", icon: Gamepad2 },
-                    { label: "PC Games Catalog", path: "/games", icon: Gamepad2 },
-                    { label: "Action Games", path: "/games?category=Action", icon: Swords },
-                    { label: "Open World", path: "/games?category=Open%20World", icon: Compass },
-                    { label: "RPG / Fantasy", path: "/games?category=RPG", icon: Shield },
-                    { label: "Racing & Cars", path: "/games?category=Racing", icon: Car },
-                    { label: "Survival Horror", path: "/games?category=Horror", icon: Skull }
-                  ].map((item, idx) => {
-                    const isActive = (location.pathname + location.search) === item.path;
-                    const IconComponent = item.icon;
-                    return (
-                      <Link
-                        key={idx}
-                        to={item.path}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`h-11 flex items-center justify-between pl-3 pr-4 rounded-xl transition-all duration-150 text-[15px] font-medium group ${
-                          isActive 
-                            ? "bg-[rgba(225,6,0,0.08)] text-[#E00000] border-l-[3px] border-[#E10600] pl-2" 
-                            : "hover:bg-[#F5F5F5] text-[#444444] hover:text-[#111111]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <IconComponent className={`w-4 h-4 transition-colors duration-150 ${isActive ? "text-[#E00000]" : "text-zinc-500 group-hover:text-[#E00000]"}`} />
-                          <span>{item.label}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                      </Link>
-                    );
-                  })}
-                </nav>
+              {/* STORE SECTION */}
+              <div className="flex flex-col gap-0.5">
+                <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 mt-1 block select-none">Store</span>
+                {renderMenuItem({ label: "Home", path: "/", icon: Home })}
+                {renderMenuItem({ label: "PC Game Catalog", path: "/games", icon: Gamepad2 })}
+                {renderAccordionHeader({ label: "Platforms", icon: Gamepad2, id: "platforms" })}
+                {renderPlatformsSubmenu()}
+                {renderAccordionHeader({ label: "Deals & Offers", icon: Tag, id: "deals" })}
+                {renderDealsSubmenu()}
               </div>
 
-              {/* Navigation Group 2: PRICE DISCOVERY */}
-              <div className="px-5 mb-6">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 px-3 block">DEALS & OFFERS</span>
-                <nav className="flex flex-col gap-1">
-                  {[
-                    { label: "Today's Spotlight", path: "/offers", icon: BadgePercent },
-                    { label: "Under ₹49 Deals", path: "/games?maxPrice=49", icon: Tag },
-                    { label: "Under ₹99 Budget", path: "/games?maxPrice=99", icon: Tag },
-                    { label: "Under ₹199 Premium", path: "/games?maxPrice=199", icon: Tag }
-                  ].map((item, idx) => {
-                    const isActive = (location.pathname + location.search) === item.path;
-                    const IconComponent = item.icon;
-                    return (
-                      <Link
-                        key={idx}
-                        to={item.path}
-                        onClick={() => setMobileMenuOpen(false)}
-                        className={`h-11 flex items-center justify-between pl-3 pr-4 rounded-xl transition-all duration-150 text-[15px] font-medium group ${
-                          isActive 
-                            ? "bg-[rgba(225,6,0,0.08)] text-[#E00000] border-l-[3px] border-[#E10600] pl-2" 
-                            : "hover:bg-[#F5F5F5] text-[#444444] hover:text-[#111111]"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <IconComponent className={`w-4 h-4 transition-colors duration-150 ${isActive ? "text-[#E00000]" : "text-zinc-500 group-hover:text-[#E00000]"}`} />
-                          <span>{item.label}</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                      </Link>
-                    );
-                  })}
-                </nav>
+              {/* ACCOUNT SECTION */}
+              <div className="flex flex-col gap-0.5 mt-5">
+                <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 block select-none">Account</span>
+                {renderAccountSection()}
               </div>
 
-              {/* Navigation Group 3: ACCOUNT */}
-              <div className="px-5 mb-6">
-                <span className="text-[11px] font-bold uppercase tracking-widest text-[#A1A1AA] mb-2 px-3 block">MY PROFILE</span>
-                <nav className="flex flex-col gap-1">
-                  {user ? (
-                    <>
-                      {[
-                        { label: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-                        { label: "Wishlist", path: "/wishlist", icon: Heart },
-                        { label: "Shopping Cart", path: "/cart", icon: ShoppingCart }
-                      ].map((item, idx) => {
-                        const isActive = (location.pathname + location.search) === item.path;
-                        const IconComponent = item.icon;
-                        return (
-                          <Link
-                            key={idx}
-                            to={item.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`h-11 flex items-center justify-between pl-3 pr-4 rounded-xl transition-all duration-150 text-sm font-medium group ${
-                              isActive 
-                                ? "bg-[rgba(224,0,0,0.08)] text-[#E00000] border-l-[3px] border-[#E00000] pl-2" 
-                                : "hover:bg-[#F5F5F5] text-[#444444] hover:text-[#111111]"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <IconComponent className={`w-4 h-4 transition-colors duration-150 ${isActive ? "text-[#E00000]" : "text-zinc-500 group-hover:text-[#E00000]"}`} />
-                              <span>{item.label}</span>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                          </Link>
-                        );
-                      })}
-                      <button
-                        onClick={async () => {
-                          setMobileMenuOpen(false);
-                          await handleLogout();
-                        }}
-                        className="w-full h-11 flex items-center justify-between pl-3 pr-4 rounded-xl transition-all duration-150 text-[14px] font-medium group hover:bg-[#FFF5F5] text-[#444444] hover:text-red-600 text-left"
-                      >
-                        <div className="flex items-center gap-3">
-                          <LogOut className="w-4 h-4 text-zinc-500 group-hover:text-[#E00000] transition-colors duration-150" />
-                          <span>Logout</span>
-                        </div>
-                        <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      {[
-                        { label: "Login", path: "/login", icon: User },
-                        { label: "Sign Up", path: "/signup", icon: User }
-                      ].map((item, idx) => {
-                        const isActive = (location.pathname + location.search) === item.path;
-                        const IconComponent = item.icon;
-                        const isSignUp = item.label === "Sign Up";
-                        return (
-                          <Link
-                            key={idx}
-                            to={item.path}
-                            onClick={() => setMobileMenuOpen(false)}
-                            className={`h-11 flex items-center justify-between pl-3 pr-4 rounded-xl transition-all duration-150 text-sm font-medium group ${
-                              isActive 
-                                ? "bg-[rgba(224,0,0,0.08)] text-[#E00000] border-l-[3px] border-[#E00000] pl-2" 
-                                : isSignUp
-                                  ? "hover:bg-[#E00000]/10 text-[#E00000]"
-                                  : "hover:bg-[#F5F5F5] text-[#444444] hover:text-[#111111]"
-                            }`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <IconComponent className={`w-4 h-4 transition-colors duration-150 ${isActive || isSignUp ? "text-[#E00000]" : "text-zinc-500 group-hover:text-[#E00000]"}`} />
-                              <span>{item.label}</span>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                          </Link>
-                        );
-                      })}
-                    </>
-                  )}
-                </nav>
-              </div>
             </div>
 
-            {/* Bottom Support */}
-            <div className="p-5 border-t border-[#E5E5E5] bg-[#F8F8F8]">
-              <span className="text-[11px] font-bold uppercase tracking-widest text-[#777777] mb-2 px-3 block">CUSTOMER SUPPORT</span>
-              <nav className="flex flex-col gap-1">
-                <a 
-                  href="https://whatsapp.com/channel/0029Vb8WvNiGehEGfRVnMr2T"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="h-11 flex items-center justify-between pl-3 pr-4 rounded-xl hover:bg-[#F0F0F0] text-[#444444] hover:text-[#111111] transition-all duration-150 text-sm font-medium group"
-                >
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-4 h-4 text-zinc-500 group-hover:text-[#E00000] transition-colors duration-150" />
-                    <span>Join WhatsApp Channel</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                </a>
-                <Link 
-                  to="/contact" 
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="h-11 flex items-center justify-between pl-3 pr-4 rounded-xl hover:bg-[#151515] text-zinc-300 hover:text-white transition-all duration-150 text-sm font-medium group"
-                >
-                  <div className="flex items-center gap-3">
-                    <Headphones className="w-4 h-4 text-zinc-500 group-hover:text-[#E00000] transition-colors duration-150" />
-                    <span>Contact Our Team</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-zinc-600 transition-transform group-hover:translate-x-0.5" />
-                </Link>
-              </nav>
+            {/* BOTTOM SUPPORT SECTION */}
+            <div className="p-3 border-t border-[#E5E5E5] bg-[#FFFFFF] flex flex-col gap-0.5 select-none shrink-0">
+              <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 block">Support</span>
+              {renderMenuItem({ label: "WhatsApp Support", path: "https://wa.me/916379490178", icon: MessageCircle })}
+              {renderMenuItem({ label: "Contact Us", path: "/contact", icon: HelpCircle })}
+              {renderMenuItem({ label: "FAQ", path: "/faq", icon: HelpCircle })}
             </div>
+
           </div>
         </div>
       )}

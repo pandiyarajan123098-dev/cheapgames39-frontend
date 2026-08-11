@@ -8,6 +8,7 @@ import {
   LockKeyhole,
   HelpCircle,
 } from "lucide-react";
+import { Breadcrumbs } from "./Breadcrumbs";
 
 /**
  * Shared layout wrapper for all CG39 legal / trust pages.
@@ -42,15 +43,11 @@ const LegalLayout = ({
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1000px] mx-auto">
 
         {/* BREADCRUMB */}
-        <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 mb-8 select-none uppercase tracking-wider">
-          <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-white font-bold">{breadcrumb}</span>
-        </nav>
+        <Breadcrumbs paths={[{ label: breadcrumb }]} />
 
         {/* PAGE HEADER */}
         <div className="mb-10">

@@ -19,6 +19,7 @@ import {
 import { toast } from "sonner";
 import axios from "axios";
 import { GameCard } from "../components/GameCard";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -100,21 +101,13 @@ const Cart = () => {
 
   /* ================= BREADCRUMBS RENDERER ================= */
   const renderBreadcrumbs = () => {
-    return (
-      <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 mb-6 select-none uppercase tracking-wider">
-        <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
-        <ChevronRight className="w-3 h-3 text-zinc-700" />
-        <Link to="/games" className="hover:text-[#E00000] transition">Games</Link>
-        <ChevronRight className="w-3 h-3 text-zinc-700" />
-        <span className="text-white font-bold">Shopping Cart</span>
-      </nav>
-    );
+    return <Breadcrumbs paths={[{ label: "Games", path: "/games" }, { label: "Shopping Cart" }]} />;
   };
 
   /* ================= LOADING SKELETON STATE ================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] text-white pt-24 pb-20 px-4 sm:px-6 font-sans select-none">
+      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans select-none">
         <div className="max-w-[1320px] mx-auto space-y-8 animate-pulse">
           {/* Breadcrumbs skeleton */}
           <div className="h-4 bg-[#151515] rounded-lg w-1/4"></div>
@@ -137,7 +130,7 @@ const Cart = () => {
   /* ================= EMPTY STATE ================= */
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
         <div className="max-w-[1320px] mx-auto">
           {renderBreadcrumbs()}
           <div className="text-center py-24 bg-[#111111] border border-white/8 rounded-3xl p-8 max-w-lg mx-auto shadow-xl space-y-5 select-none">
@@ -161,7 +154,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}

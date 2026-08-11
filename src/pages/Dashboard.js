@@ -26,6 +26,7 @@ import {
   Mail,
   ShoppingCart,
 } from "lucide-react";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -153,15 +154,11 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans animate-page-section">
       <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
 
         {/* ── BREADCRUMB ── */}
-        <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 select-none uppercase tracking-wider">
-          <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-white font-bold">My Account</span>
-        </nav>
+        <Breadcrumbs paths={[{ label: "My Account" }]} />
 
         {/* ── ACCOUNT HEADER ── */}
         <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center gap-5 shadow-xl">

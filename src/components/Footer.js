@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   Instagram, 
-  MessageSquare, 
+  MessageCircle, 
   ShieldCheck, 
   CreditCard,
   Headphones
@@ -49,10 +49,10 @@ export const Footer = () => {
               href="https://wa.me/916379490178"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full bg-[#E00000] hover:bg-[#F00000] hover:-translate-y-0.5 active:scale-95 text-white font-bold px-5 py-3 rounded-xl text-center block uppercase tracking-wider transition duration-150 flex items-center justify-center gap-2 shadow-md"
+              className="w-full bg-[#25D366] hover:bg-[#20BA5A] hover:-translate-y-0.5 active:scale-95 text-white font-bold px-5 py-3 rounded-xl text-center block uppercase tracking-wider transition duration-150 flex items-center justify-center gap-2 shadow-md"
               aria-label="Chat on WhatsApp"
             >
-              <MessageSquare className="w-4 h-4 shrink-0" /> Chat on WhatsApp
+              <MessageCircle className="w-4 h-4 shrink-0" /> Chat on WhatsApp
             </a>
           </div>
 

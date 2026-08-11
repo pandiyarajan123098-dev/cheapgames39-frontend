@@ -27,6 +27,7 @@ import {
   Gift
 } from "lucide-react";
 import { GameCard } from "../components/GameCard";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 const LIMIT = 12; // 12 items fills 4-column and 3-column grids perfectly!
@@ -286,19 +287,19 @@ const Games = () => {
     return "";
   };
 
-  const renderBreadcrumbs = () => (
-    <nav className="flex items-center gap-1.5 text-[11px] font-medium text-gray-500 mb-4 select-none">
-      <Link to="/" className="hover:text-[#111111] transition">Home</Link>
-      <ChevronRight className="w-3 h-3 text-zinc-700" />
-      <Link to="/games" className="hover:text-[#111111] transition">Games</Link>
-      {getBreadcrumbLabel() && (
-        <>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-gray-300 font-bold truncate max-w-[150px]">{getBreadcrumbLabel()}</span>
-        </>
-      )}
-    </nav>
-  );
+  const renderBreadcrumbs = () => {
+    const paths = [{ label: "Games", path: "/games" }];
+    const label = getBreadcrumbLabel();
+    if (label) {
+      if (categoryVal) {
+        const catId = getSelectedCategoryId();
+        paths.push({ label, path: `/games?category=${catId}` });
+      } else {
+        paths.push({ label });
+      }
+    }
+    return <Breadcrumbs paths={paths} />;
+  };
 
   // Desktop Categories Navigation list
   const renderDesktopCategories = () => {
@@ -525,7 +526,7 @@ const Games = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-16 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-[1400px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}

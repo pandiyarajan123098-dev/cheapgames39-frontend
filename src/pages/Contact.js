@@ -20,6 +20,7 @@ import {
   Home,
 } from "lucide-react";
 import { FaWhatsapp } from "react-icons/fa";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API =
   process.env.REACT_APP_BACKEND_URL ||
@@ -119,18 +120,11 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 font-sans animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 font-sans animate-page-section">
 
       {/* ── BREADCRUMB ── */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mb-10">
-        <nav className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600" aria-label="Breadcrumb">
-          <Link to="/" className="flex items-center gap-1 hover:text-zinc-400 transition">
-            <Home className="w-3 h-3" />
-            Home
-          </Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-zinc-400">Support</span>
-        </nav>
+        <Breadcrumbs paths={[{ label: "Support" }]} />
       </div>
 
       {/* ── HERO ── */}
@@ -282,7 +276,7 @@ const Contact = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="DM CG39 on Instagram"
-                className="flex items-center justify-center gap-2.5 border border-[#E5E5E5] hover:border-[#D4D4D4] text-[#555555] hover:text-[#111111] hover:bg-[#F5F5F5] font-bold px-5 py-3 rounded-xl text-xs uppercase tracking-wider transition min-h-[44px]"
+                className="flex items-center justify-center gap-2.5 bg-instagram-gradient text-white font-bold px-5 py-3.5 rounded-xl text-xs uppercase tracking-wider transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
               >
                 <Instagram className="w-4 h-4 shrink-0" />
                 DM on Instagram

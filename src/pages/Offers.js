@@ -14,6 +14,7 @@ import {
   Home,
 } from "lucide-react";
 import { GameCard } from "../components/GameCard";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -208,21 +209,11 @@ const Offers = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white font-sans pt-24 pb-20 animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white font-sans pt-[76px] md:pt-[82px] pb-20 animate-page-section">
 
       {/* ── BREADCRUMB ── */}
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 mb-10">
-        <nav
-          className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-zinc-600"
-          aria-label="Breadcrumb"
-        >
-          <Link to="/" className="flex items-center gap-1 hover:text-zinc-400 transition">
-            <Home className="w-3 h-3" />
-            Home
-          </Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-zinc-400">Offers</span>
-        </nav>
+        <Breadcrumbs paths={[{ label: "Offers" }]} />
       </div>
 
       {/* ── HERO ── */}

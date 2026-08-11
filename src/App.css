@@ -100,6 +100,13 @@ h1, h2, h3, h4, h5, h6 {
 [class*="bg-[#F00000]"].text-white,
 [class*="bg-[#B50000]"].text-white { color: #FFFFFF !important; }
 
+/* RESTORE white text on green WhatsApp and Instagram gradient */
+.bg-\[\#25D366\].text-white,
+[class*="bg-[#25D366]"].text-white,
+.bg-instagram-gradient.text-white {
+  color: #FFFFFF !important;
+}
+
 /* RESTORE white text on standard Tailwind colored backgrounds */
 .bg-red-500.text-white,
 .bg-red-600.text-white,
@@ -487,4 +494,42 @@ h1, h2, h3, h4, h5, h6 {
 }
 [data-sonner-toast][data-type="error"] * {
   color: #FFFFFF !important;
+}
+
+/* Fix Sonner Close Button Visibility */
+[data-sonner-toast] [data-close-button] {
+  background-color: #222222 !important;
+  border-color: #222222 !important;
+  color: #FFFFFF !important;
+  opacity: 1 !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+  border-radius: 50% !important;
+  left: auto !important;
+  right: -6px !important;
+  top: -6px !important;
+}
+
+[data-sonner-toast] [data-close-button] svg {
+  width: 10px !important;
+  height: 10px !important;
+  stroke: #FFFFFF !important;
+  stroke-width: 2.5px !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background-color: #E00000 !important;
+  border-color: #E00000 !important;
+}
+
+/* Instagram Gradient Background */
+.bg-instagram-gradient {
+  background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%) !important;
+}
+.bg-instagram-gradient:hover {
+  background: linear-gradient(45deg, #e08322 0%, #d5572b 25%, #cb1632 50%, #bb1255 75%, #ab0777 100%) !important;
 }

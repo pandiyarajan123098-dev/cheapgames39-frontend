@@ -26,6 +26,7 @@ import {
   Gamepad2
 } from "lucide-react";
 import steamLogo from "../assets/steam.png";
+import OrderProcessingLoader from "../components/OrderProcessingLoader";
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -48,6 +49,8 @@ const Checkout = () => {
   // Step state: 1 = Review, 2 = Payment, 3 = Pending Confirmation
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  // Truck loader: true ONLY during the order-creation API call
+  const [orderCreating, setOrderCreating] = useState(false);
   const [orderId, setOrderId] = useState(null);
   const [serverOrder, setServerOrder] = useState(null);
   const [transactionId, setTransactionId] = useState("");
@@ -175,8 +178,12 @@ const Checkout = () => {
       return;
     }
 
+    // Minimum loader display: 5 seconds
+    const MIN_LOADER_MS = 5000;
+
     try {
       setLoading(true);
+      setOrderCreating(true); // ← show truck loader
 
       const items = cart.map((item) => ({
         game_id: item.games?.id,
@@ -188,19 +195,23 @@ const Checkout = () => {
       setPurchasedGameIds(gameIds);
       sessionStorage.setItem("cg39_checkout_game_ids", JSON.stringify(gameIds));
 
-      const res = await axios.post(
-        `${API_BASE}/orders`,
-        {
-          billing_name: formData.billing_name,
-          billing_email: formData.billing_email,
-          billing_phone: formData.billing_phone,
-          items,
-          idempotency_key: idempotencyKey.current,
-        },
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        }
-      );
+      // Run API call + 5-second minimum delay in parallel
+      const [res] = await Promise.all([
+        axios.post(
+          `${API_BASE}/orders`,
+          {
+            billing_name: formData.billing_name,
+            billing_email: formData.billing_email,
+            billing_phone: formData.billing_phone,
+            items,
+            idempotency_key: idempotencyKey.current,
+          },
+          {
+            headers: { Authorization: `Bearer ${accessToken}` },
+          }
+        ),
+        new Promise((resolve) => setTimeout(resolve, MIN_LOADER_MS)),
+      ]);
 
       const createdOrder = res.data;
       setOrderId(createdOrder.id);
@@ -213,6 +224,7 @@ const Checkout = () => {
       // Selectively remove purchased games from cart database
       await removeItemsByGameIds(gameIds);
 
+      setOrderCreating(false); // ← hide truck loader, show step 2
       setStep(2);
       toast.success("Order created! Proceed to UPI payment.");
     } catch (error) {
@@ -220,6 +232,7 @@ const Checkout = () => {
       toast.error(errMsg);
     } finally {
       setLoading(false);
+      setOrderCreating(false); // ← always stop loader on error too
     }
   };
 
@@ -386,10 +399,19 @@ ${gameList}`;
     );
   };
 
-  /* ================= SKELETON LOAD ================= */
+  /* ================= TRUCK LOADER — order creation in progress ================= */
+  if (orderCreating) {
+    return (
+      <div className="min-h-screen bg-white pt-[76px] md:pt-[82px]">
+        <OrderProcessingLoader />
+      </div>
+    );
+  }
+
+  /* ================= SKELETON LOAD — page hydrating from sessionStorage ================= */
   if (loading && !serverOrder && step === 1) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans select-none">
+      <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans select-none">
         <div className="max-w-[1320px] mx-auto space-y-8 animate-pulse">
           <div className="h-4 bg-[#151515] rounded w-1/6"></div>
           <div className="h-14 bg-[#151515] rounded-2xl w-full"></div>
@@ -403,7 +425,7 @@ ${gameList}`;
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}

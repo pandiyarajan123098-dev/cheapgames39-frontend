@@ -28,6 +28,7 @@ import {
   RefreshCw,
   Loader2,
 } from "lucide-react";
+import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -188,7 +189,7 @@ const OrderStatus = () => {
   /* ── Loading skeleton ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+      <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
         <div className="max-w-[1200px] mx-auto space-y-6">
           <Skeleton className="h-4 w-1/4" />
           <Skeleton className="h-24 w-full" />
@@ -213,17 +214,14 @@ const OrderStatus = () => {
   const showError = searched && !order && error === "generic";
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-24 pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1200px] mx-auto">
 
         {/* BREADCRUMB */}
-        <nav className="flex items-center gap-1.5 text-[11px] font-semibold text-zinc-500 mb-6 select-none uppercase tracking-wider">
-          <Link to="/" className="hover:text-[#E00000] transition">Home</Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <Link to="/dashboard" className="hover:text-[#E00000] transition">Dashboard</Link>
-          <ChevronRight className="w-3 h-3 text-zinc-700" />
-          <span className="text-white font-bold">Order Status</span>
-        </nav>
+        <Breadcrumbs paths={[
+          { label: "Dashboard", path: "/dashboard" },
+          { label: "Order Status" }
+        ]} />
 
         {/* ── SEARCH / LANDING ── */}
         {showSearch && (
