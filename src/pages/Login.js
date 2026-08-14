@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import {
-  Eye, EyeOff, Mail, Lock, LogIn, ArrowRight, AlertCircle
-} from 'lucide-react';
+  Eye, EyeSlash as EyeOff, Envelope as Mail, Lock, SignIn as LogIn, ArrowRight, Warning as AlertCircle
+} from "@phosphor-icons/react";
 import ReCAPTCHA from "react-google-recaptcha";
 import logo from "../logo.png";
 

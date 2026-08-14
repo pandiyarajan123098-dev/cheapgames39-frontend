@@ -3,23 +3,24 @@ import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { 
-  Trash2, 
+  Trash as Trash2, 
   Plus, 
   Minus, 
-  Loader2, 
+  CircleNotch as Loader2, 
   ShoppingCart, 
   ArrowRight, 
   ArrowLeft, 
-  ChevronRight, 
+  CaretRight as ChevronRight, 
   ShieldCheck, 
   CreditCard, 
-  MessageCircle, 
-  Gamepad2 
-} from "lucide-react";
+  ChatCircle as MessageCircle, 
+  GameController as Gamepad2 
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
 import axios from "axios";
 import { GameCard } from "../components/GameCard";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -107,7 +108,7 @@ const Cart = () => {
   /* ================= LOADING SKELETON STATE ================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans select-none">
+      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans select-none">
         <div className="max-w-[1320px] mx-auto space-y-8 animate-pulse">
           {/* Breadcrumbs skeleton */}
           <div className="h-4 bg-[#151515] rounded-lg w-1/4"></div>
@@ -130,7 +131,7 @@ const Cart = () => {
   /* ================= EMPTY STATE ================= */
   if (cart.length === 0) {
     return (
-      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+      <div className="min-h-screen bg-[#F8F8F8] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
         <div className="max-w-[1320px] mx-auto">
           {renderBreadcrumbs()}
           <div className="text-center py-24 bg-[#111111] border border-white/8 rounded-3xl p-8 max-w-lg mx-auto shadow-xl space-y-5 select-none">
@@ -154,7 +155,7 @@ const Cart = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#F8F8F8] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#F8F8F8] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}
@@ -362,7 +363,7 @@ const Cart = () => {
             </div>
           </div>
           <div className="flex gap-2.5">
-            <MessageCircle className="w-[18px] h-[18px] text-[#E00000] shrink-0 mt-0.5" />
+            <FaWhatsapp className="w-[18px] h-[18px] text-[#E00000] shrink-0 mt-0.5" />
             <div className="leading-tight">
               <span className="text-[11px] font-bold text-white uppercase tracking-wider block">WhatsApp Support</span>
               <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Contact us on WhatsApp for order assistance</span>

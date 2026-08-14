@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import LegalLayout, { Section } from "../components/LegalLayout";
-import { HelpCircle, ChevronDown } from "lucide-react";
+import { Question as HelpCircle, CaretDown as ChevronDown } from "@phosphor-icons/react";
 
 const FAQ_ITEMS = [
   {

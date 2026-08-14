@@ -1,190 +1,245 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Instagram, 
-  MessageCircle, 
   ShieldCheck, 
   CreditCard,
-  Headphones
-} from 'lucide-react';
-import { FaDiscord } from 'react-icons/fa';
-import logo from '../logo.png';
+  Headset,
+  EnvelopeSimple,
+  ArrowRight,
+  InstagramLogo,
+  DiscordLogo
+} from '@phosphor-icons/react';
+import logo from "../logo.png";
+import { FaWhatsapp } from 'react-icons/fa';
 
 export const Footer = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [email, setEmail] = useState('');
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/');
+    try {
+      await logout();
+      navigate('/');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleSubscribe = (e) => {
+    e.preventDefault();
+    // Since backend does not support newsletter subscription, do nothing.
+    // Avoid fake success messages/banners.
   };
 
   return (
-    <footer className="cg39-footer bg-[#181818] border-t border-white/8 mt-16 font-sans text-xs text-zinc-400">
-      
-      {/* SECTION 1 — BRAND + SUPPORT CTA */}
-      <div className="max-w-[1280px] mx-auto px-6 py-10 border-b border-white/5">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
-          
-          {/* Left Brand Details */}
-          <div className="max-w-md">
-            <Link to="/" className="flex items-center gap-2 mb-3" aria-label="CG39 Home">
-              <img loading="lazy" src={logo} alt="CG39" className="w-8 h-8 object-contain" />
-              <span className="text-base font-bold text-white uppercase tracking-tight">
-                CG<span className="text-[#E00000]">39</span> <span className="text-xs text-zinc-500 font-bold uppercase tracking-wider ml-1">GAME STORE</span>
-              </span>
-            </Link>
-            <p className="text-white font-semibold mb-1">Great games. Better prices.</p>
-            <p className="leading-relaxed text-zinc-500">
-              Affordable digital PC gaming marketplace with simple ordering, secure payment and customer support.
+    <footer className="cg39-footer font-sans text-sm selection:bg-[#E10600] selection:text-white">
+      {/* 1. NEWSLETTER BAR (Full Width - Dark Gray) */}
+      <div className="bg-[#161616] border-t border-b border-[#292929]">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-6 md:px-10 lg:px-12 py-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="max-w-xl">
+            <h3 className="text-[#FFFFFF] text-2xl md:text-3xl font-extrabold tracking-wide uppercase mb-2">
+              GET THE BEST DEALS
+            </h3>
+            <p className="text-[#B3B3B3] text-sm leading-relaxed">
+              Stay updated with new games, exclusive deals and special offers.
             </p>
           </div>
-
-          {/* Right Help CTA */}
-          <div className="bg-[#111111] border border-white/5 rounded-2xl p-5 w-full md:w-auto md:min-w-[320px]">
-            <h4 className="text-white font-bold uppercase tracking-widest text-[10px] mb-1">Need help with your order?</h4>
-            <p className="mb-4 text-gray-500 font-normal">Get assistance with payment, activation and delivery.</p>
-            <a
-              href="https://wa.me/916379490178"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-full bg-[#25D366] hover:bg-[#20BA5A] hover:-translate-y-0.5 active:scale-95 text-white font-bold px-5 py-3 rounded-xl text-center block uppercase tracking-wider transition duration-150 flex items-center justify-center gap-2 shadow-md"
-              aria-label="Chat on WhatsApp"
+          <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-3 items-stretch shrink-0">
+            <div className="relative flex items-center w-full sm:w-[320px] md:w-[360px]">
+              <EnvelopeSimple className="absolute left-4 w-5 h-5 text-[#777777] shrink-0" weight="bold" />
+              <input
+                type="email"
+                required
+                placeholder="Email address..."
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-[#FFFFFF] text-[#111111] placeholder:text-[#777777] rounded-[10px] text-sm font-semibold outline-none focus:ring-2 focus:ring-[#E10600] transition duration-150"
+              />
+            </div>
+            <button
+              type="submit"
+              className="inline-flex items-center justify-center gap-2 bg-[#E10600] hover:bg-[#B80000] text-white px-6 py-3 rounded-[10px] text-sm font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] min-h-[46px]"
             >
-              <MessageCircle className="w-4 h-4 shrink-0" /> Chat on WhatsApp
-            </a>
-          </div>
-
+              <span>SIGN UP</span>
+              <ArrowRight className="w-4 h-4 text-white" weight="bold" />
+            </button>
+          </form>
         </div>
       </div>
 
-      {/* SECTION 2 — FOOTER NAVIGATION */}
-      <div className="max-w-[1280px] mx-auto px-6 py-12 border-b border-white/5">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      {/* 2. MAIN FOOTER CONTENT (Full Width - Darker Charcoal) */}
+      <div className="bg-[#111111]">
+        <div className="max-w-[1280px] mx-auto px-5 sm:px-6 md:px-10 lg:px-12 py-8 flex flex-col gap-6">
           
-          {/* Column 1: SHOP */}
-          <div>
-            <h4 className="text-white font-bold mb-4 uppercase tracking-widest text-[10px]">Shop</h4>
-            <ul className="space-y-2.5 font-medium text-zinc-500">
-              <li><Link to="/games" className="hover:text-white transition">All Games</Link></li>
-              <li><Link to="/offers" className="hover:text-white transition">Best Deals</Link></li>
-              <li><Link to="/games?maxPrice=49" className="hover:text-white transition">Under ₹49</Link></li>
-              <li><Link to="/games?maxPrice=99" className="hover:text-white transition">Under ₹99</Link></li>
-              <li><Link to="/games" className="hover:text-white transition">Categories</Link></li>
-            </ul>
+          {/* PAYMENT / TRUST STRIP */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-[#292929] select-none">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
+                <ShieldCheck className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
+              </div>
+              <div>
+                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">SECURE CHECKOUT</h5>
+                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">SSL Encrypted Safe Gateways</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
+                <CreditCard className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
+              </div>
+              <div>
+                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">UPI PAYMENT</h5>
+                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">Instant Verification Transfer</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
+                <Headset className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
+              </div>
+              <div>
+                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">CUSTOMER SUPPORT</h5>
+                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">Dedicated Support Helpdesk</p>
+              </div>
+            </div>
           </div>
 
-          {/* Column 2: ACCOUNT */}
-          <div>
-            <h4 className="text-white font-bold mb-4 uppercase tracking-widest text-[10px]">Account</h4>
-            <ul className="space-y-2.5 font-medium text-zinc-500">
-              <li><Link to="/dashboard" className="hover:text-white transition">Dashboard</Link></li>
-              <li><Link to="/dashboard" className="hover:text-white transition">Orders</Link></li>
-              <li><Link to="/wishlist" className="hover:text-white transition">Wishlist</Link></li>
-              <li><Link to="/cart" className="hover:text-white transition">Cart</Link></li>
-              {user ? (
-                <li>
-                  <button 
-                    onClick={handleLogout}
-                    className="hover:text-white transition font-medium text-left uppercase tracking-wider"
-                  >
-                    Logout
-                  </button>
-                </li>
-              ) : (
-                <li><Link to="/login" className="hover:text-white transition">Login</Link></li>
-              )}
-            </ul>
+          {/* MAIN NAVIGATION */}
+          {/* Professional 2x2 grid on mobile, 4 columns on desktop */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 py-2">
+            {/* SHOP Column */}
+            <div>
+              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">SHOP</h4>
+              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
+                <li><Link to="/games" className="hover:text-[#E10600] transition-colors duration-150">All Games</Link></li>
+                <li><Link to="/offers" className="hover:text-[#E10600] transition-colors duration-150">Best Deals</Link></li>
+                <li><Link to="/games?maxPrice=49" className="hover:text-[#E10600] transition-colors duration-150">Under ₹49</Link></li>
+                <li><Link to="/games?maxPrice=99" className="hover:text-[#E10600] transition-colors duration-150">Under ₹99</Link></li>
+                <li><Link to="/games" className="hover:text-[#E10600] transition-colors duration-150">Categories</Link></li>
+              </ul>
+            </div>
+
+            {/* ACCOUNT Column */}
+            <div>
+              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">ACCOUNT</h4>
+              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
+                <li><Link to="/dashboard" className="hover:text-[#E10600] transition-colors duration-150">Dashboard</Link></li>
+                <li><Link to="/dashboard" className="hover:text-[#E10600] transition-colors duration-150">Orders</Link></li>
+                <li><Link to="/wishlist" className="hover:text-[#E10600] transition-colors duration-150">Wishlist</Link></li>
+                <li><Link to="/cart" className="hover:text-[#E10600] transition-colors duration-150">Cart</Link></li>
+                {user ? (
+                  <li>
+                    <button 
+                      onClick={handleLogout}
+                      className="hover:text-[#E10600] transition-colors duration-150 font-bold uppercase text-xs tracking-wider text-left"
+                    >
+                      Logout
+                    </button>
+                  </li>
+                ) : (
+                  <li><Link to="/login" className="hover:text-[#E10600] transition-colors duration-150">Login</Link></li>
+                )}
+              </ul>
+            </div>
+
+            {/* SUPPORT Column */}
+            <div>
+              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">SUPPORT</h4>
+              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
+                <li><Link to="/faq" className="hover:text-[#E10600] transition-colors duration-150">FAQ</Link></li>
+                <li><Link to="/contact" className="hover:text-[#E10600] transition-colors duration-150">Contact</Link></li>
+                <li><Link to="/order-status" className="hover:text-[#E10600] transition-colors duration-150">Order Tracking</Link></li>
+                <li><Link to="/contact" className="hover:text-[#E10600] transition-colors duration-150">Email Support</Link></li>
+              </ul>
+            </div>
+
+            {/* LEGAL Column */}
+            <div>
+              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">LEGAL</h4>
+              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
+                <li><Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Terms</Link></li>
+                <li><Link to="/privacy" className="hover:text-[#E10600] transition-colors duration-150">Privacy</Link></li>
+                <li><Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Refund Policy</Link></li>
+              </ul>
+            </div>
           </div>
 
-          {/* Column 3: SUPPORT */}
-          <div>
-            <h4 className="text-white font-bold mb-4 uppercase tracking-widest text-[10px]">Support</h4>
-            <ul className="space-y-2.5 font-medium text-zinc-500">
-              <li><Link to="/faq" className="hover:text-white transition">FAQ</Link></li>
-              <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
-              <li><Link to="/order-status" className="hover:text-white transition">Order Tracking</Link></li>
-              <li><a href="https://wa.me/916379490178" target="_blank" rel="noopener noreferrer" className="hover:text-[#25D366] transition">WhatsApp Support</a></li>
-            </ul>
+          {/* 4. SOCIAL MEDIA */}
+          <div className="flex flex-col items-center gap-4 py-3 border-t border-[#292929]">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#FFFFFF]">FOLLOW CG39</span>
+            <div className="flex items-center gap-4">
+              <a
+                href="https://www.instagram.com/cheapgames39.official?igsh=MTUxajEzMjNuZWY2MA=="
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#FFFFFF] hover:text-[#E10600] p-3 bg-[#222222] rounded-full transition-all duration-150 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Instagram Profile"
+              >
+                <InstagramLogo className="w-5 h-5 text-white" weight="bold" />
+              </a>
+              <a
+                href="https://discord.gg/d9JKQgH5g"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#FFFFFF] hover:text-[#E10600] p-3 bg-[#222222] rounded-full transition-all duration-150 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="Discord Server"
+              >
+                <DiscordLogo className="w-5 h-5 text-white" weight="bold" />
+              </a>
+            </div>
           </div>
 
-          {/* Column 4: LEGAL */}
-          <div>
-            <h4 className="text-white font-bold mb-4 uppercase tracking-widest text-[10px]">Legal</h4>
-            <ul className="space-y-2.5 font-medium text-zinc-500">
-              <li><Link to="/terms" className="hover:text-white transition">Terms</Link></li>
-              <li><Link to="/privacy" className="hover:text-white transition">Privacy</Link></li>
-              <li><Link to="/terms" className="hover:text-white transition">Refund Policy</Link></li>
-            </ul>
+          {/* 5. BRAND & TRUST/SECURITY SECTION */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4 border-t border-[#292929]">
+            {/* Brand Intro */}
+            <div className="flex flex-col items-start gap-3">
+              <div className="flex items-center gap-2.5 select-none">
+                <img src={logo} alt="CG39 Logo" className="w-8 h-8 object-contain shrink-0" />
+                <span className="text-[#FFFFFF] font-extrabold tracking-wider text-sm uppercase">CG39 GAME STORE</span>
+              </div>
+              <p className="text-[#E10600] font-extrabold text-[13px] uppercase tracking-wider">
+                Great games. Better prices.
+              </p>
+              <p className="text-[#B3B3B3] text-sm leading-relaxed max-w-lg">
+                Affordable digital PC gaming marketplace with simple ordering, secure payment and customer support.
+              </p>
+            </div>
+
+            {/* Trust / Security */}
+            <div className="flex items-start gap-4 p-5 bg-[#161616] border border-[#292929] rounded-2xl max-w-lg lg:ml-auto">
+              <ShieldCheck className="w-8 h-8 text-[#FFFFFF] shrink-0" weight="bold" />
+              <div className="flex flex-col gap-1">
+                <h5 className="text-[#FFFFFF] font-bold text-xs uppercase tracking-wider">SECURE & TRUSTED</h5>
+                <p className="text-[#B3B3B3] text-xs leading-relaxed">
+                  Your information and transactions are handled securely.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* 6. COPYRIGHT & COMPACT LEGAL LINKS */}
+          <div className="pt-4 border-t border-[#292929] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#777777] font-bold uppercase tracking-wider">
+            <p className="text-center md:text-left select-none">© 2026 CG39. ALL RIGHTS RESERVED.</p>
+            <div className="flex flex-wrap justify-center gap-6">
+              <Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Terms</Link>
+              <Link to="/privacy" className="hover:text-[#E10600] transition-colors duration-150">Privacy</Link>
+              <Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Refund Policy</Link>
+            </div>
           </div>
 
         </div>
       </div>
 
-      {/* SECTION 3 & 4 & 5 — TRUST, PAYMENT, SOCIALS ROW */}
-      <div className="max-w-[1280px] mx-auto px-6 py-8 border-b border-white/8 flex flex-col md:flex-row justify-between items-center gap-6">
-        {/* Trust strip */}
-        <div className="flex flex-wrap justify-center gap-6 text-[10px] font-bold uppercase tracking-widest text-zinc-500">
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-zinc-600" /> Secure Checkout</span>
-          <span className="flex items-center gap-1.5"><CreditCard className="w-4 h-4 text-zinc-600" /> UPI Payment</span>
-          <span className="flex items-center gap-1.5"><Headphones className="w-4 h-4 text-zinc-600" /> Customer Support</span>
-        </div>
-
-        {/* Payment + Social coordinates */}
-        <div className="flex flex-wrap items-center justify-center gap-6">
-          <div className="flex items-center gap-2 font-bold text-white bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-xl text-[10px] uppercase tracking-wider">
-            <span className="text-gray-500 font-semibold">Supported Payment:</span>
-            <span className="text-[#E00000]">UPI</span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-gray-500">Follow CG39</span>
-            <a
-              href="https://www.instagram.com/cheapgames39.official?igsh=MTUxajEzMjNuZWY2MA=="
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white hover:scale-105 active:scale-95 p-2 bg-[#111111] border border-white/5 rounded-xl transition duration-150"
-              aria-label="Instagram Profile"
-            >
-              <Instagram className="w-4 h-4" />
-            </a>
-            <a
-              href="https://discord.gg/d9JKQgH5g"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-gray-400 hover:text-white hover:scale-105 active:scale-95 p-2 bg-[#111111] border border-white/5 rounded-xl transition duration-150"
-              aria-label="Discord Server"
-            >
-              <FaDiscord className="w-4 h-4" />
-            </a>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 6 — FINAL COPYRIGHT BAR */}
-      <div className="max-w-[1280px] mx-auto px-6 py-6 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] text-zinc-600 font-medium uppercase tracking-wider">
-        <p>&copy; 2026 CG39. All rights reserved.</p>
-        <div className="flex gap-4">
-          <Link to="/terms" className="hover:text-white transition">Terms</Link>
-          <Link to="/privacy" className="hover:text-white transition">Privacy</Link>
-        </div>
-      </div>
-
-      {/* WhatsApp Floating Button */}
+      {/* Global Floating WhatsApp Button */}
       <a
         href="https://whatsapp.com/channel/0029Vb8WvNiGehEGfRVnMr2T"
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Join our WhatsApp Channel"
-        title="Join our WhatsApp Channel"
-        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 bg-[#25D366] hover:bg-[#20BA5A] text-white rounded-full w-11 h-11 flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 z-40"
+        aria-label="Contact us on WhatsApp"
+        title="Contact us on WhatsApp"
+        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full w-[52px] h-[52px] md:w-[56px] md:h-[56px] flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 z-40"
       >
-        <img loading="lazy"
-          src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg"
-          alt="WhatsApp"
-          className="w-6 h-6"
-        />
+        <FaWhatsapp size={26} className="text-white shrink-0" />
       </a>
     </footer>
   );

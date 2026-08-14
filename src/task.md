@@ -1,0 +1,37 @@
+- [x] Add To Cart Button Component (`AddToCartButton.js`)
+  - [x] Simplify component state to idle/loading/success
+  - [x] Implement dynamic fly animation calculating positions in viewport
+  - [x] Fire custom event `"cart-item-added"` upon completion
+- [x] Game Card Component (`GameCard.js`)
+  - [x] Redesign content layout with proper categories, titles, price strings, and savings
+  - [x] Implement clean details/cart button action row at bottom
+  - [x] Standardize wishlist heart and platform controller badges
+- [x] Premium Hero Banner (Step 2)
+  - [x] Add hero overlay gradients and Swiper transitions to `App.css`
+  - [x] Update `HeroSlider.js` with standard copy pairs and layouts
+  - [x] Configure custom background image alignments per game title
+- [x] Professional Search UX Upgrade (Step 3)
+  - [x] Add search input and suggestions list styles to `App.css`
+  - [x] Initialize refs and search handlers in `Header.js`
+  - [x] Update desktop and mobile search HTML/JSX elements in `Header.js`
+- [x] Premium Add-to-Cart Micro-Interaction (Step 4)
+  - [x] Add flying item styles and adjust pulse keyframe scaling in `App.css`
+  - [x] Style temporary check icon in `Header.js`
+  - [x] Implement coordinates check and flying animations in `AddToCartButton.js`
+- [x] Premium Product Card Micro-Interactions (Step 5)
+  - [x] Implement hover scales for discount, platforms, wishlist, details, and ATC buttons in `App.css`
+  - [x] Add IntersectionObserver scroll reveal and module-level stagger delay counter in `GameCard.js`
+  - [x] Configure prefers-reduced-motion media query overrides
+- [x] Professional Cart Page UX/UI Upgrade (Step 6)
+  - [x] Implement light-themed summary, stubs, empty state, and item cards in `Cart.js`
+  - [x] Configure transition animations for item removals and quantity selectors
+- [x] Professional Wishlist UX/UI Upgrade (Step 9)
+  - [x] Configure global `Breadcrumbs.js` with Phosphor `House` icon
+  - [x] Update `GameCard.js` component to handle optional `onWishlistRemove` custom callback
+  - [x] Implement light-themed header description, skeletons, empty state, and grid alignment in `Wishlist.js`
+  - [x] Setup fade/scale card wrapping exits on items removal
+- [x] Premium Professional Footer Redesign (Step 11)
+  - [x] Implement Brand description text and Email Support CTA in `Footer.js`
+  - [x] Configure 4 column lists, payment support pills, and social coordinates
+- [x] Footer Layout Refinement
+  - [x] Implement centered 1200px container, monochromatic trust icons, and mobile collapsible accordions in `Footer.js`

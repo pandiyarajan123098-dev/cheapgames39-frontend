@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { SearchX, ArrowLeft, ArrowRight, Gamepad2, Home } from "lucide-react";
+import { MagnifyingGlass as SearchX, ArrowLeft, ArrowRight, GameController as Gamepad2, House as Home } from "@phosphor-icons/react";
 
 const NotFound = () => {
   return (

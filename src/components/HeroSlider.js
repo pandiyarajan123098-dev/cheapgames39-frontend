@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, EffectFade } from "swiper/modules";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Eye } from "lucide-react";
+import { ShoppingCart, Eye } from "@phosphor-icons/react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { notify } from "../utils/notify";
@@ -19,6 +19,15 @@ const FEATURED_TITLES = [
   { key: "elden ring", tagline: "RISE, TARNISHED" },
   { key: "forza horizon 5", tagline: "RACE WITHOUT LIMITS" }
 ];
+
+const getBgPosition = (title) => {
+  const name = title.toLowerCase();
+  if (name.includes("resident evil")) return "center right";
+  if (name.includes("forza")) return "center right";
+  if (name.includes("red dead")) return "center right";
+  if (name.includes("cyberpunk")) return "center center";
+  return "center center";
+};
 
 export default function HeroSlider({ games }) {
   const navigate = useNavigate();
@@ -61,7 +70,7 @@ export default function HeroSlider({ games }) {
     return matched;
   }, [games]);
 
-  const handleAddToCart = async (e, gameId, gameTitle) => {
+  const handleAddToCart = async (e, gameId, gameTitle, gameImage) => {
     e.stopPropagation();
     if (!user) {
       notify.loginRequiredCart();
@@ -70,7 +79,7 @@ export default function HeroSlider({ games }) {
     }
     try {
       await addToCart(gameId);
-      notify.addedToCart(gameTitle);
+      notify.addedToCart(gameTitle, gameImage);
     } catch {
       notify.actionFailed('add to cart');
     }
@@ -78,24 +87,15 @@ export default function HeroSlider({ games }) {
 
   if (spotlightSlides.length === 0) {
     return (
-      <div className="w-full h-[340px] md:h-[480px] bg-[#0d0d0d] animate-pulse rounded-3xl" />
+      <div className="w-full px-4 md:px-6 pt-6 pb-2">
+        <div className="relative w-full h-[230px] md:h-[400px] bg-[#0d0d0d] animate-pulse rounded-[20px]" />
+      </div>
     );
   }
 
-  const getSlideDesc = (title) => {
-    const key = title.toLowerCase();
-    if (key.includes("resident evil")) return "Survive the horror. Get premium PC games at better prices.";
-    if (key.includes("grand theft auto")) return "Los Santos awaits. Dominate the city in full campaign mode.";
-    if (key.includes("red dead")) return "Outlaws for life. Experience the masterpiece western epic.";
-    if (key.includes("cyberpunk")) return "Night city never sleeps. Hack your way through the futuristic streets.";
-    if (key.includes("elden ring")) return "Rise, Tarnished. Unleash your powers in the Lands Between.";
-    if (key.includes("forza")) return "Race without limits. Drive across beautiful open world environments.";
-    return "Get premium PC games with fast digital activation credentials.";
-  };
-
   return (
     <div className="w-full px-4 md:px-6 pt-6 pb-2">
-      <div className="relative w-full max-w-7xl mx-auto rounded-3xl overflow-hidden border border-white/8 bg-[#080808] shadow-2xl">
+      <div className="relative w-full max-w-7xl mx-auto rounded-[20px] overflow-hidden border border-white/8 bg-[#080808] shadow-2xl">
         <Swiper
           modules={[Autoplay, Pagination, EffectFade]}
           effect="fade"
@@ -116,70 +116,78 @@ export default function HeroSlider({ games }) {
           className="hero-swiper"
         >
           {spotlightSlides.map((slide, index) => {
-            const { game, tagline } = slide;
-            const discount = game.steam_price > game.price ? Math.round(((game.steam_price - game.price) / game.steam_price) * 100) : 0;
+            const { game } = slide;
+            const isEven = index % 2 === 0;
+
+            const label = isEven ? "CG39 DEALS" : "SAVE MORE ON PREMIUM PC GAMES";
+            const description = isEven 
+              ? "Premium PC games at prices you'll actually love." 
+              : "Get authentic keys delivered fast with 100% security.";
+
             return (
               <SwiperSlide key={game.id}>
                 <div 
                   onClick={() => navigate(`/games/${game.id}`)}
-                  className="relative w-full h-[340px] md:h-[480px] flex items-end cursor-pointer group select-none overflow-hidden"
+                  className="relative w-full h-[230px] md:h-[400px] flex items-center md:items-end cursor-pointer group select-none overflow-hidden"
                 >
-                  {/* Cinematic Background Image */}
-                  <div className="absolute inset-0 bg-black/40 z-10" />
+                  {/* Media-responsive directional gradient overlay */}
+                  <div className="cg39-hero-overlay" />
+
                   <img
                     src={game.image_url}
                     alt={game.title}
                     className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.01] transition duration-500 ease-out"
+                    style={{ objectPosition: getBgPosition(game.title) }}
                     loading={index === 0 ? "eager" : "lazy"}
                   />
-                  {/* Precise Gradient Overlay to optimize readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#080808] via-[#080808]/40 to-transparent md:bg-gradient-to-r md:from-[#080808] md:via-[#080808]/20 md:to-transparent z-20" />
  
                   {/* Slide Content Overlay */}
-                  <div className="cg39-hero-slide relative z-30 w-full p-6 md:p-12 md:max-w-2xl flex flex-col items-start gap-2 text-left mb-6 md:mb-0">
-                    <span className="text-[#E10600] text-[10px] md:text-xs font-bold tracking-widest uppercase">
-                      {tagline}
-                    </span>
-                    <h2 className="text-3xl md:text-5xl font-extrabold uppercase tracking-tight text-white leading-none">
-                      {game.title}
-                    </h2>
+                  <div className="cg39-hero-slide relative z-30 w-full p-6 md:p-12 md:max-w-2xl flex flex-col items-start gap-2 text-left">
                     
-                    {/* Short Value Proposition */}
-                    <p className="text-gray-300 text-xs md:text-sm max-w-md mt-1 mb-2 hidden sm:block leading-relaxed">
-                      {getSlideDesc(game.title)}
-                    </p>
+                    {/* DEAL LABEL */}
+                    <span className="inline-block px-2.5 py-1 rounded-[6px] text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-[#E10600]/10 border border-[#E10600]/20 text-[#E10600] mb-0.5">
+                      {label}
+                    </span>
 
-                    {/* Price Block */}
-                    <div className="flex items-center gap-3 mt-1 mb-3 md:mb-4 bg-black/40 px-3 py-1.5 rounded-full border border-white/5">
-                      <span className="text-base md:text-xl font-bold text-white">₹{game.price}</span>
-                      {game.steam_price > game.price && (
+                    {/* HERO HEADING */}
+                    <h2 className="text-xl md:text-3xl lg:text-4xl font-extrabold uppercase tracking-tight text-white leading-tight">
+                      {isEven ? (
                         <>
-                          <span className="text-gray-500 line-through text-xs">₹{game.steam_price}</span>
-                          <span className="text-green-400 font-extrabold text-[10px] tracking-wider">
-                            -{discount}% OFF
-                          </span>
+                          BIG GAMES. <br className="sm:hidden" />
+                          <span className="text-[#E10600]">SMALL PRICES.</span>
+                        </>
+                      ) : (
+                        <>
+                          GREAT GAMES. <br className="sm:hidden" />
+                          <span className="text-[#E10600]">BETTER PRICES.</span>
                         </>
                       )}
-                    </div>
+                    </h2>
+                    
+                    {/* DESCRIPTION */}
+                    <p className="text-white/90 text-[10px] md:text-sm font-semibold max-w-sm md:max-w-md leading-relaxed mt-0.5 mb-1.5">
+                      {description}
+                    </p>
  
                     {/* CTA Actions */}
-                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <div className="flex items-center gap-2.5 mt-1.5 w-full sm:w-auto">
                       <button
-                        onClick={(e) => handleAddToCart(e, game.id, game.title)}
-                        className="bg-[#E10600] hover:bg-[#ff1a13] active:scale-[0.98] text-white font-bold px-6 py-3 rounded-full text-xs uppercase tracking-wider transition flex items-center gap-2 shadow-lg shadow-[#E10600]/10"
+                        onClick={(e) => handleAddToCart(e, game.id, game.title, game.image_url)}
+                        className="h-11 px-5 rounded-xl bg-[#E10600] hover:bg-[#c40000] active:scale-[0.98] text-white text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 shrink-0"
                       >
-                        <ShoppingCart className="w-4 h-4" /> Buy Now
+                        <ShoppingCart className="w-4 h-4" /> SHOP GAMES
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           navigate(`/games/${game.id}`);
                         }}
-                        className="bg-transparent border border-white/10 hover:border-white hover:bg-white/5 active:scale-[0.98] text-white font-bold px-6 py-3 rounded-full text-xs uppercase tracking-wider transition flex items-center gap-2"
+                        className="h-11 px-5 rounded-xl bg-white hover:bg-gray-50 active:scale-[0.98] text-[#222222] text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 border border-gray-200 shrink-0"
                       >
-                        <Eye className="w-4 h-4" /> View Details
+                        <Eye className="w-4 h-4" /> VIEW DEALS
                       </button>
                     </div>
+
                   </div>
                 </div>
               </SwiperSlide>

@@ -2,33 +2,42 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
-  Swords,
+  Sword as Swords,
   Compass,
   Shield,
   Car,
-  Skull,
-  Flame,
-  Gamepad,
-  Zap,
+  Ghost as Skull,
+  Ghost as Flame,
+  GameController as Gamepad,
+  Lightning as Zap,
   ShieldCheck,
-  BadgeCheck,
-  MessageCircle,
-  LayoutDashboard,
+  SealCheck as BadgeCheck,
+  ChatCircle as MessageCircle,
+  SquaresFour as LayoutDashboard,
   Heart,
   ShoppingCart,
   Star,
   Gift,
   ArrowRight,
-  TrendingUp,
-  Gamepad2,
-  PackageOpen
-} from "lucide-react";
+  ArrowLeft,
+  TrendUp as TrendingUp,
+  GameController as Gamepad2,
+  Package as PackageOpen,
+  MapTrifold as Map,
+  Ghost,
+  Sword as Dumbbell,
+  Headset,
+  SealCheck,
+  Lightning,
+  Globe
+} from "@phosphor-icons/react";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { GameCard } from "../components/GameCard";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -64,6 +73,100 @@ const Home = () => {
   const [games, setGames] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const [touchStart, setTouchStart] = useState(0);
+  const [touchEnd, setTouchEnd] = useState(0);
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  const DEFAULT_BG_IMAGES = useMemo(() => [
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg", // Elden Ring
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/1091500/header.jpg", // Cyberpunk 2077
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg", // Red Dead Redemption 2
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg",  // GTA V
+    "https://cdn.cloudflare.steamstatic.com/steam/apps/2358720/header.jpg"  // Black Myth Wukong
+  ], []);
+
+  const carouselSlides = useMemo(() => {
+    const defaultSlides = [
+      {
+        eyebrow: "CG39 DEALS",
+        title: "BIG GAMES.",
+        titleRed: "SMALL PRICES.",
+        desc: "Premium PC games at prices you'll actually love.",
+        btn1Text: "Shop Games",
+        btn1Link: "/games",
+        btn2Text: "View Deals",
+        btn2Link: "/games?sortBy=discount",
+        image: DEFAULT_BG_IMAGES[0]
+      },
+      {
+        eyebrow: "PREMIUM PC GAMES",
+        title: "BEST SELLING",
+        titleRed: "BLOCKBUSTERS",
+        desc: "Get authentic digital keys for top-rated hits.",
+        btn1Text: "Shop Games",
+        btn1Link: "/games",
+        btn2Text: "Best Deals",
+        btn2Link: "/offers",
+        image: DEFAULT_BG_IMAGES[1]
+      },
+      {
+        eyebrow: "WEEKEND DEALS",
+        title: "MASSIVE SAVINGS",
+        titleRed: "ON AAA TITLES",
+        desc: "Save big on blockbuster titles this weekend.",
+        btn1Text: "Browse Deals",
+        btn1Link: "/games?sortBy=discount",
+        btn2Text: "View All",
+        btn2Link: "/games",
+        image: DEFAULT_BG_IMAGES[2]
+      },
+      {
+        eyebrow: "BUDGET SAVINGS",
+        title: "PC GAMES",
+        titleRed: "UNDER \u20b999",
+        desc: "Affordable titles with secure checkout and instant access.",
+        btn1Text: "Shop Budget",
+        btn1Link: "/games?maxPrice=99",
+        btn2Text: "All Games",
+        btn2Link: "/games",
+        image: DEFAULT_BG_IMAGES[3]
+      }
+    ];
+
+    if (games && games.length >= 4) {
+      return defaultSlides.map((slide, idx) => {
+        const game = games[idx];
+        return {
+          ...slide,
+          image: game.image_url || slide.image,
+          desc: game.title ? `Get authentic keys for ${game.title} and more.` : slide.desc
+        };
+      });
+    }
+
+    return defaultSlides;
+  }, [games, DEFAULT_BG_IMAGES]);
+
+  // Reduced motion media query listener
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+    const listener = (e) => setPrefersReducedMotion(e.matches);
+    mediaQuery.addEventListener("change", listener);
+    return () => mediaQuery.removeEventListener("change", listener);
+  }, []);
+
+  // Autoplay
+  useEffect(() => {
+    if (isHovered || carouselSlides.length <= 1) return;
+    const interval = setInterval(() => {
+      setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [isHovered, carouselSlides]);
 
   // Reviews state from database
   const [reviews, setReviews] = useState([]);
@@ -189,14 +292,15 @@ const Home = () => {
   // Map category names to appropriate Lucide icons
   const categoryIconMap = {
     "action": Swords,
-    "open world": Compass,
+    "open world": Map,
     "rpg": Shield,
     "racing": Car,
-    "horror": Skull,
-    "survival": Flame,
-    "fighting": Swords,
-    "steam": Gift,
-    "pc": Gamepad,
+    "horror": Ghost,
+    "survival": Ghost,
+    "fighting": Dumbbell,
+    "adventure": Compass,
+    "steam": Gamepad2,
+    "pc": Gamepad2,
   };
 
   const getCategoryIcon = (name) => {
@@ -207,72 +311,174 @@ const Home = () => {
     return Gamepad;
   };
 
-  // Compact Horizontal Hero Promotional Banner
+  const handlePrev = () => {
+    setCarouselIndex(prev => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+  };
+
+  const handleNext = () => {
+    setCarouselIndex(prev => (prev + 1) % carouselSlides.length);
+  };
+
+  const handleTouchStart = (e) => {
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > 50;
+    const isRightSwipe = distance < -50;
+
+    if (isLeftSwipe) {
+      handleNext();
+    } else if (isRightSwipe) {
+      handlePrev();
+    }
+    setTouchStart(0);
+    setTouchEnd(0);
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "ArrowLeft") {
+      handlePrev();
+    } else if (e.key === "ArrowRight") {
+      handleNext();
+    }
+  };
+
+  // Compact Horizontal Hero Promotional Banner Carousel
   const renderPromoBanner = () => {
+    if (carouselSlides.length === 0) return null;
+    const slide = carouselSlides[carouselIndex];
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4">
-        <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-[#0d0d0d] via-[#1f0d0d] to-black border border-[#E5E5E5] min-h-[190px] md:min-h-[240px] flex items-center p-6 md:p-10 shadow-md">
-          {/* Dark/red graphic backdrop element */}
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-1/2 bg-cover bg-center opacity-25 md:opacity-60 pointer-events-none" 
-            style={{ 
-              backgroundImage: "url('https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=600&auto=format&fit=crop')",
-              maskImage: "linear-gradient(to right, transparent, black)",
-              WebkitMaskImage: "linear-gradient(to right, transparent, black)"
-            }} 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 mt-4 select-none">
+        <div
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          className="relative rounded-2xl overflow-hidden bg-[#161616] border border-[#E5E5E5] min-h-[280px] md:min-h-[340px] flex items-center p-6 md:p-12 shadow-md outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000]"
+          aria-label="Promotional Carousel"
+        >
+          {/* Slides Backdrops Container with crossfade (Artwork fully visible and saturated) */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+            {carouselSlides.map((item, idx) => {
+              const isActive = idx === carouselIndex;
+              const transitionClass = prefersReducedMotion 
+                ? "" 
+                : "transition-all duration-500 ease-in-out";
+              return (
+                <div
+                  key={idx}
+                  className={`absolute inset-0 bg-cover ${transitionClass} ${isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-[1.02] z-0"}`}
+                  style={{ 
+                    backgroundImage: `url('${item.image}')`,
+                    objectFit: "cover",
+                    backgroundPosition: "center right",
+                    filter: "brightness(1.05) contrast(1.05)"
+                  }} 
+                />
+              );
+            })}
+          </div>
+
+          {/* Subtle dark gradient overlay only protecting text (Left to Right) */}
+          <div className="absolute inset-0 z-20 pointer-events-none"
+            style={{
+              background: "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.20) 55%, rgba(0,0,0,0.05) 100%)"
+            }}
           />
+          
           {/* Left Promo Text */}
-          <div className="relative z-10 max-w-xl flex flex-col items-start gap-1 sm:gap-2">
-            <span className="text-[#E10600] text-[9px] md:text-xs font-black uppercase tracking-widest bg-red-500/10 px-2 py-0.5 rounded">
-              CG39 DEALS
+          <div className="relative z-30 max-w-xl flex flex-col items-start gap-2 md:gap-3 text-left">
+            <span className="text-[#FF0000] text-[10px] md:text-xs font-black uppercase tracking-widest bg-[#111111]/80 border border-white/10 px-2.5 py-1 rounded shadow-sm" style={{ color: "#FF0000", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+              {slide.eyebrow}
             </span>
-            <h1 className="text-xl md:text-3xl font-black text-white uppercase tracking-tight leading-tight select-none">
-              BIG GAMES. <br className="hidden sm:inline" /> SMALL PRICES.
+            <h1 className="text-2xl md:text-4xl font-black text-[#FFFFFF] uppercase tracking-tight leading-tight" style={{ color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
+              {slide.title} <br className="hidden sm:inline" /> <span className="text-[#FF0000]" style={{ color: "#FF0000" }}>{slide.titleRed}</span>
             </h1>
-            <p className="text-zinc-400 text-[11px] md:text-xs max-w-xs font-medium leading-relaxed mb-1 select-none">
-              Premium PC games at prices you'll actually love.
+            <p className="text-[#F5F5F5] text-xs md:text-sm max-w-sm font-semibold leading-relaxed mb-2" style={{ color: "#F5F5F5", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
+              {slide.desc}
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2.5">
               <button
-                onClick={() => navigate("/games")}
-                className="bg-[#E10600] hover:bg-[#ff1a13] text-white text-[10px] font-black uppercase tracking-wider px-4 py-2.5 rounded-lg transition active:scale-[0.98]"
+                onClick={() => navigate(slide.btn1Link)}
+                className="bg-[#FF0000] hover:bg-[#CC0000] text-[#FFFFFF] text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shadow-md shadow-[#FF0000]/10 border border-[#FF0000]"
               >
-                Shop Games
+                {slide.btn1Text}
               </button>
               <button
-                onClick={() => navigate("/games?sortBy=discount")}
-                className="bg-white/10 hover:bg-white/20 text-white text-[10px] font-black uppercase tracking-wider px-4 py-2.5 rounded-lg transition active:scale-[0.98] border border-white/10"
+                onClick={() => navigate(slide.btn2Link)}
+                className="bg-[#FFFFFF] hover:bg-[#F5F5F5] text-[#111111] text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] border border-white shadow-md shadow-black/10"
               >
-                View Deals
+                {slide.btn2Text}
               </button>
             </div>
+          </div>
+
+          {/* Previous / Next controls */}
+          <button
+            onClick={handlePrev}
+            className="absolute left-4 z-40 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-[#FF0000] border border-white/10 hover:border-[#FF0000] text-white hover:scale-105 active:scale-95 transition-all"
+            aria-label="Previous slide"
+          >
+            <ArrowLeft className="w-5 h-5 text-white" weight="bold" />
+          </button>
+          <button
+            onClick={handleNext}
+            className="absolute right-4 z-40 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-[#FF0000] border border-white/10 hover:border-[#FF0000] text-white hover:scale-105 active:scale-95 transition-all"
+            aria-label="Next slide"
+          >
+            <ArrowRight className="w-5 h-5 text-white" weight="bold" />
+          </button>
+
+          {/* Dots Indicator */}
+          <div className="absolute bottom-4 left-0 right-0 z-40 flex justify-center gap-2">
+            {carouselSlides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCarouselIndex(idx)}
+                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${idx === carouselIndex ? "bg-[#FF0000] w-6" : "bg-white/40 hover:bg-white/70"}`}
+                aria-label={`Go to slide ${idx + 1}`}
+              />
+            ))}
           </div>
         </div>
       </div>
     );
   };
 
-  // Horizontal Quick Categories discovery rail
+  // Horizontal Quick Categories navigation rail
   const renderDiscoveryRail = () => {
     if (categories.length === 0) return null;
     return (
-      <div className="w-full bg-white border-b border-[#E5E5E5] py-2 overflow-x-auto scrollbar-none select-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-2 text-xs font-bold uppercase tracking-wider">
+      <div className="w-full bg-white py-4 border-b border-[#E5E5E5] overflow-x-auto scrollbar-none select-none">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3 text-xs font-bold uppercase tracking-wider justify-start md:justify-center">
           <Link
             to="/games"
-            className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] hover:bg-[#EEEEEE] text-[#111111] px-3.5 py-1.5 rounded-xl transition shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 bg-[#FFFFFF] border-2 border-[#E10600] text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
+            aria-label="All Games Category"
           >
-            <Gamepad className="w-3.5 h-3.5 text-[#E10600]" />
+            <Gamepad className="w-4 h-4 text-[#E10600]" weight="bold" />
             <span>All Games</span>
           </Link>
-          {categories.map((cat) => {
+          {categories.slice(0, 10).map((cat) => {
             const IconComponent = getCategoryIcon(cat.name);
             return (
               <Link
                 key={cat.id}
                 to={`/games?category=${cat.id}`}
-                className="flex items-center gap-2 bg-[#F5F5F5] border border-[#E5E5E5] hover:bg-[#EEEEEE] text-[#555555] hover:text-[#111111] px-3.5 py-1.5 rounded-xl transition shrink-0 whitespace-nowrap"
+                className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5E5E5] hover:border-zinc-300 hover:bg-[#F9F9F9] text-[#555555] hover:text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
+                aria-label={`Category ${cat.name}`}
               >
-                <IconComponent className="w-3.5 h-3.5 text-[#777777]" />
+                <IconComponent className="w-4 h-4 text-[#777777]" weight="bold" />
                 <span>{cat.name}</span>
               </Link>
             );
@@ -282,27 +488,117 @@ const Home = () => {
     );
   };
 
-  // Trust Strip Section
-  const renderTrustStrip = () => (
-    <section className="py-4 px-4 sm:px-6 bg-white border-b border-[#E5E5E5] select-none">
-      <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-        {[
-          { label: "SECURE PAYMENTS",     icon: ShieldCheck,   desc: "UPI payments verified manually" },
-          { label: "FAST DIGITAL DELIVERY", icon: Zap,          desc: "Keys sent directly after review" },
-          { label: "WHATSAPP SUPPORT",     icon: MessageCircle, desc: "Quick responses for orders" },
-          { label: "GREAT GAME PRICES",     icon: BadgeCheck,    desc: "100% active digital catalog" }
-        ].map((item, idx) => {
-          const IconComp = item.icon;
-          return (
-            <div key={idx} className="flex items-center gap-3 bg-[#F8F8F8] border border-[#E5E5E5] rounded-xl p-3 text-left">
-              <IconComp className="w-4.5 h-4.5 text-[#E10600] shrink-0" />
-              <div>
-                <span className="text-[10px] font-black text-[#111111] uppercase tracking-wider block">{item.label}</span>
-                <span className="text-[9px] text-[#666666] leading-tight block mt-0.5">{item.desc}</span>
+  // Compact Deal Banner Grid
+  const renderDealBanners = () => {
+    const banner1Img = games[4]?.image_url || DEFAULT_BG_IMAGES[0];
+    const banner2Img = games[1]?.image_url || DEFAULT_BG_IMAGES[2];
+    const banner3Img = games[2]?.image_url || DEFAULT_BG_IMAGES[4];
+
+    const dealItems = [
+      {
+        titleWhite: "WEEKEND",
+        titleRed: "DEALS",
+        desc: "Explore selected PC games",
+        image: banner1Img,
+        link: "/games?sortBy=discount"
+      },
+      {
+        titleWhite: "DEALS UNDER",
+        titleRed: "\u20b999",
+        desc: "Save on budget PC games",
+        image: banner2Img,
+        link: "/games?maxPrice=99"
+      },
+      {
+        titleWhite: "AAA",
+        titleRed: "BLOCKBUSTERS",
+        desc: "Blockbuster deals at epic prices",
+        image: banner3Img,
+        link: "/games?minSteamPrice=1500"
+      }
+    ];
+
+    return (
+      <section className="py-2 px-4 sm:px-6 max-w-7xl mx-auto w-full select-none mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+          {dealItems.map((item, idx) => (
+            <div
+              key={idx}
+              onClick={() => navigate(item.link)}
+              className="relative overflow-hidden rounded-xl border border-[#E5E5E5] hover:border-[#FF0000] h-[95px] md:h-[110px] flex items-center justify-between p-5 cursor-pointer shadow-sm transition-all duration-300 hover:-translate-y-0.5 group"
+            >
+              {/* Background cover (original saturation & color preserved) */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                style={{ 
+                  backgroundImage: `url('${item.image}')`,
+                  objectFit: "cover",
+                  backgroundPosition: "center right",
+                  filter: "brightness(1.05) contrast(1.05)"
+                }}
+              />
+              {/* Subtle dark gradient behind text only (Left to Right) */}
+              <div 
+                className="absolute inset-0 z-10 transition-colors duration-300"
+                style={{
+                  background: "linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.05) 100%)"
+                }}
+              />
+
+              {/* Text content */}
+              <div className="relative z-20 text-left">
+                <span className="text-[10px] font-black tracking-wider uppercase block mb-0.5" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                  <span className="text-[#FFFFFF]">{item.titleWhite}</span> <span className="text-[#FF0000]">{item.titleRed}</span>
+                </span>
+                <h4 className="text-[#F2F2F2] text-xs md:text-sm font-extrabold uppercase leading-tight select-none" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
+                  {item.desc}
+                </h4>
+              </div>
+
+              {/* CTA icon - white circular arrow button with subtle shadow */}
+              <div className="relative z-20 w-8 h-8 rounded-full bg-white/20 hover:bg-[#FF0000] flex items-center justify-center border border-white/20 hover:border-[#FF0000] shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-all duration-200 shrink-0">
+                <ArrowRight className="w-4 h-4 text-[#FFFFFF]" weight="bold" />
               </div>
             </div>
-          );
-        })}
+          ))}
+        </div>
+      </section>
+    );
+  };
+
+  // Trust Strip Section
+  const renderTrustStrip = () => (
+    <section className="pt-[36px] pb-[36px] px-5 sm:px-6 bg-white select-none">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-[14px] sm:text-[15px] font-bold tracking-[0.12em] text-[#222222] uppercase mb-6 text-center lg:text-left">
+          Why Shop with CG39
+        </h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            { label: "SECURE PAYMENTS",     icon: ShieldCheck, desc: "UPI payments verified manually", color: "text-[#E10600]" },
+            { label: "FAST DIGITAL DELIVERY", icon: Lightning,   desc: "Keys delivered after verification", color: "text-amber-500" },
+            { label: "VERIFIED PROCESS",     icon: SealCheck,   desc: "Transparent ordering process", color: "text-blue-500" },
+            { label: "CUSTOMER SUPPORT",     icon: Headset,     desc: "Quick assistance when you need it", color: "text-[#222222]" }
+          ].map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <div 
+                key={idx} 
+                className="group flex flex-col items-start text-left p-4 sm:p-5 bg-white border border-[#E8E8E8] rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 hover:border-zinc-300 transition-all duration-200 ease-out min-h-[130px] sm:min-h-[145px] h-full"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[#FAFAFA] border border-[#EEEEEE] flex items-center justify-center shrink-0 mb-3.5 transition-transform duration-200 ease-out group-hover:scale-[1.04]">
+                  <IconComp size={22} className={`${item.color} shrink-0`} />
+                </div>
+                <h3 className="text-[13px] sm:text-[14px] font-bold text-[#222222] uppercase tracking-wide leading-tight mb-1 select-none">
+                  {item.label}
+                </h3>
+                <p className="text-[11px] sm:text-[12px] text-[#777777] leading-[1.4] select-none">
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </section>
   );
@@ -465,15 +761,38 @@ const Home = () => {
     return (
       <section className="py-6 px-4 sm:px-6 bg-[#F8F8F8] border-y border-[#E5E5E5] select-none">
         <div className="max-w-7xl mx-auto">
-          <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-neutral-900 via-neutral-950 to-red-950 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 border border-[#E5E5E5] shadow-sm min-h-[180px] md:min-h-[220px]">
-            <div className="text-center sm:text-left">
-              <span className="text-[#E10600] text-[10px] font-black uppercase tracking-widest block mb-1">SAVE MORE ON PREMIUM PC GAMES</span>
-              <h3 className="text-lg md:text-xl font-black text-white uppercase tracking-tight">Great games. Better prices.</h3>
-              <p className="text-zinc-400 text-xs mt-1">Get authentic keys delivered fast with 100% security.</p>
+          <div className="relative rounded-2xl overflow-hidden bg-[#161616] p-6 md:p-10 flex flex-col sm:flex-row items-center justify-between gap-6 border border-[#E5E5E5] shadow-sm min-h-[160px] md:min-h-[180px]">
+            {/* Background cover (original saturation & color preserved, fully visible) */}
+            <div className="absolute inset-0 bg-cover pointer-events-none"
+              style={{
+                backgroundImage: "url('https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg')",
+                objectFit: "cover",
+                backgroundPosition: "center right",
+                filter: "brightness(1.05) contrast(1.05)"
+              }}
+            />
+            {/* Subtle overlay gradient protecting text from left to right */}
+            <div 
+              className="absolute inset-0 z-10 pointer-events-none"
+              style={{
+                background: "linear-gradient(90deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.18) 48%, rgba(0,0,0,0.05) 100%)"
+              }}
+            />
+            
+            <div className="relative z-20 text-center sm:text-left">
+              <span className="text-[#FF0000] text-[10px] font-black uppercase tracking-widest block mb-1" style={{ color: "#FF0000" }}>
+                SAVE MORE ON PREMIUM PC GAMES
+              </span>
+              <h3 className="text-xl md:text-2xl font-black text-[#FFFFFF] uppercase tracking-tight leading-snug" style={{ color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
+                GREAT GAMES. <span className="text-[#FF0000]" style={{ color: "#FF0000" }}>BETTER PRICES.</span>
+              </h3>
+              <p className="text-[#FFFFFF] text-xs font-semibold mt-1" style={{ color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
+                Get authentic keys delivered fast with 100% security.
+              </p>
             </div>
             <button
               onClick={() => navigate("/offers")}
-              className="bg-[#E10600] hover:bg-[#ff1a13] text-white text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shrink-0"
+              className="bg-[#FF0000] hover:bg-[#CC0000] text-[#FFFFFF] text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shrink-0 relative z-20 shadow-md shadow-[#FF0000]/10 border border-[#FF0000]"
             >
               Explore Deals
             </button>
@@ -615,13 +934,13 @@ const Home = () => {
             href="https://wa.me/916379490178"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-[#E10600] hover:bg-[#ff1a13] text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md shadow-[#E10600]/10 min-h-[40px]"
+            className="bg-[#E10600] hover:bg-[#C80500] text-white font-bold px-6 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md shadow-[#E10600]/10 h-11 min-h-[44px] min-w-[140px] active:scale-[0.98]"
           >
-            <MessageCircle className="w-4 h-4" /> WhatsApp
+            <FaWhatsapp className="w-4 h-4" /> WhatsApp
           </a>
           <Link
             to="/dashboard"
-            className="bg-white hover:bg-[#F5F5F5] border border-[#E5E5E5] text-[#555555] hover:text-[#111111] font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 min-h-[40px]"
+            className="bg-white hover:bg-[#F5F5F5] border border-[#E5E5E5] text-[#555555] hover:text-[#111111] font-bold px-6 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 h-11 min-h-[44px] min-w-[140px] active:scale-[0.98]"
           >
             <TrendingUp className="w-4 h-4 text-[#E10600]" /> Order Tracking
           </Link>
@@ -633,38 +952,39 @@ const Home = () => {
   return (
     <div className="bg-white text-[#111111] overflow-x-hidden min-h-screen animate-page-section">
       
-      {/* 1. HERO SPOTLIGHT SLIDER (COMPACT MARKETING BANNER) */}
+      {/* 1. HERO SPOTLIGHT CAROUSEL */}
       {renderPromoBanner()}
-
-      {/* 2. QUICK CATEGORY NAVIGATION */}
+ 
+      {/* 2. QUICK CATEGORY NAVIGATION STRIP */}
       {renderDiscoveryRail()}
 
-      {/* 3. TRUST STRIP */}
-      {renderTrustStrip()}
-
-      {/* PRODUCT GRID LISTINGS */}
+      {/* 3. COMPACT DEAL BANNER GRID */}
+      {renderDealBanners()}
+ 
+      {/* 4. BEST SELLING Games */}
       {renderBestSellingGames()}
+
+      {/* 5. WHY SHOP WITH CG39 (TRUST SECTION) */}
+      {renderTrustStrip()}
+ 
+      {/* PRODUCT GRID LISTINGS & OTHER GAME SECTIONS */}
       {renderBestSellingDeals()}
-      {renderMidPromoBanner()}
       {renderTrendingNow()}
       {renderPriceDiscovery()}
       {renderCategories()}
-
+ 
       {hasHistory && <RecentlyViewed />}
       {hasHistory && renderRecommendations()}
-
+ 
+      {/* PREMIUM DEALS */}
+      {renderMidPromoBanner()}
+ 
       {/* HOW IT WORKS */}
       {renderHowItWorks()}
-
-      {/* FINAL CTA */}
-      {renderFinalCTA()}
-
-      {/* TESTIMONIALS */}
-      {renderReviews()}
-
+ 
       {/* SUPPORT */}
       {renderSupportCTA()}
-
+ 
     </div>
   );
 };

@@ -10,25 +10,27 @@ import {
   ArrowRight, 
   Star, 
   ShieldCheck, 
-  Zap, 
-  MessageCircle, 
+  Lightning as Zap, 
+  ChatCircle as MessageCircle, 
   Info,
   Clock,
-  ChevronRight,
-  Sparkles,
-  Gamepad2,
+  CaretRight as ChevronRight,
+  Sparkle as Sparkles,
+  GameController as Gamepad2,
   FileText,
   Check,
   Eye,
-  EyeOff,
-  Clock3,
+  EyeSlash as EyeOff,
+  Clock as Clock3,
   Copy,
   Play
-} from "lucide-react";
+} from "@phosphor-icons/react";
 import { toast } from "sonner";
+import { notify } from "../utils/notify";
 import steamLogo from "../assets/steam.png";
 import { GameCard } from "../components/GameCard";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -351,7 +353,7 @@ const GameDetails = () => {
     try {
       setCartLoading(true);
       await addToCart(game.id);
-      toast.success("Added to cart");
+      notify.addedToCart(game.title, game.image_url);
     } catch (err) {
       toast.error(err.message || "Failed to add to cart");
     } finally {
@@ -363,7 +365,7 @@ const GameDetails = () => {
     try {
       setBuyNowLoading(true);
       await addToCart(game.id);
-      toast.success("Added to cart");
+      notify.addedToCart(game.title, game.image_url);
       navigate("/checkout");
     } catch (err) {
       toast.error(err.message || "Failed to purchase game");
@@ -423,7 +425,7 @@ const GameDetails = () => {
   /* ================= SKELETON SHIMMER LOAD STATE ================= */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-28 pb-20 px-4 sm:px-6 font-sans select-none">
+      <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans select-none">
         <div className="max-w-6xl mx-auto space-y-12 animate-pulse">
           {/* Breadcrumbs Shimmer */}
           <div className="h-4 bg-[#151515] rounded-lg w-1/4"></div>
@@ -476,7 +478,7 @@ const GameDetails = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-16 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}
@@ -630,13 +632,13 @@ const GameDetails = () => {
               </button>
             </div>
 
-            {/* TRUST BLOCK */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/8 pt-6 mt-6 select-none max-w-xl">
+            {/* Trust strip */}
+            <div className="grid grid-cols-2 gap-4 border-t border-white/8 pt-6 select-none">
               <div className="flex gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <div className="leading-tight">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Secure Payment</span>
-                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">UPI and Bank transfers verified</span>
+                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Verified Delivery</span>
+                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Checked manually by support</span>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -647,7 +649,7 @@ const GameDetails = () => {
                 </div>
               </div>
               <div className="flex gap-2">
-                <MessageCircle className="w-4 h-4 text-[#E00000] shrink-0 mt-0.5" />
+                <FaWhatsapp className="w-4 h-4 text-[#E10600] shrink-0 mt-0.5" />
                 <div className="leading-tight">
                   <span className="text-[11px] font-bold text-white uppercase tracking-wider block">WhatsApp Support</span>
                   <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Direct chat support 24/7</span>
@@ -661,7 +663,6 @@ const GameDetails = () => {
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -736,7 +737,7 @@ const GameDetails = () => {
               </div>
             </div>
           </div>
-
+ 
           {/* Product Disclaimers */}
           <div className="md:col-span-5 bg-[#111111] border border-white/8 rounded-2xl p-6 sm:p-8 flex flex-col justify-between h-full min-h-[300px]">
             <div className="space-y-4">

@@ -3,16 +3,15 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
   Tag,
-  Gamepad2,
+  GameController as Gamepad2,
   ArrowRight,
-  ChevronRight,
-  BadgePercent,
+  CaretRight as ChevronRight,
+  Percent as BadgePercent,
   SlidersHorizontal,
-  TrendingDown,
-  PackageOpen,
-  AlertCircle,
-  Home,
-} from "lucide-react";
+  Package as PackageOpen,
+  Warning as AlertCircle,
+  House as Home,
+} from "@phosphor-icons/react";
 import { GameCard } from "../components/GameCard";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 
@@ -209,7 +208,7 @@ const Offers = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white font-sans pt-[76px] md:pt-[82px] pb-20 animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white font-sans pt-[68px] md:pt-[74px] pb-20 animate-page-section">
 
       {/* ── BREADCRUMB ── */}
       <div className="max-w-[1240px] mx-auto px-4 sm:px-6 mb-10">

@@ -1,20 +1,68 @@
-import React, { useState } from "react";
+import React from "react";
 import { useNavigate } from "react-router-dom";
-import { ShoppingCart, Heart, Loader2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { Heart } from "@phosphor-icons/react";
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { useWishlist } from "../context/WishlistContext";
 import { notify } from "../utils/notify";
-import steamLogo from "../assets/steam.png";
+import { AddToCartButton } from "./AddToCartButton";
+import steamIcon from "../assets/steam.png";
 
-export const GameCard = ({ game }) => {
+let globalStaggerCount = 0;
+let globalStaggerTimeout = null;
+
+const getStaggerDelay = () => {
+  const delay = Math.min(globalStaggerCount * 50, 150);
+  globalStaggerCount += 1;
+  
+  if (globalStaggerTimeout) clearTimeout(globalStaggerTimeout);
+  globalStaggerTimeout = setTimeout(() => {
+    globalStaggerCount = 0;
+  }, 100);
+  
+  return delay;
+};
+
+export const GameCard = ({ game, onWishlistRemove }) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { toggleWishlist, isGameInWishlist } = useWishlist();
-  
-  const [cartLoading, setCartLoading] = useState(false);
+
+  const [isVisible, setIsVisible] = React.useState(false);
+  const [delay, setDelay] = React.useState(0);
+  const cardRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReducedMotion) {
+      setIsVisible(true);
+      setDelay(0);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const calculatedDelay = getStaggerDelay();
+            setDelay(calculatedDelay);
+            setIsVisible(true);
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+
+    if (cardRef.current) {
+      observer.observe(cardRef.current);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   /* ================= SAFE VALUES ================= */
   const steamPrice = typeof game?.steam_price === "number" ? game.steam_price : 0;
@@ -32,25 +80,14 @@ export const GameCard = ({ game }) => {
   const savings = steamPrice - salePrice;
 
   /* ================= ADD TO CART ================= */
-  const handleAddToCart = async (e) => {
-    e.stopPropagation();
-
+  const handleAddToCartAction = async (e) => {
     if (!user) {
       notify.loginRequiredCart();
       navigate("/login");
-      return;
+      throw new Error("Login required");
     }
-
-    try {
-      setCartLoading(true);
-      await addToCart(game.id);
-      notify.addedToCart(game?.title);
-    } catch (error) {
-      console.error(error);
-      notify.actionFailed('add to cart');
-    } finally {
-      setCartLoading(false);
-    }
+    await addToCart(game.id);
+    notify.addedToCart(game?.title, imageUrl);
   };
 
   /* ================= TOGGLE WISHLIST ================= */
@@ -62,6 +99,10 @@ export const GameCard = ({ game }) => {
       return;
     }
     const wasWishlisted = wishlisted;
+    if (wasWishlisted && onWishlistRemove) {
+      await onWishlistRemove(game.id);
+      return;
+    }
     await toggleWishlist(game.id);
     if (wasWishlisted) {
       notify.removedFromWishlist(game?.title);
@@ -71,155 +112,111 @@ export const GameCard = ({ game }) => {
   };
 
   return (
-    <motion.div
-      whileHover={{ y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2, ease: "easeOut" }}
-      className={`
-        relative
-        group
-        bg-white
-        rounded-2xl
-        overflow-hidden
-        border border-[#E5E5E5]
-        shadow-[0_2px_8px_rgba(0,0,0,0.06)]
-        hover:shadow-[0_6px_20px_rgba(0,0,0,0.10)]
-        transition-all duration-200
-        h-full
-        flex
-        flex-col
-        ${
-          isOutOfStock
-            ? "grayscale opacity-75 cursor-not-allowed"
-            : "hover:border-[#E10600]/30 cursor-pointer"
-        }
-      `}
+    <div
+      ref={cardRef}
+      style={{
+        transitionDelay: `${delay}ms`
+      }}
       onClick={() => {
         if (!isOutOfStock) {
           navigate(`/games/${game.id}`);
         }
       }}
+      className={`cg39-game-card cursor-pointer group ${isVisible ? "reveal-visible" : "reveal-hidden"} ${isOutOfStock ? "grayscale opacity-75" : ""}`}
     >
-      {/* IMAGE SECTION */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-black/40">
+      {/* IMAGE CONTAINER */}
+      <div className="cg39-game-card-image-wrap">
         
-        {/* WISH LIST HEART */}
-        <button
-          onClick={handleWishlistToggle}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          className="absolute top-2.5 right-2.5 z-20 p-2 bg-white rounded-full text-[#999999] hover:text-[#E10600] border border-[#E5E5E5] shadow-sm transition"
-        >
-          <Heart className={`w-3.5 h-3.5 ${wishlisted ? "fill-[#E10600] text-[#E10600]" : ""}`} />
-        </button>
-
         {/* DISCOUNT BADGE */}
-        {hasDiscount && (
-          <div className="absolute top-2.5 left-2.5 z-10 bg-[#E10600] text-white text-[10px] font-black px-2.5 py-0.5 rounded-lg">
+        {hasDiscount && !isOutOfStock && (
+          <div className="cg39-discount-badge">
             -{discountPercentage}%
           </div>
         )}
 
-        {/* STEAM LOGO */}
-        <div className="absolute bottom-2.5 right-2.5 z-10 bg-white/90 rounded-full p-1 border border-[#E5E5E5]">
-          <img 
-            loading="lazy"
-            src={steamLogo}
-            alt="Steam Platform"
-            className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity"
-          />
-        </div>
-
         {isOutOfStock && (
-          <div className="absolute top-2.5 left-2.5 z-10 bg-black/80 text-white text-[10px] font-extrabold px-2.5 py-0.5 rounded-lg">
+          <div className="cg39-discount-badge bg-black/80">
             OUT OF STOCK
           </div>
         )}
 
+        {/* WISHLIST BUTTON */}
+        <button
+          onClick={handleWishlistToggle}
+          aria-label={wishlisted ? `Remove ${game?.title} from wishlist` : `Add ${game?.title} to wishlist`}
+          title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          className={`cg39-wishlist-btn ${wishlisted ? "active" : ""}`}
+        >
+          <Heart 
+            className="w-4 h-4" 
+            weight={wishlisted ? "fill" : "bold"}
+          />
+        </button>
+
+        {/* PLATFORM BADGE */}
+        <div className="cg39-platform-badge" title="Platform Supported">
+          <img src={steamIcon} alt="Steam Logo" className="w-4 h-4 object-contain" />
+        </div>
+
+        {/* GAME COVER IMAGE */}
         <img 
           loading="lazy"
           src={imageUrl}
           alt={game?.title || "Game Cover"}
-          className="
-            w-full h-full object-cover
-            transition-transform duration-500
-            group-hover:scale-[1.02]
-          "
+          className="cg39-game-card-image"
         />
       </div>
 
-      {/* CONTENT */}
-      <div className="p-4 flex flex-col flex-1">
+      {/* CARD CONTENT */}
+      <div className="cg39-card-content">
         
         {/* CATEGORY */}
-        <p className="text-[10px] text-[#E10600] font-semibold uppercase tracking-wider mb-1 block">
+        <p className="cg39-card-category">
           {categoryName}
         </p>
 
         {/* TITLE */}
-        <h3 className="text-[#111111] font-bold text-sm md:text-base line-clamp-2 h-10 md:h-12 mb-2 group-hover:text-[#E10600] transition-colors duration-200">
+        <h3 className="cg39-card-title group-hover:text-[#E00000] transition-colors duration-200">
           {game?.title}
         </h3>
 
         {/* PRICE BLOCK */}
-        <div className="flex flex-col mt-auto h-12 justify-center">
+        <div className="cg39-price-block">
+          <div className="cg39-price-row">
+            <span className="cg39-price-current">₹{salePrice.toLocaleString()}</span>
+            {hasDiscount && (
+              <span className="cg39-price-original">₹{steamPrice.toLocaleString()}</span>
+            )}
+          </div>
           {hasDiscount ? (
-            <>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-extrabold text-[#111111]">₹{salePrice.toLocaleString()}</span>
-                <span className="text-[#AAAAAA] line-through text-[11px]">₹{steamPrice.toLocaleString()}</span>
-              </div>
-              <span className="text-[9px] text-[#16A34A] font-semibold mt-0.5 block">Save ₹{savings.toLocaleString()}</span>
-            </>
+            <span className="cg39-price-savings">Save ₹{savings.toLocaleString()}</span>
           ) : (
-            <>
-              <div className="flex items-center gap-1.5">
-                <span className="text-lg font-extrabold text-[#111111]">₹{salePrice.toLocaleString()}</span>
-              </div>
-              <span className="text-[9px] text-transparent mt-0.5 block select-none">No Discount</span>
-            </>
+            <span className="cg39-price-savings text-transparent select-none">No Savings</span>
           )}
         </div>
 
         {/* ACTIONS */}
-        <div className="flex items-center gap-2 mt-4 pt-3 border-t border-[#F0F0F0]">
-            <button
-              onClick={() => navigate(`/games/${game.id}`)}
-              className="flex-1 bg-white hover:bg-[#F5F5F5] active:scale-[0.98] border border-[#E5E5E5] hover:border-[#D4D4D4] text-[#111111] rounded-xl h-11 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-200"
+        <div className="cg39-action-row">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/games/${game.id}`);
+            }}
+            aria-label={`View details for ${game?.title}`}
+            title="View Game Details"
+            className="cg39-details-btn"
           >
             Details
           </button>
           
-          <button
-            disabled={isOutOfStock || cartLoading}
-            onClick={handleAddToCart}
-            className={`
-              bg-[#E10600]
-              hover:bg-[#ff1a13]
-              active:scale-[0.98]
-              text-white
-              rounded-xl
-              h-11
-              w-11
-              shrink-0
-              transition-all duration-200
-              flex
-              items-center
-              justify-center
-              ${
-                isOutOfStock
-                  ? "opacity-40 cursor-not-allowed bg-gray-800"
-                  : ""
-              }
-            `}
-          >
-            {cartLoading ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <ShoppingCart className="w-4 h-4" />
-            )}
-          </button>
+          <AddToCartButton
+            disabled={isOutOfStock}
+            onAddToCart={handleAddToCartAction}
+            gameImage={imageUrl}
+            className="w-11 h-11 bg-[#E10600] text-white rounded-xl hover:bg-[#ff1a13] transition-all duration-200 flex items-center justify-center shrink-0 active:scale-[0.98]"
+          />
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };

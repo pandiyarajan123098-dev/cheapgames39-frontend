@@ -5,29 +5,32 @@ import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import {
   ShoppingBag,
-  Search,
-  CheckCircle2,
-  Clock3,
-  AlertTriangle,
+  MagnifyingGlass as Search,
+  CheckCircle as CheckCircle2,
+  Clock as Clock3,
+  Warning as AlertTriangle,
   ArrowLeft,
   Copy,
   Check,
-  MessageCircle,
+  ChatCircle as MessageCircle,
   User,
-  Mail,
+  Envelope as Mail,
   Phone,
   ShieldCheck,
-  PackageCheck,
-  KeyRound,
-  Send,
+  Package as PackageCheck,
+  Key as KeyRound,
+  PaperPlane as Send,
   Eye,
-  EyeOff,
-  ChevronRight,
+  EyeSlash as EyeOff,
+  CaretRight as ChevronRight,
   CreditCard,
-  LockKeyhole,
-  RefreshCw,
-  Loader2,
-} from "lucide-react";
+  Lock as LockKeyhole,
+  ArrowClockwise as RefreshCw,
+  CircleNotch as Loader2,
+  DownloadSimple as Download,
+  Key
+} from "@phosphor-icons/react";
+import { FaWhatsapp } from "react-icons/fa";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
@@ -189,7 +192,7 @@ const OrderStatus = () => {
   /* ── Loading skeleton ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+      <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
         <div className="max-w-[1200px] mx-auto space-y-6">
           <Skeleton className="h-4 w-1/4" />
           <Skeleton className="h-24 w-full" />
@@ -214,7 +217,7 @@ const OrderStatus = () => {
   const showError = searched && !order && error === "generic";
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1200px] mx-auto">
 
         {/* BREADCRUMB */}
@@ -238,14 +241,15 @@ const OrderStatus = () => {
                   Enter your Order ID to track delivery status and access your game credentials.
                 </p>
               </div>
-              <div className="flex flex-col gap-3">
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
                 <input
                   type="text"
-                  placeholder="Enter Order ID (e.g. a94106a1-...)"
+                  placeholder="Enter 36-character Order ID (e.g. a94106a1-...)"
                   value={orderId}
                   onChange={(e) => setOrderId(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && fetchOrderDetails(orderId)}
-                  className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl px-4 py-3.5 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 outline-none transition text-sm font-mono text-center placeholder-[#AAAAAA] text-[#111111]"
+                  className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-4 py-3.5 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 outline-none transition text-sm font-mono text-center placeholder-[#AAAAAA] text-[#111111]"
                   style={{ height: "48px" }}
                 />
                 <button
@@ -554,10 +558,10 @@ const OrderStatus = () => {
                         const message = `Hi CG39 Support, I need help with Order #${order.id}. Current status: ${order.status}`;
                         window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
                       }}
-                      className="w-full flex items-center justify-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-600/20 hover:border-emerald-500/40 text-emerald-400 rounded-xl py-3 text-xs font-bold uppercase tracking-wider transition min-h-[44px]"
+                      className="w-full flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl py-3 text-xs font-bold uppercase tracking-wider transition min-h-[44px]"
                       aria-label="Contact support on WhatsApp"
                     >
-                      <MessageCircle className="w-4 h-4" /> Contact Support via WhatsApp
+                      <FaWhatsapp className="w-4 h-4" /> Contact Support via WhatsApp
                     </button>
 
                     {(order.status === "pending" || order.status === "pending_payment") && (

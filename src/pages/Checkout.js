@@ -10,23 +10,23 @@ import {
   Clock, 
   ArrowRight, 
   ArrowLeft, 
-  ChevronRight, 
+  CaretRight as ChevronRight, 
   Lock, 
   Copy, 
   Check, 
   Phone,
   User,
-  Mail,
+  Envelope as Mail,
   ShieldCheck,
-  MessageCircle,
+  ChatCircle as MessageCircle,
   Receipt,
-  CheckCircle2,
-  Loader2,
-  PackageSearch,
-  Gamepad2
-} from "lucide-react";
-import steamLogo from "../assets/steam.png";
+  CheckCircle as CheckCircle2,
+  CircleNotch as Loader2,
+  Package as PackageSearch,
+  GameController as Gamepad2
+} from "@phosphor-icons/react";
 import OrderProcessingLoader from "../components/OrderProcessingLoader";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -393,7 +393,7 @@ ${gameList}`;
           <div className="flex items-center gap-1.5 font-bold"><Gamepad2 className="w-4 h-4 text-blue-500" /> Digital Product</div>
           <div className="flex items-center gap-1.5 font-bold"><CreditCard className="w-4 h-4 text-amber-500" /> UPI Payment</div>
           <div className="flex items-center gap-1.5 font-bold"><PackageSearch className="w-4 h-4 text-zinc-400" /> Order Tracking</div>
-          <div className="flex items-center gap-1.5 font-bold"><MessageCircle className="w-4 h-4 text-[#E00000]" /> WhatsApp Support</div>
+          <div className="flex items-center gap-1.5 font-bold"><FaWhatsapp className="w-4 h-4 text-zinc-400" /> WhatsApp Support</div>
         </div>
       </div>
     );
@@ -402,7 +402,7 @@ ${gameList}`;
   /* ================= TRUCK LOADER — order creation in progress ================= */
   if (orderCreating) {
     return (
-      <div className="min-h-screen bg-white pt-[76px] md:pt-[82px]">
+      <div className="min-h-screen bg-white pt-[68px] md:pt-[74px]">
         <OrderProcessingLoader />
       </div>
     );
@@ -411,7 +411,7 @@ ${gameList}`;
   /* ================= SKELETON LOAD — page hydrating from sessionStorage ================= */
   if (loading && !serverOrder && step === 1) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans select-none">
+      <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans select-none">
         <div className="max-w-[1320px] mx-auto space-y-8 animate-pulse">
           <div className="h-4 bg-[#151515] rounded w-1/6"></div>
           <div className="h-14 bg-[#151515] rounded-2xl w-full"></div>
@@ -425,7 +425,7 @@ ${gameList}`;
   }
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}
@@ -513,9 +513,9 @@ ${gameList}`;
 
                   {/* Phone */}
                   <div>
-                    <label className="block text-xs uppercase tracking-widest text-[#E00000] font-bold mb-2 select-none">WhatsApp Number</label>
+                    <label className="block text-xs uppercase tracking-widest text-zinc-400 font-bold mb-2 select-none">WhatsApp Number</label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-3.5 w-4 h-4 text-[#E00000]" />
+                      <FaWhatsapp className="absolute left-4 top-3.5 w-4 h-4 text-zinc-500" />
                       <input
                         type="tel"
                         name="billing_phone"
@@ -524,7 +524,7 @@ ${gameList}`;
                         required
                         value={formData.billing_phone}
                         onChange={handleChange}
-                        className="w-full bg-[#080808] border border-[#E00000]/30 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/30 outline-none transition animate-pulse-slow"
+                        className="w-full bg-[#080808] border border-white/8 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder:text-zinc-600 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/30 outline-none transition"
                         style={{ height: "48px" }}
                       />
                     </div>
@@ -856,10 +856,10 @@ ${gameList}`;
                   const message = `Hi support, checking status of my payment verification for Order ID #${orderId}`;
                   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
                 }}
-                className="flex-1 bg-transparent border border-white/8 hover:border-white/20 text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98]"
-                aria-label="Contact support on WhatsApp channel"
+                className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98] border-0"
+                aria-label="Contact support on WhatsApp"
               >
-                <MessageCircle className="w-4 h-4 text-emerald-500" />
+                <FaWhatsapp className="w-4 h-4" />
                 <span>Contact Support</span>
               </button>
             </div>

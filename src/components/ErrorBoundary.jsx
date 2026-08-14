@@ -1,5 +1,5 @@
 import React from "react";
-import { Home, RefreshCw, AlertCircle } from "lucide-react";
+import { House as Home, ArrowClockwise as RefreshCw, Warning as AlertCircle } from "@phosphor-icons/react";
 
 /**
  * ErrorBoundary — catches uncaught React render/lifecycle errors.

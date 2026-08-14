@@ -1,13 +1,13 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  ChevronRight,
-  MessageCircle,
+  CaretRight as ChevronRight,
+  ChatCircle as MessageCircle,
   FileText,
   ShieldCheck,
-  LockKeyhole,
-  HelpCircle,
-} from "lucide-react";
+  Lock as LockKeyhole,
+  Question as HelpCircle,
+} from "@phosphor-icons/react";
 import { Breadcrumbs } from "./Breadcrumbs";
 
 /**

@@ -6,27 +6,28 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { toast } from "sonner";
 import {
-  UserRound,
+  User as UserRound,
   ShoppingBag,
   Heart,
-  MessageCircle,
-  LogOut,
+  ChatCircle as MessageCircle,
+  SignOut as LogOut,
   ArrowRight,
-  CalendarDays,
+  Calendar,
   Key,
   ShieldCheck,
-  History,
-  TrendingUp,
-  ChevronRight,
-  PackageOpen,
-  CheckCircle2,
-  Clock3,
-  AlertTriangle,
+  ClockCounterClockwise as History,
+  TrendUp as TrendingUp,
+  CaretRight as ChevronRight,
+  Package as PackageOpen,
+  CheckCircle as CheckCircle2,
+  Clock as Clock3,
+  Warning as AlertTriangle,
   Package,
-  Mail,
-  ShoppingCart,
-} from "lucide-react";
+  Envelope as Mail,
+  ShoppingCart
+} from "@phosphor-icons/react";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -154,7 +155,7 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans animate-page-section">
       <div className="max-w-[1200px] mx-auto flex flex-col gap-8">
 
         {/* ── BREADCRUMB ── */}
@@ -226,9 +227,7 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* ══════════════════════════════════════════════
-            TAB: ORDERS
-        ══════════════════════════════════════════════ */}
+        {/* ── TAB: ORDERS ── */}
         {activeTab === "orders" && (
           <div className="flex flex-col gap-5" id="order-history">
             <h2 className="text-lg font-black uppercase tracking-tight text-white flex items-center gap-2 select-none">
@@ -429,9 +428,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════
-            TAB: WISHLIST
-        ══════════════════════════════════════════════ */}
+        {/* ── TAB: WISHLIST ── */}
         {activeTab === "wishlist" && (
           <div className="flex flex-col gap-5">
             <h2 className="text-lg font-black uppercase tracking-tight text-white flex items-center gap-2 select-none">
@@ -487,9 +484,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* ══════════════════════════════════════════════
-            TAB: ACCOUNT
-        ══════════════════════════════════════════════ */}
+        {/* ── TAB: ACCOUNT ── */}
         {activeTab === "account" && (
           <div className="flex flex-col gap-5">
             <h2 className="text-lg font-black uppercase tracking-tight text-white flex items-center gap-2 select-none">
@@ -535,10 +530,10 @@ export default function Dashboard() {
                   const msg = `Hi CG39 support, I need help with my account (${user?.email}).`;
                   window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
                 }}
-                className="flex items-center gap-2 bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-600/20 hover:border-emerald-500/40 text-emerald-400 hover:text-emerald-300 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition shrink-0 min-h-[44px]"
+                className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition shrink-0 min-h-[44px]"
                 aria-label="Contact support via WhatsApp"
               >
-                <MessageCircle className="w-4 h-4" /> Contact Support
+                <FaWhatsapp className="w-4 h-4" /> Contact Support
               </button>
             </div>
 

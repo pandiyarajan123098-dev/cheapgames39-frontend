@@ -2,32 +2,36 @@ import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
+  MagnifyingGlass as Search, 
+  CaretLeft as ChevronLeft, 
+  CaretRight as ChevronRight, 
   SlidersHorizontal, 
   X, 
   Tag, 
-  RotateCcw,
+  ArrowClockwise as RotateCcw,
   ShieldCheck,
-  MessageCircle,
-  BadgeCheck,
+  ChatCircle as MessageCircle,
+  SealCheck as BadgeCheck,
   Package,
-  Swords,
+  Sword as Swords,
   Compass,
   Shield,
   Car,
-  Skull,
-  Flame,
-  Gamepad,
-  Gamepad2,
-  Headphones,
+  Ghost as Skull,
+  Ghost as Flame,
+  GameController as Gamepad,
+  GameController as Gamepad2,
+  Headset as Headphones,
   Sliders,
-  TrendingUp,
-  Gift
-} from "lucide-react";
+  TrendUp as TrendingUp,
+  Gift,
+  MapTrifold as Map,
+  Ghost,
+  Sword as Dumbbell
+} from "@phosphor-icons/react";
 import { GameCard } from "../components/GameCard";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 const LIMIT = 12; // 12 items fills 4-column and 3-column grids perfectly!
@@ -262,14 +266,15 @@ const Games = () => {
   // Map category names to appropriate Lucide icons
   const categoryIconMap = {
     "action": Swords,
-    "open world": Compass,
+    "open world": Map,
     "rpg": Shield,
     "racing": Car,
-    "horror": Skull,
-    "survival": Flame,
-    "fighting": Swords,
-    "steam": Gift,
-    "pc": Gamepad,
+    "horror": Ghost,
+    "survival": Ghost,
+    "fighting": Dumbbell,
+    "adventure": Compass,
+    "steam": Gamepad2,
+    "pc": Gamepad2,
   };
 
   const getCategoryIcon = (name) => {
@@ -277,7 +282,7 @@ const Games = () => {
     for (const [pattern, icon] of Object.entries(categoryIconMap)) {
       if (key.includes(pattern)) return icon;
     }
-    return Gamepad;
+    return Gamepad2;
   };
 
   // Breadcrumb helper label
@@ -403,7 +408,7 @@ const Games = () => {
         </div>
       </div>
       <div className="flex items-center justify-center md:justify-start gap-2 px-1">
-        <MessageCircle className="w-5 h-5 text-[#E10600] shrink-0" />
+        <FaWhatsapp className="w-5 h-5 text-[#E10600] shrink-0" />
         <div className="text-left flex flex-col justify-center leading-tight">
           <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">WhatsApp Support</span>
           <span className="text-[8px] sm:text-[9px] text-zinc-500 font-normal">24/7 direct client help</span>
@@ -526,7 +531,7 @@ const Games = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-16 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-[1400px] mx-auto animate-page-section">
         
         {/* BREADCRUMB */}

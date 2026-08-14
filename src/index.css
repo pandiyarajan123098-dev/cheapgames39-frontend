@@ -181,3 +181,12 @@ select:focus-visible {
   outline: 2px solid #E10600 !important;
   outline-offset: 3px !important;
 }
+
+/* Force WhatsApp icon svg and path elements to white fill color */
+.whatsapp-icon-white {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+}
+.whatsapp-icon-white path {
+  fill: #ffffff !important;
+}

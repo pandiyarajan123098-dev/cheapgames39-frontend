@@ -9,7 +9,10 @@
  *   notify.error('Action failed', 'We couldn\'t process your request.');
  */
 
+import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { toast } from 'sonner';
+import { CheckCircle, X, ArrowRight } from '@phosphor-icons/react';
 
 /* ─── Durations (ms) ──────────────────────────────────────────────── */
 const DUR = {
@@ -19,12 +22,77 @@ const DUR = {
   error:   4500,
 };
 
+const CartToast = ({ tId, title, imageUrl }) => {
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleDismiss = () => {
+    setIsExiting(true);
+    setTimeout(() => {
+      toast.dismiss(tId);
+    }, 180);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsExiting(true);
+      setTimeout(() => {
+        toast.dismiss(tId);
+      }, 180);
+    }, 3320); // auto dismiss after 3.5s total (3320ms + 180ms exit)
+
+    return () => clearTimeout(timer);
+  }, [tId]);
+
+  return createPortal(
+    <div 
+      role="status" 
+      className={`cg39-custom-toast ${isExiting ? 'exit' : ''}`}
+    >
+      <div className="flex gap-3 items-start w-full pr-4">
+        {imageUrl ? (
+          <img 
+            src={imageUrl} 
+            alt={title || "Game Cover"} 
+            className="cg39-toast-thumbnail" 
+          />
+        ) : (
+          <CheckCircle 
+            className="cg39-toast-icon-check" 
+            weight="bold" 
+          />
+        )}
+        <div className="flex flex-col min-w-0 flex-1 leading-normal">
+          <span className="cg39-toast-title">Added to cart</span>
+          {title && <span className="cg39-toast-product">"{title}"</span>}
+          <a 
+            href="/cart" 
+            className="cg39-toast-link"
+            aria-label="View shopping cart"
+          >
+            View Cart <ArrowRight className="w-3.5 h-3.5" weight="bold" />
+          </a>
+        </div>
+      </div>
+      <button
+        onClick={handleDismiss}
+        className="cg39-toast-close"
+        aria-label="Close cart notification"
+      >
+        <X className="w-3.5 h-3.5" weight="bold" />
+      </button>
+    </div>,
+    document.body
+  );
+};
+
 /* ─── Cart ────────────────────────────────────────────────────────── */
 export const notify = {
   /** Game successfully added to cart */
-  addedToCart: (title) =>
-    toast.success(title ? `"${title}" added to cart.` : 'Added to cart.', {
-      duration: DUR.success,
+  addedToCart: (title, imageUrl) =>
+    toast.custom((tId) => (
+      <CartToast tId={tId} title={title} imageUrl={imageUrl} />
+    ), {
+      duration: Infinity,
       id: `cart-add-${title}`,
     }),
 

@@ -4,21 +4,22 @@ import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import {
-  CheckCircle2,
-  Clock3,
+  CheckCircle as CheckCircle2,
+  Clock as Clock3,
   Copy,
   Check,
-  ChevronRight,
+  CaretRight as ChevronRight,
   ShoppingBag,
   CreditCard,
   ShieldCheck,
-  PackageCheck,
-  KeyRound,
-  MessageCircle,
+  Package as PackageCheck,
+  Key as KeyRound,
+  ChatCircle as MessageCircle,
   ArrowRight,
-  LockKeyhole,
-} from "lucide-react";
+  Lock as LockKeyhole,
+} from "@phosphor-icons/react";
 import { Breadcrumbs } from "../components/Breadcrumbs";
+import { FaWhatsapp } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 const WHATSAPP_NUMBER = "916379490178";
@@ -113,7 +114,7 @@ const Success = () => {
   /* ── Loading skeleton ── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+      <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
         <div className="max-w-[760px] mx-auto space-y-6 animate-pulse">
           <Skeleton className="h-4 w-1/4" />
           <Skeleton className="h-48 w-full" />
@@ -137,7 +138,7 @@ const Success = () => {
   const savings = steamTotal - (order.total_price || 0);
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 px-4 sm:px-6 font-sans">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
       <div className="max-w-[760px] mx-auto">
 
         {/* BREADCRUMB */}
@@ -319,10 +320,10 @@ const Success = () => {
               const msg = `Hi CG39 support, I need help with my order. Order ID: #${order.id}`;
               window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
             }}
-            className="flex items-center gap-2 bg-green-50 hover:bg-green-100 border border-green-200 hover:border-green-300 text-green-700 hover:text-green-800 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition shrink-0 min-h-[44px]"
+            className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition shrink-0 min-h-[44px]"
             aria-label="Chat with support on WhatsApp"
           >
-            <MessageCircle className="w-4 h-4" />
+            <FaWhatsapp className="w-4 h-4" />
             Chat on WhatsApp
           </button>
         </div>

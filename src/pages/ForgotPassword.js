@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "../lib/supabase";
 import { toast } from "sonner";
-import { Mail, ArrowLeft, AlertCircle, CheckCircle } from "lucide-react";
+import { Envelope as Mail, ArrowLeft, Warning as AlertCircle, CheckCircle } from "@phosphor-icons/react";
 import logo from "../logo.png";
 
 export default function ForgotPassword() {

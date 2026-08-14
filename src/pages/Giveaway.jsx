@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Gift } from "lucide-react";
+import { Gift } from "@phosphor-icons/react";
 import { Link } from "react-router-dom";
 
 const Giveaway = () => {

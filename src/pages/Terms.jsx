@@ -1,6 +1,6 @@
 import React from "react";
 import LegalLayout, { Section, Callout } from "../components/LegalLayout";
-import { FileText } from "lucide-react";
+import { FileText } from "@phosphor-icons/react";
 
 const TOC = [
   { id: "digital-products",      label: "Digital Products" },

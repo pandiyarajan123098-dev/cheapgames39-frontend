@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { proofs } from "../data/proofs";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CaretLeft as ChevronLeft, CaretRight as ChevronRight } from "@phosphor-icons/react";
 
 const ProofSlider = () => {
   const [current, setCurrent] = useState(0);

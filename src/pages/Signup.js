@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, EyeOff, Mail, Lock, User, UserPlus, ArrowRight, AlertCircle } from "lucide-react";
+import { Eye, EyeSlash as EyeOff, Envelope as Mail, Lock, User, UserPlus, ArrowRight, Warning as AlertCircle } from "@phosphor-icons/react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";

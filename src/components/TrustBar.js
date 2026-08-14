@@ -1,11 +1,11 @@
 import {
-  Zap,
+  Lightning as Zap,
   ShieldCheck,
-  Gamepad2,
-  Headphones,
-  BadgeCheck,
-  Clock3,
-} from "lucide-react";
+  GameController as Gamepad2,
+  Headset as Headphones,
+  SealCheck as BadgeCheck,
+  Clock as Clock3,
+} from "@phosphor-icons/react";
 
 export default function TrustBar() {
   const items = [

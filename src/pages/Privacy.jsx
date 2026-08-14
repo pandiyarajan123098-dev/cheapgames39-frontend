@@ -1,6 +1,6 @@
 import React from "react";
 import LegalLayout, { Section, Callout } from "../components/LegalLayout";
-import { LockKeyhole } from "lucide-react";
+import { Lock as LockKeyhole } from "@phosphor-icons/react";
 
 const TOC = [
   { id: "information-collected", label: "Information We Collect" },

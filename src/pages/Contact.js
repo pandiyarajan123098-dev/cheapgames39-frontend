@@ -2,23 +2,23 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import {
-  MessageCircle,
+  ChatCircle as MessageCircle,
   ShoppingBag,
   CreditCard,
-  Mail,
+  Envelope as Mail,
   Phone,
   Clock,
-  Send,
-  CheckCircle2,
-  ChevronDown,
-  ChevronRight,
-  Instagram,
+  PaperPlane as Send,
+  CheckCircle as CheckCircle2,
+  CaretDown as ChevronDown,
+  CaretRight as ChevronRight,
+  InstagramLogo as Instagram,
   ArrowRight,
   Package,
-  LayoutDashboard,
-  Gamepad2,
-  Home,
-} from "lucide-react";
+  SquaresFour as LayoutDashboard,
+  GameController as Gamepad2,
+  House as Home,
+} from "@phosphor-icons/react";
 import { FaWhatsapp } from "react-icons/fa";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 
@@ -120,7 +120,7 @@ const Contact = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#080808] text-white pt-[76px] md:pt-[82px] pb-20 font-sans animate-page-section">
+    <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-20 font-sans animate-page-section">
 
       {/* ── BREADCRUMB ── */}
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 mb-10">
@@ -147,12 +147,13 @@ const Contact = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             {
-              icon: MessageCircle,
+              icon: FaWhatsapp,
               title: "General Support",
               desc: "Get help with your account, games or any general enquiry.",
               cta: "Chat on WhatsApp",
               href: `https://wa.me/${WHATSAPP_NUMBER}`,
               external: true,
+              isWhatsApp: true,
             },
             {
               icon: Package,
@@ -161,6 +162,7 @@ const Contact = () => {
               cta: "View Order Status",
               href: "/order-status",
               external: false,
+              isWhatsApp: false,
             },
             {
               icon: CreditCard,
@@ -169,13 +171,14 @@ const Contact = () => {
               cta: "Contact via WhatsApp",
               href: `https://wa.me/${WHATSAPP_NUMBER}`,
               external: true,
+              isWhatsApp: true,
             },
-          ].map(({ icon: Icon, title, desc, cta, href, external }) => (
+          ].map(({ icon: Icon, title, desc, cta, href, external, isWhatsApp }) => (
             <div
               key={title}
               className="bg-[#111111] border border-white/8 rounded-2xl p-5 flex flex-col gap-3 hover:-translate-y-0.5 hover:border-white/15 transition-all duration-200"
             >
-              <div className="w-9 h-9 rounded-xl bg-[#E00000]/8 border border-[#E00000]/15 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 bg-[#E00000]/8 border border-[#E00000]/15">
                 <Icon className="w-4 h-4 text-[#E00000]" />
               </div>
               <div className="flex-1">
@@ -189,6 +192,7 @@ const Contact = () => {
                   rel="noopener noreferrer"
                   className="flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-[#E00000] hover:text-[#B50000] transition mt-1"
                 >
+                  {isWhatsApp && <FaWhatsapp className="w-3.5 h-3.5" />}
                   {cta} <ArrowRight className="w-3 h-3" />
                 </a>
               ) : (
@@ -200,7 +204,8 @@ const Contact = () => {
                 </Link>
               )}
             </div>
-          ))}
+          ))
+          }
         </div>
       </div>
 
@@ -266,7 +271,7 @@ const Contact = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Contact CG39 support on WhatsApp"
-                className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20BA5A] text-white font-bold px-5 py-3.5 rounded-xl text-xs uppercase tracking-wider transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
+                className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20ba56] text-white font-bold px-5 py-3.5 rounded-xl text-xs uppercase tracking-wider transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
               >
                 <FaWhatsapp size={18} />
                 Message on WhatsApp

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { WifiOff, Wifi } from "lucide-react";
+import { WifiSlash as WifiOff, WifiHigh as Wifi } from "@phosphor-icons/react";
 
 /**
  * OfflineIndicator — shows a compact banner when browser goes offline.
