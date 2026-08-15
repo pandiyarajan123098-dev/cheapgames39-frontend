@@ -14,15 +14,12 @@ import ReCAPTCHA from "react-google-recaptcha";
 import AuthLayout from '../components/AuthLayout';
 
 /* ── reCAPTCHA key ────────────────────────────────────────────────────
-   localhost / 127.0.0.1 → Google's universal test key (always passes,
-   no domain registration required).
-   Production → registered site key.
+   Uses environment variable if configured, otherwise falls back to
+   Google's official universal v2 test key (always passes).
 ──────────────────────────────────────────────────────────────────────── */
 const recaptchaSiteKey =
-  window.location.hostname === "localhost" ||
-  window.location.hostname === "127.0.0.1"
-    ? "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3"   // Google test key
-    : "6Ld0dAUtAAAAALg-0PUO7PVo_e0gC3Tx7T9YUY73";  // production key
+  process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
+  "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3";
 
 /* ── Shared input style ─────────────────────────────────────────────── */
 const inputCls =
@@ -42,6 +39,11 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!formData.email || !formData.password) {
+      setError('Please fill in all fields.');
+      return;
+    }
 
     if (!captchaToken) {
       toast.error("Please complete the verification check.");

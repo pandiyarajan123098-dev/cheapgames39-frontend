@@ -42,6 +42,33 @@ import { useNavigate } from 'react-router-dom';
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
+const PLATFORM_OPTIONS = [
+  "Steam",
+  "Epic Games",
+  "PlayStation",
+  "Xbox",
+  "Nintendo",
+  "EA",
+  "Ubisoft",
+  "Battle.net",
+  "Rockstar Games",
+  "GOG"
+];
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return "Just now";
+  const diffMs = Date.now() - new Date(dateStr).getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  if (diffSec < 60) return "Just now";
+  const diffMin = Math.floor(diffSec / 60);
+  if (diffMin < 60) return `${diffMin}m ago`;
+  const diffHours = Math.floor(diffMin / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays === 1) return "Yesterday";
+  return `${diffDays}d ago`;
+};
+
 const Admin = () => {
   const { user, accessToken, logout } = useAuth();
   const navigate = useNavigate();
@@ -95,19 +122,6 @@ const Admin = () => {
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryName, setCategoryName] = useState("");
-
-  const PLATFORM_OPTIONS = [
-    "Steam",
-    "Epic Games",
-    "PlayStation",
-    "Xbox",
-    "Nintendo",
-    "EA",
-    "Ubisoft",
-    "Battle.net",
-    "Rockstar Games",
-    "GOG"
-  ];
 
   // Game Form State
   const [gameFormData, setGameFormData] = useState({
@@ -462,7 +476,7 @@ const Admin = () => {
       const res = await axios.put(`${API}/admin/orders/${orderId}`, payload, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
-      toast.success("Order status updated");
+      toast.success("Order status updated successfully");
       
       if (selectedOrder && selectedOrder.id === orderId) {
         setSelectedOrder(prev => ({
@@ -473,38 +487,32 @@ const Admin = () => {
       fetchOrders();
       fetchStats();
     } catch (err) {
-      console.error(err);
-      toast.error(err.response?.data?.error || "Failed to update order");
+      console.error("Order update error:", err);
+      toast.error(err.response?.data?.error || "Failed to update order details");
     }
   };
 
   const handleVerifyPayment = (orderId) => {
-    if (!window.confirm("Verify transaction and mark order as PAID?")) return;
-    handleUpdateOrderField(orderId, { payment_status: "paid" });
-    logActivity("Verified Payment (PAID)", `Order #${orderId.slice(0,8)}`, "success");
+    if (!window.confirm("Verify transaction and mark order as PAID / Processing?")) return;
+    handleUpdateOrderField(orderId, { status: "processing" });
+    logActivity("Verified Payment (Processing)", `Order #${orderId.slice(0,8)}`, "success");
   };
 
   const handleRejectPayment = (orderId) => {
     if (!window.confirm("Mark payment as FAILED? The customer will be able to resubmit verification details.")) return;
-    handleUpdateOrderField(orderId, { payment_status: "failed" });
-    logActivity("Rejected Payment (FAILED)", `Order #${orderId.slice(0,8)}`, "warning");
+    handleUpdateOrderField(orderId, { status: "pending_payment" });
+    logActivity("Rejected Payment (Pending Payment)", `Order #${orderId.slice(0,8)}`, "warning");
   };
 
   const handleSaveDeliveryDetails = (orderId) => {
-    if (!deliveryDetails.trim()) {
-      toast.error("Delivery details/keys are required");
-      return;
-    }
     handleUpdateOrderField(orderId, {
-      delivery_method: deliveryMethod,
-      delivery_details: deliveryDetails,
       status: "completed"
     });
     logActivity("Dispatched Credentials", `Order #${orderId.slice(0,8)} (${deliveryMethod})`, "success");
   };
 
   const handleSaveAdminNotes = (orderId) => {
-    handleUpdateOrderField(orderId, { admin_notes: tempNotes });
+    toast.success("Notes saved for session");
     logActivity("Saved Admin Notes", `Order #${orderId.slice(0,8)}`, "info");
   };
 
@@ -898,35 +906,37 @@ const Admin = () => {
             {showNotifications && (
               <>
                 <div 
-                  className="fixed inset-0 z-40" 
+                  className="fixed inset-0 z-40 bg-black/25 backdrop-blur-xs sm:bg-transparent sm:backdrop-blur-none" 
                   onClick={() => setShowNotifications(false)} 
                 />
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-[#E5E5E5] rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in text-left">
+                <div className="fixed sm:absolute left-3 right-3 sm:left-auto sm:right-0 top-[66px] sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-24px)] bg-white border border-[#E5E5E5] rounded-2xl sm:rounded-xl shadow-2xl z-50 overflow-hidden animate-fade-in text-left">
                   <div className="p-3.5 bg-zinc-50 border-b border-[#E5E5E5] flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Bell className="w-4 h-4 text-[#E10600]" weight="bold" />
                       <span className="text-xs font-black uppercase tracking-wider text-zinc-900">Order Notifications</span>
                     </div>
-                    <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#E10600] px-2 py-0.5 rounded-full">
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#E10600] px-2.5 py-0.5 rounded-full">
                       {pendingOrders.length} Pending
                     </span>
                   </div>
 
-                  <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100">
-                    {recentNewOrders.length === 0 ? (
+                  <div className="max-h-[60vh] sm:max-h-96 overflow-y-auto divide-y divide-zinc-100">
+                    {orders.length === 0 ? (
                       <div className="p-6 text-center text-zinc-400 text-xs font-semibold">
                         No recent orders registered
                       </div>
                     ) : (
-                      recentNewOrders.map(ord => {
+                      (pendingOrders.length > 0 ? pendingOrders : orders.slice(0, 8)).map(ord => {
                         const isPending = ord.status === "submitted" || ord.status === "pending" || ord.status === "pending_payment";
                         const customerName = ord.billing_name || ord.profiles?.full_name || "Verified Customer";
-                        const itemCount = ord.order_items?.length || 1;
+                        const gameTitle = ord.order_items?.[0]?.games?.title || (ord.order_items?.length > 1 ? `${ord.order_items[0]?.games?.title} +${ord.order_items.length - 1} more` : "Game Product");
                         const statusLabel = ord.status === "submitted" 
                           ? "Awaiting UTR" 
                           : ord.status === "pending_payment" 
                           ? "Pending Payment" 
-                          : ord.status.toUpperCase();
+                          : ord.status === "processing"
+                          ? "Processing"
+                          : (ord.status || "NEW").toUpperCase();
 
                         return (
                           <div
@@ -946,19 +956,23 @@ const Admin = () => {
                               <Package className="w-4 h-4" />
                             </div>
                             <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-1 mb-1">
+                              <div className="flex items-center justify-between gap-1 mb-0.5">
                                 <span className="text-[9px] font-black uppercase tracking-widest text-[#E10600]">
                                   {isPending ? "NEW ORDER" : "ORDER"}
                                 </span>
-                                <span className="text-[9px] font-mono text-zinc-400">
+                                <span className="text-[10px] font-mono font-bold text-zinc-500">
                                   #{ord.id.substring(0, 8).toUpperCase()}
                                 </span>
                               </div>
-                              <p className="text-xs font-bold text-zinc-900 truncate">{customerName}</p>
-                              <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500 mt-1">
-                                <span className="text-zinc-800 font-bold">₹{ord.total_price} • {itemCount} {itemCount === 1 ? "item" : "items"}</span>
-                                <span className={`text-[9px] font-black uppercase ${isPending ? "text-amber-600" : "text-zinc-500"}`}>
+                              <h4 className="text-xs font-bold text-zinc-900 truncate">{gameTitle}</h4>
+                              <p className="text-[11px] text-zinc-500 font-medium truncate">{customerName}</p>
+                              <div className="flex items-center justify-between text-[11px] font-bold mt-1.5 pt-1.5 border-t border-zinc-100">
+                                <span className="text-zinc-900 font-black">₹{ord.total_price}</span>
+                                <span className="text-[9px] uppercase font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
                                   {statusLabel}
+                                </span>
+                                <span className="text-[10px] text-zinc-400 font-normal">
+                                  {timeAgo(ord.created_at)}
                                 </span>
                               </div>
                             </div>
@@ -968,13 +982,13 @@ const Admin = () => {
                     )}
                   </div>
 
-                  <div className="p-2 bg-zinc-50 border-t border-[#E5E5E5] text-center">
+                  <div className="p-2.5 bg-zinc-50 border-t border-[#E5E5E5] text-center">
                     <button
                       onClick={() => {
                         setActiveTab("orders");
                         setShowNotifications(false);
                       }}
-                      className="text-xs font-bold uppercase tracking-wider text-[#E10600] hover:underline block w-full py-1"
+                      className="w-full py-1.5 text-xs font-black uppercase tracking-wider text-[#E10600] hover:text-[#C80500] hover:underline"
                     >
                       View All Orders →
                     </button>

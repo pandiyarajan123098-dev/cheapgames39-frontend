@@ -2,7 +2,7 @@ export const WHATSAPP_SUPPORT_NUMBER = "916379490178";
 
 /**
  * Generates the standardized CG39 WhatsApp order confirmation & support message.
- * @param {Object} order - Order object containing id, total_price, transaction_id, billing_name, billing_email, billing_phone, order_items / items
+ * @param {Object} order - Order object containing id, total_price, transaction_id, order_items / items
  * @param {Array} fallbackItems - Fallback items array from cart if order_items is not populated yet
  * @returns {string} Fully formatted WhatsApp message string
  */
@@ -15,36 +15,29 @@ export const formatWhatsAppOrderMessage = (order, fallbackItems = []) => {
   const txnId = order.transaction_id || "Awaiting UTR";
   const amount = order.total_price !== undefined ? `₹${order.total_price}` : "₹0";
 
-  // Format line items
+  // Extract line items from order_items, items, or cart fallbackItems
   const rawItems = (order.order_items && order.order_items.length > 0)
     ? order.order_items
     : (order.items && order.items.length > 0)
     ? order.items
-    : fallbackItems;
+    : (Array.isArray(fallbackItems) && fallbackItems.length > 0)
+    ? fallbackItems
+    : [];
 
   let itemsText = "";
-  if (rawItems && rawItems.length > 0) {
+  if (rawItems.length > 0) {
     itemsText = rawItems
-      .map((item, idx) => {
-        const title = item.games?.title || item.title || "Game Product";
+      .map((item) => {
+        const title = item.games?.title || item.title || item.name || "Game Product";
         const qty = item.quantity || 1;
-        const itemPrice = item.price ? `₹${item.price * qty}` : (item.games?.price ? `₹${item.games.price * qty}` : "");
-        return `${idx + 1}. ${title} × ${qty}${itemPrice ? ` — ${itemPrice}` : ""}`;
+        const unitPrice = item.price || item.games?.price || 0;
+        const lineTotal = unitPrice ? unitPrice * qty : (order.total_price || 0);
+        return `• ${title} × ${qty} — ₹${lineTotal}`;
       })
       .join("\n");
   } else {
-    itemsText = "1. Game Product × 1";
+    itemsText = `• Game Product × 1 — ${amount}`;
   }
-
-  const name = order.billing_name || "Customer";
-  const email = order.billing_email || "customer@email.com";
-  const phone = order.billing_phone ? `\nPhone: ${order.billing_phone}` : "";
-
-  const paymentStatus = (order.payment_status === "paid" || order.status === "paid" || order.status === "completed" || order.status === "delivered")
-    ? "Verified"
-    : order.transaction_id
-    ? "Awaiting Verification"
-    : "Pending Verification";
 
   return `Hi CG39 Support,
 
@@ -57,12 +50,8 @@ Amount: ${amount}
 Items:
 ${itemsText}
 
-Customer:
-Name: ${name}
-Email: ${email}${phone}
-
 Payment Method: UPI
-Payment Status: ${paymentStatus}
+Payment Status: Awaiting Verification
 
 Please verify my payment and process my order.
 

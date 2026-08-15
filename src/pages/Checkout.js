@@ -58,9 +58,9 @@ const Checkout = () => {
   const [purchasedGameIds, setPurchasedGameIds] = useState([]);
   const [copied, setCopied] = useState(false);
 
-  // Prefill form from user profile
+  // Prefill form from user profile with safe fallback
   const [formData, setFormData] = useState({
-    billing_name: user?.user_metadata?.full_name || "",
+    billing_name: user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0] : ""),
     billing_email: user?.email || "",
     billing_phone: "",
   });
@@ -76,7 +76,7 @@ const Checkout = () => {
 
     if (savedFormData) {
       try {
-        setFormData(JSON.parse(savedFormData));
+        setFormData(prev => ({ ...prev, ...JSON.parse(savedFormData) }));
       } catch (e) {}
     }
     if (savedGameIds) {
@@ -99,17 +99,12 @@ const Checkout = () => {
           const orderStatus = res.data.status?.toLowerCase();
           if (orderStatus === "pending") {
             setStep(2);
-          } else if (orderStatus === "submitted") {
+          } else if (orderStatus === "submitted" || orderStatus === "paid" || orderStatus === "processing") {
             setStep(3);
-          } else if (orderStatus === "paid" || orderStatus === "completed" || orderStatus === "delivered") {
-            // Already paid/completed, go straight to success
-            navigate("/success", { state: { orderId: savedOrderId } });
-          } else {
-            setStep(1);
           }
-        } catch (error) {
-          console.error("Failed to restore checkout order:", error);
-          // If the order can't be fetched, reset
+        } catch (err) {
+          console.error("Order recovery error:", err);
+          // If 404 or expired, reset checkout
           sessionStorage.removeItem("cg39_checkout_step");
           sessionStorage.removeItem("cg39_checkout_order_id");
           setStep(1);
@@ -122,14 +117,14 @@ const Checkout = () => {
         fetchOrderDetails();
       }
     }
-  }, [accessToken, navigate]);
+  }, [accessToken]);
 
-  // Sync profile metadata if it loads late
+  // Keep form in sync when user data loads asynchronously
   useEffect(() => {
     if (user) {
-      setFormData((prev) => ({
+      setFormData(prev => ({
         ...prev,
-        billing_name: prev.billing_name || user.user_metadata?.full_name || "",
+        billing_name: prev.billing_name || user.user_metadata?.full_name || (user.email ? user.email.split("@")[0] : ""),
         billing_email: prev.billing_email || user.email || "",
       }));
     }
@@ -174,6 +169,19 @@ const Checkout = () => {
       return;
     }
 
+    const nameToSubmit = formData.billing_name?.trim() || user?.user_metadata?.full_name || (user?.email ? user.email.split("@")[0] : "Customer");
+    const emailToSubmit = formData.billing_email?.trim() || user?.email || "";
+
+    if (!nameToSubmit || nameToSubmit.length < 2) {
+      toast.error("Please enter your Full Name");
+      return;
+    }
+
+    if (!emailToSubmit || !emailToSubmit.includes("@")) {
+      toast.error("Please enter a valid Email address");
+      return;
+    }
+
     if (!formData.billing_phone || formData.billing_phone.trim().length < 8) {
       toast.error("Please enter a valid Phone/WhatsApp number");
       return;
@@ -186,15 +194,34 @@ const Checkout = () => {
       setLoading(true);
       setOrderCreating(true); // ← show truck loader
 
-      const items = cart.map((item) => ({
-        game_id: item.games?.id,
-        quantity: item.quantity,
-      }));
+      const items = cart
+        .map((item) => ({
+          game_id: item.games?.id || item.game_id || item.id,
+          quantity: Number(item.quantity) || 1,
+        }))
+        .filter((item) => Boolean(item.game_id));
+
+      if (items.length === 0) {
+        toast.error("Your cart items are missing valid game information. Please refresh your cart.");
+        return;
+      }
 
       // Cache game IDs to selectively remove later
-      const gameIds = cart.map((item) => item.games?.id).filter(Boolean);
+      const gameIds = items.map((item) => item.game_id).filter(Boolean);
       setPurchasedGameIds(gameIds);
       sessionStorage.setItem("cg39_checkout_game_ids", JSON.stringify(gameIds));
+
+      console.log("ORDER CREATION INITIATED", {
+        userId: user?.id,
+        userEmail: user?.email,
+        cartCount: cart.length,
+        itemsToSubmit: items,
+        formData: {
+          billing_name: formData.billing_name,
+          billing_email: formData.billing_email,
+          billing_phone: formData.billing_phone,
+        }
+      });
 
       // Run API call + 5-second minimum delay in parallel
       const [res] = await Promise.all([
@@ -215,6 +242,13 @@ const Checkout = () => {
       ]);
 
       const createdOrder = res.data;
+      console.log("ORDER CREATION SUCCESSFUL", {
+        orderId: createdOrder.id,
+        total: createdOrder.total_price,
+        status: createdOrder.status,
+        itemCount: createdOrder.order_items?.length
+      });
+
       setOrderId(createdOrder.id);
       setServerOrder(createdOrder);
 
@@ -229,7 +263,13 @@ const Checkout = () => {
       setStep(2);
       toast.success("Order created! Proceed to UPI payment.");
     } catch (error) {
-      const errMsg = error.response?.data?.error || "Failed to initiate order";
+      console.error("ORDER CREATION DEBUG FAILURE", {
+        userId: user?.id,
+        apiStatus: error.response?.status,
+        response: error.response?.data,
+        error: error.message
+      });
+      const errMsg = error.response?.data?.error || error.message || "Failed to initiate order";
       toast.error(errMsg);
     } finally {
       setLoading(false);
