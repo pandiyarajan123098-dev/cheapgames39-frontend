@@ -1,30 +1,40 @@
 import React from "react";
-import { House as Home, ArrowClockwise as RefreshCw, Warning as AlertCircle } from "@phosphor-icons/react";
+import { WarningCircle, ArrowClockwise, House } from "@phosphor-icons/react";
 
 /**
  * ErrorBoundary — catches uncaught React render/lifecycle errors.
- * Shows a customer-friendly fallback. Never exposes technical details.
+ * Shows a compact, customer-friendly fallback card while keeping
+ * the rest of the layout (Header/Footer) intact.
+ *
+ * Two modes:
+ *  - inline (default): renders a compact recovery card in-page
+ *  - fullPage: renders a centred full-screen fallback (used only
+ *    if something ABOVE the layout crashes, e.g. AuthProvider)
+ *
  * Developer errors are logged to console only in development.
  */
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, retrying: false };
   }
 
   static getDerivedStateFromError() {
-    return { hasError: true };
+    return { hasError: true, retrying: false };
   }
 
   componentDidCatch(error, info) {
-    // Log to console in development only — never expose to user
     if (process.env.NODE_ENV !== "production") {
       console.error("[ErrorBoundary]", error, info.componentStack);
     }
   }
 
-  handleReload = () => {
-    window.location.reload();
+  handleRetry = () => {
+    this.setState({ retrying: true });
+    // Give the browser a tick to show the spinner, then reset
+    setTimeout(() => {
+      this.setState({ hasError: false, retrying: false });
+    }, 600);
   };
 
   handleHome = () => {
@@ -32,48 +42,158 @@ class ErrorBoundary extends React.Component {
   };
 
   render() {
-    if (this.state.hasError) {
+    const { hasError, retrying } = this.state;
+    const { fullPage = false, label = "Unable to load" } = this.props;
+
+    if (!hasError) return this.props.children;
+
+    /* ── Compact in-page recovery card ──────────────────── */
+    if (!fullPage) {
       return (
-        <div className="min-h-screen bg-[#080808] text-white font-sans flex flex-col items-center justify-center px-4 sm:px-6 py-20 relative">
-
-          {/* Subtle depth accent */}
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="w-full py-16 px-4 flex flex-col items-center justify-center"
+        >
           <div
-            className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#E00000]/3 rounded-full blur-3xl pointer-events-none"
-            aria-hidden="true"
-          />
-
-          <div className="relative z-10 w-full max-w-md text-center">
+            style={{
+              background: "#FFFFFF",
+              border: "1px solid #E8E8E8",
+              borderRadius: "18px",
+              boxShadow: "0 4px 20px rgba(0,0,0,0.06)",
+              padding: "32px 28px",
+              maxWidth: "420px",
+              width: "100%",
+              textAlign: "center",
+            }}
+          >
             {/* Icon */}
-            <div className="mx-auto w-16 h-16 rounded-2xl bg-[#111111] border border-white/8 flex items-center justify-center mb-7">
-              <AlertCircle className="w-8 h-8 text-red-400" />
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                background: "#FEF2F2",
+                border: "1px solid #FECACA",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 16px",
+              }}
+            >
+              <WarningCircle
+                weight="bold"
+                style={{ width: 22, height: 22, color: "#FF0000" }}
+              />
             </div>
 
-            <span className="text-[#E00000] text-xs uppercase font-black tracking-widest block mb-3 select-none">
-              Unexpected Error
+            {/* Label */}
+            <span
+              style={{
+                display: "block",
+                fontSize: 10,
+                fontWeight: 800,
+                textTransform: "uppercase",
+                letterSpacing: "0.1em",
+                color: "#FF0000",
+                marginBottom: 8,
+              }}
+            >
+              {label}
             </span>
 
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white mb-4">
-              Something Went Wrong
-            </h1>
+            {/* Heading */}
+            <h2
+              style={{
+                fontSize: 17,
+                fontWeight: 700,
+                color: "#111111",
+                marginBottom: 8,
+                lineHeight: 1.3,
+              }}
+            >
+              Something went wrong
+            </h2>
 
-            <p className="text-sm text-zinc-500 leading-relaxed max-w-sm mx-auto mb-10">
-              The page couldn't be displayed correctly.
-              Please reload the page or return to the homepage.
+            {/* Description */}
+            <p
+              style={{
+                fontSize: 13,
+                color: "#888888",
+                lineHeight: 1.6,
+                marginBottom: 24,
+              }}
+            >
+              We couldn't load this section right now.
+              <br />
+              Please try again.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            {/* Buttons */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 10,
+              }}
+            >
               <button
-                onClick={this.handleReload}
-                className="flex items-center gap-2 bg-[#E00000] hover:bg-[#F00000] text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition active:scale-[0.98] min-h-[44px] w-full sm:w-auto justify-center"
+                onClick={this.handleRetry}
+                disabled={retrying}
+                style={{
+                  background: retrying ? "#999999" : "#FF0000",
+                  color: "#FFFFFF",
+                  border: "none",
+                  borderRadius: 12,
+                  padding: "12px 24px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  cursor: retrying ? "not-allowed" : "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  minHeight: 44,
+                  transition: "background 150ms ease",
+                  width: "100%",
+                }}
               >
-                <RefreshCw className="w-4 h-4 shrink-0" />
-                Reload Page
+                <ArrowClockwise
+                  weight="bold"
+                  style={{
+                    width: 15,
+                    height: 15,
+                    animation: retrying ? "cg39-eb-spin 0.7s linear infinite" : "none",
+                  }}
+                />
+                {retrying ? "Trying again…" : "Try Again"}
               </button>
+
               <button
                 onClick={this.handleHome}
-                className="flex items-center gap-2 border border-white/8 hover:border-white/20 text-zinc-300 hover:text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition active:scale-[0.98] min-h-[44px] w-full sm:w-auto justify-center"
+                style={{
+                  background: "transparent",
+                  color: "#555555",
+                  border: "1px solid #E5E5E5",
+                  borderRadius: 12,
+                  padding: "12px 24px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  minHeight: 44,
+                  transition: "border-color 150ms ease, color 150ms ease",
+                  width: "100%",
+                }}
               >
-                <Home className="w-4 h-4 shrink-0" />
+                <House weight="bold" style={{ width: 14, height: 14 }} />
                 Go Home
               </button>
             </div>
@@ -82,7 +202,159 @@ class ErrorBoundary extends React.Component {
       );
     }
 
-    return this.props.children;
+    /* ── Full-page fallback (only for top-level layout crashes) ── */
+    return (
+      <div
+        role="alert"
+        style={{
+          minHeight: "100vh",
+          background: "#F9F9F9",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: "24px 16px",
+          fontFamily: "inherit",
+        }}
+      >
+        <div
+          style={{
+            background: "#FFFFFF",
+            border: "1px solid #E8E8E8",
+            borderRadius: 20,
+            boxShadow: "0 6px 30px rgba(0,0,0,0.07)",
+            padding: "40px 32px",
+            maxWidth: 400,
+            width: "100%",
+            textAlign: "center",
+          }}
+        >
+          {/* Icon */}
+          <div
+            style={{
+              width: 56,
+              height: 56,
+              borderRadius: "50%",
+              background: "#FEF2F2",
+              border: "1px solid #FECACA",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+            }}
+          >
+            <WarningCircle
+              weight="bold"
+              style={{ width: 26, height: 26, color: "#FF0000" }}
+            />
+          </div>
+
+          <span
+            style={{
+              display: "block",
+              fontSize: 10,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.1em",
+              color: "#FF0000",
+              marginBottom: 10,
+            }}
+          >
+            Unable to Load
+          </span>
+
+          <h1
+            style={{
+              fontSize: 20,
+              fontWeight: 700,
+              color: "#111111",
+              marginBottom: 12,
+            }}
+          >
+            Something went wrong
+          </h1>
+
+          <p
+            style={{
+              fontSize: 13,
+              color: "#888888",
+              lineHeight: 1.6,
+              marginBottom: 28,
+            }}
+          >
+            We couldn't load this page correctly.
+            <br />
+            Please try again or return home.
+          </p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <button
+              onClick={this.handleRetry}
+              disabled={retrying}
+              style={{
+                background: retrying ? "#999999" : "#FF0000",
+                color: "#FFFFFF",
+                border: "none",
+                borderRadius: 12,
+                padding: "13px 24px",
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                cursor: retrying ? "not-allowed" : "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                minHeight: 44,
+                width: "100%",
+              }}
+            >
+              <ArrowClockwise
+                weight="bold"
+                style={{
+                  width: 15,
+                  height: 15,
+                  animation: retrying ? "cg39-eb-spin 0.7s linear infinite" : "none",
+                }}
+              />
+              {retrying ? "Trying again…" : "Try Again"}
+            </button>
+
+            <button
+              onClick={this.handleHome}
+              style={{
+                background: "transparent",
+                color: "#555555",
+                border: "1px solid #E5E5E5",
+                borderRadius: 12,
+                padding: "13px 24px",
+                fontSize: 12,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.06em",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
+                minHeight: 44,
+                width: "100%",
+              }}
+            >
+              <House weight="bold" style={{ width: 14, height: 14 }} />
+              Go Home
+            </button>
+          </div>
+        </div>
+
+        <style>{`
+          @keyframes cg39-eb-spin {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+          }
+        `}</style>
+      </div>
+    );
   }
 }
 

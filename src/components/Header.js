@@ -34,7 +34,23 @@ import {
   Ghost,
   Sword as Dumbbell,
   Envelope as Mail,
-  Tag as Tags
+  Tag as Tags,
+  SteamLogo,
+  Polygon,
+  Shapes,
+  CircleNotch,
+  DeviceMobile,
+  Flame,
+  Spiral,
+  ShieldChevron,
+  Star,
+  Disc,
+  LockSimple,
+  Desktop,
+  UserCircle,
+  PuzzlePiece,
+  Wallet,
+  Package
 } from "@phosphor-icons/react";
 import { FaWhatsapp } from "react-icons/fa";
 
@@ -84,6 +100,7 @@ export const Header = () => {
   const [searchFocused, setSearchFocused] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [openAccordion, setOpenAccordion] = useState(null);
+  const [steamExpanded, setSteamExpanded] = useState(true);
   const [categories, setCategories] = useState([]);
   const searchRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -390,22 +407,83 @@ export const Header = () => {
     );
   };
 
-  const renderPlatformsSubmenu = () => {
+  const renderPlatformsSection = () => {
+    const lockedPlatforms = [
+      { label: "Epic Games", icon: Polygon },
+      { label: "PlayStation", icon: Shapes },
+      { label: "Xbox", icon: CircleNotch },
+      { label: "Nintendo", icon: DeviceMobile },
+      { label: "EA", icon: Flame },
+      { label: "Ubisoft", icon: Spiral },
+      { label: "Battle.net", icon: ShieldChevron },
+      { label: "Rockstar Games", icon: Star },
+      { label: "GOG", icon: Disc },
+    ];
+
+    const isAllSteamActive = location.pathname === "/games" && new URLSearchParams(location.search).get("platform") === "Steam";
+
     return (
-      <div className={`overflow-hidden transition-all duration-200 ease-in-out ${openAccordion === "platforms" ? "max-h-[350px] opacity-100 mt-1" : "max-h-0 opacity-0"}`}>
-        <div className="flex flex-col gap-0.5 ml-4 border-l border-[#E5E5E5]/70 py-1">
-          {categories
-            .filter(cat => ["Action", "Open World", "RPG", "Racing", "Horror", "Adventure", "Fighting"].includes(cat.name))
-            .map((cat, idx) => 
-              renderMenuItem({
-                key: idx,
-                label: cat.name,
-                path: `/games?category=${cat.id}`,
-                icon: getCategoryIcon(cat.name),
-                isSubmenu: true
-              })
-            )}
+      <div className="flex flex-col gap-0.5">
+        {/* 1. STEAM (UNLOCKED / EXPANDABLE) */}
+        <div>
+          <button
+            type="button"
+            onClick={() => setSteamExpanded(!steamExpanded)}
+            className="h-11 w-full flex items-center justify-between px-4 rounded-lg text-[#555555] hover:text-[#222222] hover:bg-[#F8F8F8] font-semibold transition-all duration-150 select-none text-left mx-1 my-0.5"
+            aria-expanded={steamExpanded}
+            aria-label="Steam platform menu"
+          >
+            <div className="flex items-center gap-3.5 min-w-0">
+              <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                <SteamLogo weight="bold" className="w-[18px] h-[18px] text-[#666666] shrink-0" />
+              </div>
+              <span className="text-sm truncate">Steam</span>
+            </div>
+            <ChevronDown className={`w-3.5 h-3.5 stroke-[1.8] text-[#999999] transition-transform duration-200 shrink-0 ${steamExpanded ? "rotate-180" : ""}`} />
+          </button>
+
+          {/* Steam Submenu with vertical guide line */}
+          <div className={`overflow-hidden transition-all duration-200 ease-in-out ${steamExpanded ? "max-h-[100px] opacity-100 mt-0.5 mb-1.5" : "max-h-0 opacity-0"}`}>
+            <div className="flex flex-col gap-0.5 ml-6 pl-2.5 border-l border-[#E5E5E5] py-0.5">
+              <Link
+                to="/games?platform=Steam"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`h-9 flex items-center justify-between pr-3 rounded-md px-2.5 transition-colors duration-150 select-none text-xs ${
+                  isAllSteamActive
+                    ? "text-[#111111] font-semibold bg-[#F0F0F0]"
+                    : "text-[#555555] hover:text-[#111111] hover:bg-[#F8F8F8] font-medium"
+                }`}
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Package className={`w-3.5 h-3.5 shrink-0 ${isAllSteamActive ? "text-[#333333]" : "text-[#777777]"}`} weight={isAllSteamActive ? "bold" : "regular"} />
+                  <span className="truncate">All Steam Products</span>
+                </div>
+                <ChevronRight className={`w-3.5 h-3.5 text-[#999999] shrink-0 transition-opacity ${isAllSteamActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} />
+              </Link>
+            </div>
+          </div>
         </div>
+
+        {/* 2. LOCKED PLATFORMS */}
+        {lockedPlatforms.map((platform, idx) => {
+          const Icon = platform.icon;
+          return (
+            <div
+              key={idx}
+              className="h-10 flex items-center justify-between px-4 rounded-lg text-[#888888] opacity-60 cursor-not-allowed select-none mx-1 my-0.5 bg-transparent"
+              aria-disabled="true"
+              title={`${platform.label} (Coming Soon)`}
+            >
+              <div className="flex items-center gap-3.5 min-w-0">
+                <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                  <Icon className="w-[18px] h-[18px] text-[#888888] stroke-[1.8] shrink-0" />
+                </div>
+                <span className="text-sm font-medium text-[#888888] truncate">{platform.label}</span>
+              </div>
+              <LockSimple className="w-3.5 h-3.5 text-[#AAAAAA] shrink-0" weight="bold" />
+            </div>
+          );
+        })}
       </div>
     );
   };
@@ -439,9 +517,7 @@ export const Header = () => {
       <div className="flex flex-col gap-0.5">
         {user ? (
           <>
-            {renderMenuItem({ label: "Dashboard", path: "/dashboard", icon: User })}
-            {renderMenuItem({ label: "Wishlist", path: "/wishlist", icon: Heart })}
-            {renderMenuItem({ label: "Shopping Cart", path: "/cart", icon: ShoppingCart })}
+            {renderMenuItem({ label: "My Account", path: "/dashboard", icon: User })}
             {renderMenuItem({ 
               label: "Log Out", 
               path: "#logout", 
@@ -743,14 +819,7 @@ export const Header = () => {
                         <LayoutDashboard className="w-3.5 h-3.5 text-[#999999]" />
                         My Account
                       </Link>
-                      <Link
-                        to="/wishlist"
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs text-[#444444] hover:text-[#111111] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <Heart className="w-3.5 h-3.5 text-[#999999]" />
-                        Wishlist
-                      </Link>
+
                       {(user?.email === "pandiyarajan007123@gmail.com" || user?.role === "admin") && (
                         <Link
                           to="/admin"
@@ -971,8 +1040,17 @@ export const Header = () => {
                 <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 mt-1 block select-none">Store</span>
                 {renderMenuItem({ label: "Home", path: "/", icon: Home })}
                 {renderMenuItem({ label: "PC Game Catalog", path: "/games", icon: Gamepad2 })}
-                {renderAccordionHeader({ label: "Platforms", icon: Monitor, id: "platforms" })}
-                {renderPlatformsSubmenu()}
+              </div>
+
+              {/* PLATFORMS SECTION */}
+              <div className="flex flex-col gap-0.5 mt-4">
+                <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 block select-none">Platforms</span>
+                {renderPlatformsSection()}
+              </div>
+
+              {/* DEALS & OFFERS */}
+              <div className="flex flex-col gap-0.5 mt-4">
+                <span className="text-[10px] font-semibold text-zinc-500 tracking-[0.08em] uppercase px-4 mb-1 block select-none">Deals & Offers</span>
                 {renderAccordionHeader({ label: "Deals & Offers", icon: Tags, id: "deals" })}
                 {renderDealsSubmenu()}
               </div>

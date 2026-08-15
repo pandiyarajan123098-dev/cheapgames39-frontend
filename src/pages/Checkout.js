@@ -27,9 +27,10 @@ import {
 } from "@phosphor-icons/react";
 import OrderProcessingLoader from "../components/OrderProcessingLoader";
 import { FaWhatsapp } from "react-icons/fa";
+import { getWhatsAppOrderUrl, WHATSAPP_SUPPORT_NUMBER } from "../utils/whatsapp";
 
 const API_BASE = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
-const WHATSAPP_NUMBER = "916379490178";
+const WHATSAPP_NUMBER = WHATSAPP_SUPPORT_NUMBER;
 
 // Safe UUID Generator
 const generateUUID = () => {
@@ -262,22 +263,18 @@ const Checkout = () => {
 
       toast.success("Payment submitted successfully! Support notified.");
       
-      // WhatsApp notification integration
-      const gameList = (serverOrder?.order_items || cart)
-        .map((item) => `• ${item.games?.title || "Game"} x${item.quantity}`)
-        .join("\n");
-      
-      const whatsappMsg = `Hi CG39 support, I have submitted my payment.
-Order ID: #${orderId}
-Transaction ID: ${transactionId.trim()}
-Amount: ₹${serverOrder?.total_price || cartSubtotal}
-Items:
-${gameList}`;
+      // WhatsApp notification with complete order details
+      const orderPayload = res.data || serverOrder || {
+        id: orderId,
+        total_price: payableAmount,
+        transaction_id: transactionId.trim(),
+        billing_name: formData.billing_name,
+        billing_email: formData.billing_email,
+        billing_phone: formData.billing_phone,
+      };
 
-      window.open(
-        `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(whatsappMsg)}`,
-        "_blank"
-      );
+      const waUrl = getWhatsAppOrderUrl(orderPayload, cart);
+      window.open(waUrl, "_blank");
     } catch (error) {
       const errMsg = error.response?.data?.error || "Failed to submit transaction details";
       toast.error(errMsg);
@@ -853,8 +850,15 @@ ${gameList}`;
               </button>
               <button
                 onClick={() => {
-                  const message = `Hi support, checking status of my payment verification for Order ID #${orderId}`;
-                  window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`, "_blank");
+                  const orderPayload = serverOrder || {
+                    id: orderId,
+                    total_price: payableAmount,
+                    transaction_id: transactionId.trim(),
+                    billing_name: formData.billing_name,
+                    billing_email: formData.billing_email,
+                    billing_phone: formData.billing_phone,
+                  };
+                  window.open(getWhatsAppOrderUrl(orderPayload, cart), "_blank");
                 }}
                 className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98] border-0"
                 aria-label="Contact support on WhatsApp"

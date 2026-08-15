@@ -4,6 +4,12 @@
   box-sizing: border-box;
 }
 
+/* ErrorBoundary retry spinner */
+@keyframes cg39-eb-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 body {
   font-family: 'Nunito Sans', sans-serif;
   background-color: #FFFFFF;

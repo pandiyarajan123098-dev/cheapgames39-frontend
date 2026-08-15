@@ -139,6 +139,7 @@ const Home = () => {
     if (games && games.length >= 4) {
       return defaultSlides.map((slide, idx) => {
         const game = games[idx];
+        if (!game) return slide; // guard: fewer games than slides
         return {
           ...slide,
           image: game.image_url || slide.image,
@@ -248,7 +249,14 @@ const Home = () => {
   const recommendedGames = useMemo(() => {
     if (games.length === 0) return [];
     const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
-    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+    let recent = [];
+    try {
+      const raw = localStorage.getItem(storageKey);
+      recent = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(recent)) recent = [];
+    } catch (e) {
+      console.warn("[Home] localStorage parse error:", e);
+    }
     const recentIds = recent.map(r => String(r.id));
     const recentCatIds = recent.map(r => {
       const match = games.find(g => String(g.id) === String(r.id));
@@ -271,8 +279,13 @@ const Home = () => {
 
   const hasHistory = useMemo(() => {
     const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
-    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
-    return recent.length > 0;
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const recent = raw ? JSON.parse(raw) : [];
+      return Array.isArray(recent) && recent.length > 0;
+    } catch (e) {
+      return false;
+    }
   }, [user]);
 
   // Memoize price discovery tiers
@@ -463,10 +476,10 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3 text-xs font-bold uppercase tracking-wider justify-start md:justify-center">
           <Link
             to="/games"
-            className="flex items-center gap-2 bg-[#FFFFFF] border-2 border-[#E10600] text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
+            className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5E5E5] hover:border-zinc-300 hover:bg-[#F9F9F9] text-[#555555] hover:text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
             aria-label="All Games Category"
           >
-            <Gamepad className="w-4 h-4 text-[#E10600]" weight="bold" />
+            <Gamepad className="w-4 h-4 text-[#777777]" weight="bold" />
             <span>All Games</span>
           </Link>
           {categories.slice(0, 10).map((cat) => {

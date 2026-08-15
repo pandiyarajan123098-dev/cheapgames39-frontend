@@ -10,7 +10,6 @@ import {
   Tag, 
   ArrowClockwise as RotateCcw,
   ShieldCheck,
-  ChatCircle as MessageCircle,
   SealCheck as BadgeCheck,
   Package,
   Sword as Swords,
@@ -29,12 +28,26 @@ import {
   Ghost,
   Sword as Dumbbell
 } from "@phosphor-icons/react";
+import { FaWhatsapp } from "react-icons/fa";
 import { GameCard } from "../components/GameCard";
 import { Breadcrumbs } from "../components/Breadcrumbs";
-import { FaWhatsapp } from "react-icons/fa";
+
 
 const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 const LIMIT = 12; // 12 items fills 4-column and 3-column grids perfectly!
+
+const PLATFORM_OPTIONS = [
+  "Steam",
+  "Epic Games",
+  "PlayStation",
+  "Xbox",
+  "Nintendo",
+  "EA",
+  "Ubisoft",
+  "Battle.net",
+  "Rockstar Games",
+  "GOG"
+];
 
 const Games = () => {
   const navigate = useNavigate();
@@ -43,6 +56,8 @@ const Games = () => {
   // Extract filters from URL query parameters (URL STATE SYNCHRONIZATION)
   const searchVal = searchParams.get("search") || "";
   const categoryVal = searchParams.get("category") || "";
+  const platformVal = searchParams.get("platform") || "";
+  const productTypeVal = searchParams.get("product_type") || "";
   const maxPriceVal = searchParams.get("maxPrice") || "";
   const minSteamPriceVal = searchParams.get("minSteamPrice") || "";
   const sortByVal = searchParams.get("sortBy") || "";
@@ -172,17 +187,36 @@ const Games = () => {
       }
     }
 
-    // 3. Price Filter (maxPrice)
+    // 3. Platform Filter (Real Product Data Filter)
+    if (platformVal) {
+      result = result.filter(g => {
+        const p = (g.platform || "Steam").toLowerCase();
+        return p === platformVal.toLowerCase();
+      });
+    }
+
+    // 4. Product Type Filter (game, account, dlc)
+    if (productTypeVal) {
+      result = result.filter(g => {
+        const pt = (g.product_type || "game").toLowerCase();
+        if (productTypeVal === "game") return pt === "game" || (!g.is_bundle && !g.title?.toLowerCase().includes("account") && !g.title?.toLowerCase().includes("dlc"));
+        if (productTypeVal === "account") return pt === "account" || g.title?.toLowerCase().includes("account");
+        if (productTypeVal === "dlc") return pt === "dlc" || g.title?.toLowerCase().includes("dlc") || g.title?.toLowerCase().includes("expansion");
+        return true;
+      });
+    }
+
+    // 5. Price Filter (maxPrice)
     if (maxPriceVal) {
       result = result.filter(g => g.price <= Number(maxPriceVal));
     }
 
-    // 4. AAA Deals (minSteamPrice)
+    // 6. AAA Deals (minSteamPrice)
     if (minSteamPriceVal) {
       result = result.filter(g => g.steam_price >= Number(minSteamPriceVal));
     }
 
-    // 5. Sorting Controls
+    // 7. Sorting Controls
     if (sortByVal === "price_asc") {
       result.sort((a, b) => a.price - b.price);
     } else if (sortByVal === "price_desc") {
@@ -201,7 +235,7 @@ const Games = () => {
     }
 
     return result;
-  }, [allGames, categories, searchVal, categoryVal, maxPriceVal, minSteamPriceVal, sortByVal]);
+  }, [allGames, categories, searchVal, categoryVal, platformVal, productTypeVal, maxPriceVal, minSteamPriceVal, sortByVal]);
 
   // Pagination bounds
   const totalPages = Math.ceil(filteredGames.length / LIMIT);
@@ -234,11 +268,13 @@ const Games = () => {
     let count = 0;
     if (searchVal) count++;
     if (categoryVal) count++;
+    if (platformVal) count++;
+    if (productTypeVal) count++;
     if (maxPriceVal) count++;
     if (minSteamPriceVal) count++;
     if (sortByVal) count++;
     return count;
-  }, [searchVal, categoryVal, maxPriceVal, minSteamPriceVal, sortByVal]);
+  }, [searchVal, categoryVal, platformVal, productTypeVal, maxPriceVal, minSteamPriceVal, sortByVal]);
 
   // Lock body scroll when mobile sheet open
   useEffect(() => {
@@ -288,6 +324,7 @@ const Games = () => {
   // Breadcrumb helper label
   const getBreadcrumbLabel = () => {
     if (categoryVal) return getCategoryName(categoryVal);
+    if (platformVal) return `Platform: ${platformVal}`;
     if (searchVal) return "Search";
     return "";
   };
@@ -299,6 +336,8 @@ const Games = () => {
       if (categoryVal) {
         const catId = getSelectedCategoryId();
         paths.push({ label, path: `/games?category=${catId}` });
+      } else if (platformVal) {
+        paths.push({ label, path: `/games?platform=${platformVal}` });
       } else {
         paths.push({ label });
       }
@@ -347,7 +386,7 @@ const Games = () => {
 
   // Compact active filter chips block
   const renderFilterChips = () => {
-    if (!searchVal && !categoryVal && !maxPriceVal && !minSteamPriceVal && !sortByVal) return null;
+    if (!searchVal && !categoryVal && !platformVal && !productTypeVal && !maxPriceVal && !minSteamPriceVal && !sortByVal) return null;
     return (
       <div className="flex flex-wrap gap-2 items-center mb-8 bg-[#0D0D0D] border border-white/8 rounded-2xl p-4">
         <span className="text-[10px] uppercase text-zinc-500 tracking-wider font-extrabold mr-2">Filters:</span>
@@ -363,6 +402,20 @@ const Games = () => {
           <span className="flex items-center gap-1.5 bg-[#141414] text-white border border-white/8 px-3 py-1 rounded-full text-xs font-bold transition">
             {getCategoryName(categoryVal)}
             <button onClick={() => handleFilterChange("category", "")} className="text-zinc-500 hover:text-[#E10600] ml-1" aria-label="Remove category filter"><X className="w-3 h-3" /></button>
+          </span>
+        )}
+
+        {platformVal && (
+          <span className="flex items-center gap-1.5 bg-[#141414] text-white border border-white/8 px-3 py-1 rounded-full text-xs font-bold transition">
+            Platform: {platformVal}
+            <button onClick={() => handleFilterChange("platform", "")} className="text-zinc-500 hover:text-[#E10600] ml-1" aria-label="Remove platform filter"><X className="w-3 h-3" /></button>
+          </span>
+        )}
+
+        {productTypeVal && (
+          <span className="flex items-center gap-1.5 bg-[#141414] text-white border border-white/8 px-3 py-1 rounded-full text-xs font-bold transition">
+            Type: {productTypeVal.toUpperCase()}
+            <button onClick={() => handleFilterChange("product_type", "")} className="text-zinc-500 hover:text-[#E10600] ml-1" aria-label="Remove type filter"><X className="w-3 h-3" /></button>
           </span>
         )}
 
@@ -398,35 +451,84 @@ const Games = () => {
   };
 
   // Trust Strip Section
+  const TRUST_FEATURES = [
+    {
+      icon: <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: '#FF0000' }} weight="bold" />,
+      title: 'Secure Payments',
+      desc: '100% verified transactions',
+    },
+    {
+      icon: <FaWhatsapp className="w-5 h-5 shrink-0" style={{ color: '#25D366' }} />,
+      title: 'WhatsApp Support',
+      desc: '24/7 direct client help',
+    },
+    {
+      icon: <BadgeCheck className="w-5 h-5 shrink-0" style={{ color: '#3B82F6' }} weight="bold" />,
+      title: 'Verified Process',
+      desc: 'Direct Steam credentials',
+    },
+    {
+      icon: <Package className="w-5 h-5 shrink-0" style={{ color: '#F59E0B' }} weight="bold" />,
+      title: 'Digital Delivery',
+      desc: 'Instant activation codes',
+    },
+  ];
+
   const renderTrustStrip = () => (
-    <section className="grid grid-cols-2 md:grid-cols-4 gap-4 border-y border-white/8 py-5 mb-8 text-center bg-[#0D0D0D]/30 rounded-2xl px-4 select-none">
-      <div className="flex items-center justify-center md:justify-start gap-2 px-1">
-        <ShieldCheck className="w-5 h-5 text-[#E10600] shrink-0" />
-        <div className="text-left flex flex-col justify-center leading-tight">
-          <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">Secure Payments</span>
-          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-normal">100% verified transactions</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-center md:justify-start gap-2 px-1">
-        <FaWhatsapp className="w-5 h-5 text-[#E10600] shrink-0" />
-        <div className="text-left flex flex-col justify-center leading-tight">
-          <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">WhatsApp Support</span>
-          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-normal">24/7 direct client help</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-center md:justify-start gap-2 px-1">
-        <BadgeCheck className="w-5 h-5 text-[#E10600] shrink-0" />
-        <div className="text-left flex flex-col justify-center leading-tight">
-          <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">Verified Process</span>
-          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-normal">Direct Steam credentials</span>
-        </div>
-      </div>
-      <div className="flex items-center justify-center md:justify-start gap-2 px-1">
-        <Package className="w-5 h-5 text-[#E10600] shrink-0" />
-        <div className="text-left flex flex-col justify-center leading-tight">
-          <span className="text-[10px] sm:text-xs font-bold text-white uppercase tracking-wider">Digital Delivery</span>
-          <span className="text-[8px] sm:text-[9px] text-zinc-500 font-normal">Instant activation codes</span>
-        </div>
+    <section
+      aria-label="Trust features"
+      className="mb-5 select-none"
+      style={{
+        background: '#FFFFFF',
+        border: '1px solid #E8E8E8',
+        borderRadius: '18px',
+        padding: '16px 24px',
+        boxShadow: '0 3px 15px rgba(0,0,0,0.035)',
+      }}
+    >
+      <div className="grid grid-cols-2 md:grid-cols-4">
+        {TRUST_FEATURES.map((feature, idx) => (
+          <div
+            key={feature.title}
+            className={`flex items-center gap-3 py-2 px-3 md:px-4 group cursor-default
+              ${
+                idx < TRUST_FEATURES.length - 1
+                  ? 'border-b md:border-b-0 md:border-r border-[#EFEFEF]'
+                  : ''
+              }
+              ${idx % 2 === 0 && idx < TRUST_FEATURES.length - 1 ? 'md:border-r' : ''}
+            `}
+            style={{ transition: 'opacity 150ms ease' }}
+          >
+            <div className="shrink-0">{feature.icon}</div>
+            <div className="flex flex-col min-w-0 leading-tight">
+              <span
+                style={{
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#111111',
+                  letterSpacing: '-0.01em',
+                  lineHeight: 1.3,
+                }}
+              >
+                {feature.title}
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  color: '#888888',
+                  lineHeight: 1.4,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                {feature.desc}
+              </span>
+            </div>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -561,7 +663,7 @@ const Games = () => {
         {/* SEARCH AND FILTERS TOOLBAR (DESKTOP) */}
         <div className="hidden md:flex items-center justify-between gap-4 mb-6 bg-[#0D0D0D] border border-white/8 rounded-xl p-3 h-14">
           {/* Search form */}
-          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-[500px]">
+          <form onSubmit={handleSearchSubmit} className="relative flex-1 max-w-[450px]">
             <Search className="absolute left-4 top-2.5 w-4 h-4 text-gray-500" />
             <input
               type="text"
@@ -586,6 +688,21 @@ const Games = () => {
           </form>
 
           <div className="flex items-center gap-3">
+            {/* Platform Dropdown */}
+            <select
+              value={platformVal}
+              onChange={(e) => handleFilterChange("platform", e.target.value)}
+              className={`bg-[#141414] border rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer transition ${
+                platformVal ? "border-[#E10600]" : "border-white/8 hover:border-white/20"
+              }`}
+              aria-label="Filter by Platform"
+            >
+              <option value="">All Platforms</option>
+              {PLATFORM_OPTIONS.map((plat) => (
+                <option key={plat} value={plat}>{plat}</option>
+              ))}
+            </select>
+
             {/* Price Range Dropdown */}
             <select
               value={minSteamPriceVal === "1500" ? "aaa" : maxPriceVal}
@@ -599,7 +716,9 @@ const Games = () => {
                   handleFilterChange({ minSteamPrice: "", maxPrice: "" });
                 }
               }}
-              className="bg-[#141414] border border-white/8 rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer hover:border-white/20 transition"
+              className={`bg-[#141414] border rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer transition ${
+                maxPriceVal || minSteamPriceVal === "1500" ? "border-[#E10600]" : "border-white/8 hover:border-white/20"
+              }`}
               aria-label="Filter by Price"
             >
               <option value="">All Prices</option>
@@ -616,7 +735,9 @@ const Games = () => {
                 const val = e.target.value;
                 handleFilterChange({ maxPrice: "", minSteamPrice: val });
               }}
-              className="bg-[#141414] border border-white/8 rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer hover:border-white/20 transition"
+              className={`bg-[#141414] border rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer transition ${
+                minSteamPriceVal && minSteamPriceVal !== "1500" ? "border-[#E10600]" : "border-white/8 hover:border-white/20"
+              }`}
               aria-label="Filter by Steam Value"
             >
               <option value="">Steam Value</option>
@@ -629,7 +750,9 @@ const Games = () => {
             <select
               value={sortByVal}
               onChange={(e) => handleFilterChange("sortBy", e.target.value)}
-              className="bg-[#141414] border border-white/8 rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer hover:border-white/20 transition font-bold"
+              className={`bg-[#141414] border rounded-lg px-3 py-2 text-xs text-white outline-none cursor-pointer transition font-bold ${
+                sortByVal ? "border-[#E10600]" : "border-white/8 hover:border-white/20"
+              }`}
               aria-label="Sort games"
             >
               <option value="">Recommended</option>
@@ -818,14 +941,16 @@ const Games = () => {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-5 pb-24">
-              {/* Category */}
+            <div className="flex-1 overflow-y-auto space-y-5 pb-24 text-left">
+              {/* 1. Category */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase text-zinc-500 font-extrabold tracking-widest">Category</label>
                 <select
                   value={getSelectedCategoryId()}
                   onChange={(e) => handleFilterChange("category", e.target.value)}
-                  className="w-full bg-[#141414] border border-white/8 rounded-xl p-3 text-xs text-white outline-none cursor-pointer"
+                  className={`w-full bg-[#141414] border rounded-xl p-3 text-xs text-white outline-none cursor-pointer transition ${
+                    categoryVal ? "border-[#E10600]" : "border-white/8"
+                  }`}
                   aria-label="Select Category"
                 >
                   <option value="">All Categories</option>
@@ -835,7 +960,25 @@ const Games = () => {
                 </select>
               </div>
 
-              {/* Price Limit */}
+              {/* 2. Platform */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-[10px] uppercase text-zinc-500 font-extrabold tracking-widest">Platform</label>
+                <select
+                  value={platformVal}
+                  onChange={(e) => handleFilterChange("platform", e.target.value)}
+                  className={`w-full bg-[#141414] border rounded-xl p-3 text-xs text-white outline-none cursor-pointer transition ${
+                    platformVal ? "border-[#E10600]" : "border-white/8"
+                  }`}
+                  aria-label="Select Platform"
+                >
+                  <option value="">All Platforms</option>
+                  {PLATFORM_OPTIONS.map((plat) => (
+                    <option key={plat} value={plat}>{plat}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* 3. Price Limit */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase text-zinc-500 font-extrabold tracking-widest">Price Limit</label>
                 <select
@@ -850,7 +993,9 @@ const Games = () => {
                       handleFilterChange({ minSteamPrice: "", maxPrice: "" });
                     }
                   }}
-                  className="w-full bg-[#141414] border border-white/8 rounded-xl p-3 text-xs text-white outline-none cursor-pointer"
+                  className={`w-full bg-[#141414] border rounded-xl p-3 text-xs text-white outline-none cursor-pointer transition ${
+                    maxPriceVal || minSteamPriceVal === "1500" ? "border-[#E10600]" : "border-white/8"
+                  }`}
                   aria-label="Select Price Limit"
                 >
                   <option value="">All Prices</option>
@@ -861,7 +1006,7 @@ const Games = () => {
                 </select>
               </div>
 
-              {/* Steam Value Filter */}
+              {/* 4. Steam Value Filter */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase text-zinc-500 font-extrabold tracking-widest">Steam Value</label>
                 <select
@@ -870,7 +1015,9 @@ const Games = () => {
                     const val = e.target.value;
                     handleFilterChange({ maxPrice: "", minSteamPrice: val });
                   }}
-                  className="w-full bg-[#141414] border border-white/8 rounded-xl p-3 text-xs text-white outline-none cursor-pointer"
+                  className={`w-full bg-[#141414] border rounded-xl p-3 text-xs text-white outline-none cursor-pointer transition ${
+                    minSteamPriceVal && minSteamPriceVal !== "1500" ? "border-[#E10600]" : "border-white/8"
+                  }`}
                   aria-label="Select Steam Value"
                 >
                   <option value="">All Steam Values</option>
@@ -880,13 +1027,15 @@ const Games = () => {
                 </select>
               </div>
 
-              {/* Sort Option */}
+              {/* 5. Sort Option */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-[10px] uppercase text-zinc-500 font-extrabold tracking-widest">Sort Option</label>
                 <select
                   value={sortByVal}
                   onChange={(e) => handleFilterChange("sortBy", e.target.value)}
-                  className="w-full bg-[#141414] border border-white/8 rounded-xl p-3 text-xs text-white font-bold outline-none cursor-pointer"
+                  className={`w-full bg-[#141414] border rounded-xl p-3 text-xs text-white font-bold outline-none cursor-pointer transition ${
+                    sortByVal ? "border-[#E10600]" : "border-white/8"
+                  }`}
                   aria-label="Select Sort Option"
                 >
                   <option value="">Recommended</option>

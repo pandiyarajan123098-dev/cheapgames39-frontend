@@ -20,9 +20,9 @@ import {
 } from "@phosphor-icons/react";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { FaWhatsapp } from "react-icons/fa";
+import { getWhatsAppOrderUrl } from "../utils/whatsapp";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
-const WHATSAPP_NUMBER = "916379490178";
 
 /* ─── Status helpers ─────────────────────────────────────────────── */
 const getStepIndex = (status) => {
@@ -317,8 +317,7 @@ const Success = () => {
           </div>
           <button
             onClick={() => {
-              const msg = `Hi CG39 support, I need help with my order. Order ID: #${order.id}`;
-              window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`, "_blank");
+              window.open(getWhatsAppOrderUrl(order), "_blank");
             }}
             className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition shrink-0 min-h-[44px]"
             aria-label="Chat with support on WhatsApp"

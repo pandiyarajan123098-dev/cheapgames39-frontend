@@ -138,7 +138,14 @@ const GameDetails = () => {
       const allGames = (res.data || []).filter(g => g.id !== currentGame.id && g.in_stock !== false);
       
       const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
-      const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+      let recent = [];
+      try {
+        const raw = localStorage.getItem(storageKey);
+        recent = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(recent)) recent = [];
+      } catch (e) {
+        console.warn("[GameDetails] localStorage parse error:", e);
+      }
       const recentIds = recent.map(r => String(r.id));
 
       // Calculate score for all products
@@ -326,7 +333,14 @@ const GameDetails = () => {
   useEffect(() => {
     if (!game?.id) return;
     const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
-    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+    let recent = [];
+    try {
+      const raw = localStorage.getItem(storageKey);
+      recent = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(recent)) recent = [];
+    } catch (e) {
+      console.warn("[GameDetails recent] localStorage parse error:", e);
+    }
     const updated = [
       {
         id: String(game.id),
@@ -687,7 +701,7 @@ const GameDetails = () => {
             <div className="space-y-4 text-xs">
               <div className="flex justify-between items-center py-0.5">
                 <span className="text-zinc-500 uppercase font-bold">Platform</span>
-                <span className="text-white font-medium">PC (Steam)</span>
+                <span className="text-white font-medium">{game.platform || "PC (Steam)"}</span>
               </div>
               {game.categories?.name && (
                 <div className="flex justify-between items-center py-0.5">

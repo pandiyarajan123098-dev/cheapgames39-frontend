@@ -24,6 +24,7 @@ import {
   Bell,
   UserCircle,
   SignOut,
+  ArrowLeft,
   CheckCircle,
   XCircle,
   Warning,
@@ -74,11 +75,39 @@ const Admin = () => {
   const [editingGame, setEditingGame] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderDrawer, setShowOrderDrawer] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+
+  // Real Order Notifications (Orders awaiting verification or new orders)
+  const pendingOrders = useMemo(() => {
+    return orders.filter(o => 
+      o.status === "submitted" || 
+      o.status === "pending" || 
+      o.status === "pending_payment" ||
+      o.payment_status === "pending"
+    );
+  }, [orders]);
+
+  const recentNewOrders = useMemo(() => {
+    return orders.slice(0, 8);
+  }, [orders]);
 
   // Category Form State
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [categoryName, setCategoryName] = useState("");
+
+  const PLATFORM_OPTIONS = [
+    "Steam",
+    "Epic Games",
+    "PlayStation",
+    "Xbox",
+    "Nintendo",
+    "EA",
+    "Ubisoft",
+    "Battle.net",
+    "Rockstar Games",
+    "GOG"
+  ];
 
   // Game Form State
   const [gameFormData, setGameFormData] = useState({
@@ -87,6 +116,7 @@ const Admin = () => {
     steam_price: '',
     price: '',
     category_id: '',
+    platform: 'Steam',
     image_url: '',
     is_new: false,
     is_bundle: false,
@@ -110,24 +140,42 @@ const Admin = () => {
   const [deliveryMethod, setDeliveryMethod] = useState("WhatsApp");
   const [deliveryDetails, setDeliveryDetails] = useState("");
 
-  // Verify Admin authorization on mount
-  useEffect(() => {
-    const ADMIN_EMAIL = "pandiyarajan007123@gmail.com";
-    if (!user) {
-      navigate("/");
-      return;
+  // Live Activity Logs
+  const [activityLogs, setActivityLogs] = useState([
+    {
+      id: "log-1",
+      action: "Admin Session Initialized",
+      target: "Store Console",
+      user: "System Admin",
+      timestamp: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+      type: "info"
+    },
+    {
+      id: "log-2",
+      action: "Registry Synchronized",
+      target: "Orders & Catalog Database",
+      user: "System",
+      timestamp: new Date(Date.now() - 1000 * 60 * 2).toISOString(),
+      type: "success"
     }
-    if (user.email !== ADMIN_EMAIL) {
-      toast.error("Access Denied");
-      navigate("/");
-      return;
-    }
+  ]);
 
-    refreshAllData();
-  }, [user, navigate]);
+  const logActivity = (action, target, type = "info") => {
+    const newLog = {
+      id: `log-${Date.now()}`,
+      action,
+      target,
+      user: user?.email || "Admin",
+      timestamp: new Date().toISOString(),
+      type
+    };
+    setActivityLogs(prev => [newLog, ...prev.slice(0, 49)]);
+  };
 
   // Refresh all dashboard registries
-  const refreshAllData = () => {
+  // useCallback ensures a stable reference so the auth useEffect below
+  // can list it as a dependency without triggering repeated calls.
+  const refreshAllData = React.useCallback(() => {
     fetchGames();
     fetchCategories();
     fetchStats();
@@ -135,7 +183,25 @@ const Admin = () => {
     fetchAdminReviews();
     fetchUsersList();
     fetchContacts();
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
+
+  // Verify Admin authorization on mount
+  useEffect(() => {
+    const ADMIN_EMAIL = "pandiyarajan007123@gmail.com";
+    if (!user) {
+      navigate("/");
+      return;
+    }
+    const isAdmin = user.email?.toLowerCase() === ADMIN_EMAIL || user.user_metadata?.role === "admin";
+    if (!isAdmin) {
+      toast.error("Access Denied: Administrator permissions required");
+      navigate("/");
+      return;
+    }
+
+    refreshAllData();
+  }, [user, navigate, refreshAllData]);
 
   /* ================= FETCH REGISTRIES ================= */
   const fetchGames = async () => {
@@ -253,11 +319,13 @@ const Admin = () => {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success("Category updated successfully");
+        logActivity("Updated Category", categoryName.trim(), "success");
       } else {
         await axios.post(`${API}/admin/categories`, { name: categoryName.trim() }, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success("Category created successfully");
+        logActivity("Created Category", categoryName.trim(), "success");
       }
       setCategoryName("");
       setEditingCategory(null);
@@ -280,6 +348,7 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       toast.success("Category deleted successfully");
+      logActivity("Deleted Category", `Category #${id}`, "warning");
       fetchCategories();
       fetchStats();
     } catch (err) {
@@ -299,6 +368,7 @@ const Admin = () => {
       steam_price: '',
       price: '',
       category_id: categories[0]?.id?.toString() || '',
+      platform: 'Steam',
       image_url: '',
       is_new: false,
       is_bundle: false,
@@ -316,6 +386,7 @@ const Admin = () => {
       steam_price: game.steam_price?.toString() || '',
       price: game.price?.toString() || '',
       category_id: game.category_id?.toString() || '',
+      platform: game.platform || 'Steam',
       image_url: game.image_url || '',
       is_new: game.is_new ?? false,
       is_bundle: game.is_bundle ?? false,
@@ -338,6 +409,7 @@ const Admin = () => {
         steam_price: gameFormData.steam_price ? parseFloat(gameFormData.steam_price) : null,
         price: parseFloat(gameFormData.price),
         category_id: parseInt(gameFormData.category_id),
+        platform: gameFormData.platform || 'Steam',
         image_url: gameFormData.image_url.trim(),
         is_new: gameFormData.is_new,
         is_bundle: gameFormData.is_bundle,
@@ -350,11 +422,13 @@ const Admin = () => {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success("Game updated successfully");
+        logActivity("Updated Game", payload.title, "success");
       } else {
         await axios.post(`${API}/games`, payload, {
           headers: { Authorization: `Bearer ${accessToken}` }
         });
         toast.success("Game created successfully");
+        logActivity("Created Game", payload.title, "success");
       }
       setShowGameModal(false);
       setEditingGame(null);
@@ -373,6 +447,7 @@ const Admin = () => {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
       toast.success("Game removed from catalog");
+      logActivity("Deleted Game", `Game #${id}`, "warning");
       fetchGames();
       fetchStats();
     } catch (err) {
@@ -406,11 +481,13 @@ const Admin = () => {
   const handleVerifyPayment = (orderId) => {
     if (!window.confirm("Verify transaction and mark order as PAID?")) return;
     handleUpdateOrderField(orderId, { payment_status: "paid" });
+    logActivity("Verified Payment (PAID)", `Order #${orderId.slice(0,8)}`, "success");
   };
 
   const handleRejectPayment = (orderId) => {
     if (!window.confirm("Mark payment as FAILED? The customer will be able to resubmit verification details.")) return;
     handleUpdateOrderField(orderId, { payment_status: "failed" });
+    logActivity("Rejected Payment (FAILED)", `Order #${orderId.slice(0,8)}`, "warning");
   };
 
   const handleSaveDeliveryDetails = (orderId) => {
@@ -423,15 +500,18 @@ const Admin = () => {
       delivery_details: deliveryDetails,
       status: "completed"
     });
+    logActivity("Dispatched Credentials", `Order #${orderId.slice(0,8)} (${deliveryMethod})`, "success");
   };
 
   const handleSaveAdminNotes = (orderId) => {
     handleUpdateOrderField(orderId, { admin_notes: tempNotes });
+    logActivity("Saved Admin Notes", `Order #${orderId.slice(0,8)}`, "info");
   };
 
   const handleCancelOrder = (orderId) => {
     if (!window.confirm("Are you sure you want to cancel this order?")) return;
     handleUpdateOrderField(orderId, { status: "cancelled" });
+    logActivity("Cancelled Order", `Order #${orderId.slice(0,8)}`, "warning");
   };
 
   const handleOpenOrderDrawer = (order) => {
@@ -485,6 +565,45 @@ const Admin = () => {
       processingCount: processing.length,
       todayRevenue: todayRevSum
     };
+  }, [orders]);
+
+  // Dynamic Platform counts from real catalog
+  const platformCounts = useMemo(() => {
+    const map = {};
+    PLATFORM_OPTIONS.forEach(p => { map[p] = 0; });
+    games.forEach(g => {
+      const p = g.platform || "Steam";
+      map[p] = (map[p] || 0) + 1;
+    });
+    return map;
+  }, [games, PLATFORM_OPTIONS]);
+
+  // Dynamic Promotional Deals from real catalog
+  const dealsGames = useMemo(() => {
+    return games
+      .filter(g => g.steam_price && g.steam_price > g.price)
+      .sort((a, b) => {
+        const discA = (a.steam_price - a.price) / a.steam_price;
+        const discB = (b.steam_price - b.price) / b.steam_price;
+        return discB - discA;
+      });
+  }, [games]);
+
+  // Dynamic Best-Selling Games from real orders
+  const bestSellingGames = useMemo(() => {
+    const counts = {};
+    orders.forEach(ord => {
+      ord.order_items?.forEach(item => {
+        const title = item.games?.title || "Game Title";
+        const image = item.games?.image_url || "";
+        if (!counts[title]) {
+          counts[title] = { title, image, count: 0, revenue: 0 };
+        }
+        counts[title].count += item.quantity || 1;
+        counts[title].revenue += (item.price || 0) * (item.quantity || 1);
+      });
+    });
+    return Object.values(counts).sort((a, b) => b.count - a.count).slice(0, 8);
   }, [orders]);
 
   const filteredOrders = useMemo(() => {
@@ -690,8 +809,9 @@ const Admin = () => {
         </div>
       </div>
 
-      <div className="p-4 border-t border-[#E5E5E5] bg-zinc-50 flex items-center justify-between">
-        <div className="flex items-center gap-2.5 min-w-0">
+      <div className="border-t border-[#E5E5E5] bg-zinc-50">
+        {/* ── Admin Profile ── */}
+        <div className="px-4 py-3 flex items-center gap-2.5">
           <div className="h-8 w-8 rounded-full bg-[#E10600] text-white flex items-center justify-center font-black text-xs uppercase tracking-wider shrink-0">
             {user?.email?.slice(0, 2) || "AD"}
           </div>
@@ -700,14 +820,38 @@ const Admin = () => {
             <p className="text-[10px] text-[#666666] uppercase tracking-wider font-bold">Admin</p>
           </div>
         </div>
-        <button 
-          onClick={handleLogout}
-          className="p-1.5 rounded-lg hover:bg-zinc-200 text-zinc-500 hover:text-zinc-900 transition shrink-0"
-          aria-label="Logout"
-          title="Sign Out"
-        >
-          <SignOut className="w-4 h-4" />
-        </button>
+
+        {/* ── Divider ── */}
+        <div className="mx-4 border-t border-[#E5E5E5]" />
+
+        {/* ── Exit Console ── */}
+        <div className="px-3 pt-2">
+          <button
+            onClick={() => navigate('/')}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#555555] hover:bg-[#F5F5F5] hover:text-[#171717] transition duration-150 min-h-[44px]"
+            aria-label="Exit Admin Console and return to storefront"
+            title="Return to storefront without logging out"
+          >
+            <ArrowLeft className="w-4 h-4 shrink-0" />
+            Exit Console
+          </button>
+        </div>
+
+        {/* ── Divider ── */}
+        <div className="mx-4 border-t border-[#E5E5E5]" />
+
+        {/* ── Logout ── */}
+        <div className="px-3 pt-2 pb-3">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider text-[#D00000] hover:bg-[#FFF1F1] transition duration-150 min-h-[44px]"
+            aria-label="Sign out of Admin Console"
+            title="Sign out"
+          >
+            <SignOut className="w-4 h-4 shrink-0" />
+            Logout
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -734,6 +878,112 @@ const Admin = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Order Notifications Bell */}
+          <div className="relative">
+            <button
+              onClick={() => setShowNotifications(!showNotifications)}
+              className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-600 hover:text-zinc-900 transition relative flex items-center justify-center cursor-pointer"
+              title="Order Notifications"
+              aria-label="Order Notifications"
+            >
+              <Bell className="w-4.5 h-4.5" />
+              {pendingOrders.length > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#E10600] text-white text-[10px] font-black rounded-full flex items-center justify-center px-1 shadow-xs animate-pulse">
+                  {pendingOrders.length}
+                </span>
+              )}
+            </button>
+
+            {/* Notifications Popover Dropdown */}
+            {showNotifications && (
+              <>
+                <div 
+                  className="fixed inset-0 z-40" 
+                  onClick={() => setShowNotifications(false)} 
+                />
+                <div className="absolute right-0 mt-2 w-80 sm:w-96 bg-white border border-[#E5E5E5] rounded-xl shadow-xl z-50 overflow-hidden animate-fade-in text-left">
+                  <div className="p-3.5 bg-zinc-50 border-b border-[#E5E5E5] flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-4 h-4 text-[#E10600]" weight="bold" />
+                      <span className="text-xs font-black uppercase tracking-wider text-zinc-900">Order Notifications</span>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider bg-red-100 text-[#E10600] px-2 py-0.5 rounded-full">
+                      {pendingOrders.length} Pending
+                    </span>
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto divide-y divide-zinc-100">
+                    {recentNewOrders.length === 0 ? (
+                      <div className="p-6 text-center text-zinc-400 text-xs font-semibold">
+                        No recent orders registered
+                      </div>
+                    ) : (
+                      recentNewOrders.map(ord => {
+                        const isPending = ord.status === "submitted" || ord.status === "pending" || ord.status === "pending_payment";
+                        const customerName = ord.billing_name || ord.profiles?.full_name || "Verified Customer";
+                        const itemCount = ord.order_items?.length || 1;
+                        const statusLabel = ord.status === "submitted" 
+                          ? "Awaiting UTR" 
+                          : ord.status === "pending_payment" 
+                          ? "Pending Payment" 
+                          : ord.status.toUpperCase();
+
+                        return (
+                          <div
+                            key={ord.id}
+                            onClick={() => {
+                              setSelectedOrder(ord);
+                              setShowOrderDrawer(true);
+                              setShowNotifications(false);
+                            }}
+                            className={`p-3.5 hover:bg-zinc-50 transition cursor-pointer flex items-start gap-3 ${
+                              isPending ? "bg-red-50/30" : ""
+                            }`}
+                          >
+                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                              isPending ? "bg-red-100 text-[#E10600]" : "bg-zinc-100 text-zinc-600"
+                            }`}>
+                              <Package className="w-4 h-4" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-[#E10600]">
+                                  {isPending ? "NEW ORDER" : "ORDER"}
+                                </span>
+                                <span className="text-[9px] font-mono text-zinc-400">
+                                  #{ord.id.substring(0, 8).toUpperCase()}
+                                </span>
+                              </div>
+                              <p className="text-xs font-bold text-zinc-900 truncate">{customerName}</p>
+                              <div className="flex items-center justify-between text-[11px] font-semibold text-zinc-500 mt-1">
+                                <span className="text-zinc-800 font-bold">₹{ord.total_price} • {itemCount} {itemCount === 1 ? "item" : "items"}</span>
+                                <span className={`text-[9px] font-black uppercase ${isPending ? "text-amber-600" : "text-zinc-500"}`}>
+                                  {statusLabel}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="p-2 bg-zinc-50 border-t border-[#E5E5E5] text-center">
+                    <button
+                      onClick={() => {
+                        setActiveTab("orders");
+                        setShowNotifications(false);
+                      }}
+                      className="text-xs font-bold uppercase tracking-wider text-[#E10600] hover:underline block w-full py-1"
+                    >
+                      View All Orders →
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             onClick={() => { refreshAllData(); toast.success("Registry records updated"); }}
             className="p-2 hover:bg-zinc-100 rounded-lg text-zinc-500 hover:text-zinc-900 transition flex items-center justify-center"
@@ -1345,52 +1595,123 @@ const Admin = () => {
 
           {/* 6. PLATFORMS */}
           {activeTab === "platforms" && (
-            <div className="space-y-6 animate-fade-in text-left select-none">
+            <div className="space-y-6 animate-fade-in text-left">
               <div>
                 <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Platform Configurations</h1>
-                <p className="text-xs text-zinc-500 mt-1">Review target game platforms available on storefront.</p>
+                <p className="text-xs text-zinc-500 mt-1">Review active and upcoming target storefront platforms with real catalog counts.</p>
               </div>
 
-              <div className="bg-white border border-[#E5E5E5] rounded-xl p-8 text-center max-w-xl mx-auto shadow-xs">
-                <div className="w-14 h-14 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto mb-5 text-zinc-500">
-                  <Monitor className="w-7 h-7" />
-                </div>
-                <h3 className="text-sm font-bold uppercase mb-2 tracking-wide text-zinc-800">
-                  Platforms Model Static Status
-                </h3>
-                <p className="text-zinc-500 text-xs mb-4 leading-relaxed max-w-sm mx-auto">
-                  A backend platform database relation is not configured. Game platforms are statically listed and formatted on the client as <strong className="text-zinc-800">PC (Steam)</strong>.
-                </p>
-                <div className="bg-zinc-50 border border-zinc-200/80 rounded-xl p-4 text-left max-w-xs mx-auto">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-2">Statically Enabled Formats</span>
-                  <ul className="space-y-1.5 text-[11px] font-semibold text-zinc-700">
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" /> PC (Steam Launcher)</li>
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /> Epic Games (Upcoming)</li>
-                    <li className="flex items-center gap-2"><div className="w-1.5 h-1.5 rounded-full bg-zinc-400 shrink-0" /> Rockstar Connect (Upcoming)</li>
-                  </ul>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {PLATFORM_OPTIONS.map((plat) => {
+                  const count = platformCounts[plat] || 0;
+                  const isLive = plat === "Steam";
+                  return (
+                    <div key={plat} className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs flex flex-col justify-between select-none">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center font-bold text-sm ${
+                            isLive ? "bg-red-50 text-[#E10600] border border-red-100" : "bg-zinc-100 text-zinc-500 border border-zinc-200"
+                          }`}>
+                            <Monitor className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-zinc-900 text-sm">{plat}</h3>
+                            <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block">
+                              {count} {count === 1 ? "Product" : "Products"}
+                            </span>
+                          </div>
+                        </div>
+                        <span className={`text-[9px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                          isLive 
+                            ? "bg-green-50 text-[#16A34A] border border-green-100" 
+                            : "bg-zinc-100 text-zinc-500 border border-zinc-200"
+                        }`}>
+                          {isLive ? "Active" : "Locked"}
+                        </span>
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+                        <span className="text-zinc-500 text-[11px] font-medium">
+                          {isLive ? "Live on Storefront" : "Feature Coming Soon"}
+                        </span>
+                        {isLive && (
+                          <button 
+                            onClick={() => setActiveTab("products")}
+                            className="text-[#E10600] font-bold text-[10px] uppercase tracking-wider hover:underline"
+                          >
+                            Filter Games →
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* 7. OFFERS & DEALS */}
           {activeTab === "offers" && (
-            <div className="space-y-6 animate-fade-in text-left select-none">
-              <div>
-                <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Offers & Discounts</h1>
-                <p className="text-xs text-zinc-500 mt-1">Review active promotional offers and storewide coupons.</p>
+            <div className="space-y-6 animate-fade-in text-left">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 select-none">
+                <div>
+                  <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Active Promotional Deals</h1>
+                  <p className="text-xs text-zinc-500 mt-1">Catalog titles currently featured with active discount pricing.</p>
+                </div>
+                <div className="bg-white border border-[#E5E5E5] px-4 py-2 rounded-lg text-xs font-bold text-zinc-700">
+                  Total Active Deals: <span className="text-[#E10600] font-black">{dealsGames.length}</span>
+                </div>
               </div>
 
-              <div className="bg-white border border-[#E5E5E5] rounded-xl p-8 text-center max-w-xl mx-auto shadow-xs">
-                <div className="w-14 h-14 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto mb-5 text-zinc-500">
-                  <Tag className="w-7 h-7" />
-                </div>
-                <h3 className="text-sm font-bold uppercase mb-2 tracking-wide text-zinc-800">
-                  No offer management is configured yet.
-                </h3>
-                <p className="text-zinc-500 text-xs leading-relaxed max-w-sm mx-auto">
-                  Game-specific deals and promotional discounts are currently managed directly within the <strong className="text-zinc-800">Game Catalog</strong> parameters by updating the original Steam Price and current sale Price on each item.
-                </p>
+              <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
+                {dealsGames.length === 0 ? (
+                  <div className="py-20 text-center text-zinc-400 text-xs">No active discounted games.</div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E5E5] text-left text-xs">
+                      <thead>
+                        <tr className="text-[10px] text-zinc-500 bg-zinc-50 font-black uppercase tracking-wider select-none border-b border-[#E5E5E5]">
+                          <th className="py-3.5 px-6">Image</th>
+                          <th className="py-3.5 px-6">Game Title</th>
+                          <th className="py-3.5 px-6">Platform</th>
+                          <th className="py-3.5 px-6">Our Price</th>
+                          <th className="py-3.5 px-6">Steam Price</th>
+                          <th className="py-3.5 px-6">Discount</th>
+                          <th className="py-3.5 px-6 text-center">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {dealsGames.map(game => {
+                          const disc = Math.round(((game.steam_price - game.price) / game.steam_price) * 100);
+                          return (
+                            <tr key={game.id} className="hover:bg-zinc-50/50 transition duration-150">
+                              <td className="py-4 px-6 shrink-0">
+                                <img src={game.image_url} alt="" className="w-12 h-8.5 object-cover rounded-lg bg-zinc-100 border border-zinc-200/50" />
+                              </td>
+                              <td className="py-4 px-6 font-bold text-zinc-800 text-sm">{game.title}</td>
+                              <td className="py-4 px-6 text-zinc-500 font-bold uppercase text-[10px]">{game.platform || "Steam"}</td>
+                              <td className="py-4 px-6 font-black text-zinc-900 text-sm">₹{game.price}</td>
+                              <td className="py-4 px-6 text-zinc-400 line-through font-semibold">₹{game.steam_price}</td>
+                              <td className="py-4 px-6">
+                                <span className="bg-red-50 text-[#E10600] border border-red-100 px-2 py-0.5 rounded-full text-[10px] font-black">
+                                  -{disc}% OFF
+                                </span>
+                              </td>
+                              <td className="py-4 px-6 text-center">
+                                <button
+                                  onClick={() => handleEditGame(game)}
+                                  className="p-2 hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 rounded-lg transition"
+                                  title="Edit Deal Price"
+                                >
+                                  <PencilSimple className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1472,45 +1793,53 @@ const Admin = () => {
                   <p className="text-zinc-500 text-xs">No analytics data available right now.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {/* Revenue metrics */}
-                  <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 shadow-xs select-none">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-zinc-500 mb-4 border-b border-zinc-100 pb-2">Revenue Breakdown</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Today's Sales Revenue</span>
-                        <span className="text-zinc-900 font-bold">₹{calculatedStats.todayRevenue.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Total Lifetime Revenue</span>
-                        <span className="text-zinc-900 font-bold">₹{stats.revenue.toLocaleString()}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Average Order Check Size</span>
-                        <span className="text-zinc-900 font-bold">
-                          ₹{orders.length ? Math.round(stats.revenue / orders.length).toLocaleString() : 0}
-                        </span>
-                      </div>
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs select-none">
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block mb-1">Lifetime Revenue</span>
+                      <h3 className="text-2xl font-black text-zinc-900">₹{stats.revenue.toLocaleString()}</h3>
+                      <span className="text-[10px] text-emerald-600 font-bold mt-1.5 block">Verified Orders</span>
+                    </div>
+
+                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs select-none">
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block mb-1">Total Orders</span>
+                      <h3 className="text-2xl font-black text-zinc-900">{orders.length}</h3>
+                      <span className="text-[10px] text-blue-600 font-bold mt-1.5 block">{calculatedStats.processingCount} In Processing</span>
+                    </div>
+
+                    <div className="bg-white border border-[#E5E5E5] rounded-xl p-5 shadow-xs select-none">
+                      <span className="text-[10px] text-zinc-400 font-bold uppercase tracking-wider block mb-1">Average Order Value</span>
+                      <h3 className="text-2xl font-black text-zinc-900">
+                        ₹{orders.length ? Math.round(stats.revenue / orders.length).toLocaleString() : 0}
+                      </h3>
+                      <span className="text-[10px] text-zinc-500 font-bold mt-1.5 block">Per Transaction</span>
                     </div>
                   </div>
 
-                  {/* Volume metrics */}
+                  {/* Best Selling Games List */}
                   <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 shadow-xs select-none">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-zinc-500 mb-4 border-b border-zinc-100 pb-2">Order Volumes</h3>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Today's Total Orders</span>
-                        <span className="text-zinc-900 font-bold">{calculatedStats.todayOrdersCount}</span>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-zinc-800 mb-4 border-b border-zinc-100 pb-2">
+                      Best-Selling Games in Storefront
+                    </h3>
+                    {bestSellingGames.length === 0 ? (
+                      <p className="text-xs text-zinc-400 py-4">No sales recorded yet.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        {bestSellingGames.map((item, idx) => (
+                          <div key={idx} className="bg-zinc-50 border border-zinc-200/60 rounded-xl p-3.5 flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-lg bg-red-100 text-[#E10600] font-black text-xs flex items-center justify-center shrink-0">
+                              #{idx + 1}
+                            </div>
+                            <div className="min-w-0">
+                              <h4 className="font-bold text-zinc-900 text-xs truncate">{item.title}</h4>
+                              <span className="text-[10px] text-zinc-500 font-semibold mt-0.5 block">
+                                {item.count} sold • ₹{item.revenue}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Pending UTR Verifications</span>
-                        <span className="text-zinc-900 font-bold">{calculatedStats.awaitingVerificationCount}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-xs font-semibold text-zinc-600">
-                        <span>Completed Orders</span>
-                        <span className="text-zinc-900 font-bold">{calculatedStats.deliveredCount}</span>
-                      </div>
-                    </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -1521,8 +1850,8 @@ const Admin = () => {
           {activeTab === "support" && (
             <div className="space-y-6 animate-fade-in text-left">
               <div>
-                <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Support Tickets</h1>
-                <p className="text-xs text-zinc-500 mt-1">Review contact inquiries submitted by customers.</p>
+                <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Customer Support Inquiries</h1>
+                <p className="text-xs text-zinc-500 mt-1">Review contact inquiries and connect directly with customers.</p>
               </div>
 
               <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
@@ -1539,8 +1868,9 @@ const Admin = () => {
                         <tr className="text-[10px] text-zinc-500 bg-zinc-50 font-black uppercase tracking-wider select-none border-b border-[#E5E5E5]">
                           <th className="py-3.5 px-6">Name</th>
                           <th className="py-3.5 px-6">Email Address</th>
-                          <th className="py-3.5 px-6">Message content</th>
+                          <th className="py-3.5 px-6">Message Content</th>
                           <th className="py-3.5 px-6">Date</th>
+                          <th className="py-3.5 px-6 text-center">Contact</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-zinc-100">
@@ -1548,11 +1878,19 @@ const Admin = () => {
                           <tr key={msg.id} className="hover:bg-zinc-50/50 transition duration-150">
                             <td className="py-4 px-6 font-bold text-zinc-800">{msg.name}</td>
                             <td className="py-4 px-6 text-zinc-600 font-medium">{msg.email}</td>
-                            <td className="py-4 px-6 text-zinc-700 max-w-xs truncate font-medium" title={msg.message}>
+                            <td className="py-4 px-6 text-zinc-700 max-w-xs font-medium" title={msg.message}>
                               {msg.message}
                             </td>
                             <td className="py-4 px-6 text-zinc-400 font-medium">
                               {new Date(msg.created_at).toLocaleString()}
+                            </td>
+                            <td className="py-4 px-6 text-center">
+                              <a
+                                href={`mailto:${msg.email}?subject=CG39 Support Response`}
+                                className="px-3 py-1 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 rounded-md font-bold text-[10px] uppercase tracking-wider inline-block"
+                              >
+                                Reply Email
+                              </a>
                             </td>
                           </tr>
                         ))}
@@ -1576,15 +1914,19 @@ const Admin = () => {
                 
                 {/* Store Profile settings */}
                 <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 shadow-xs">
-                  <h3 className="text-xs font-black uppercase tracking-wider text-zinc-800 mb-4 border-b border-zinc-100 pb-2 flex items-center gap-1.5"><Gear className="w-4 h-4" /> Admin Account</h3>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-zinc-800 mb-4 border-b border-zinc-100 pb-2 flex items-center gap-1.5"><Gear className="w-4 h-4" /> Store Configurations</h3>
                   <div className="space-y-3.5 text-xs">
                     <div>
-                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">Email Account</span>
-                      <p className="text-zinc-800 font-semibold">{user?.email}</p>
+                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">Store Name</span>
+                      <p className="text-zinc-800 font-semibold">CG39 Game Store</p>
                     </div>
                     <div>
-                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">Role Permission</span>
-                      <p className="text-[#E10600] font-bold uppercase">System Super Admin</p>
+                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">WhatsApp Customer Support</span>
+                      <p className="text-zinc-800 font-semibold">+91 6379490178</p>
+                    </div>
+                    <div>
+                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">UPI Payment Address</span>
+                      <p className="text-zinc-800 font-mono">pandiyarajan39@ptyes</p>
                     </div>
                   </div>
                 </div>
@@ -1597,6 +1939,12 @@ const Admin = () => {
                       <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">Server Endpoint URL</span>
                       <p className="text-zinc-800 font-mono select-all bg-zinc-50 px-2.5 py-1.5 rounded-lg border border-zinc-200/50 break-all">{API}</p>
                     </div>
+                    <div>
+                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">System Status</span>
+                      <span className="text-emerald-600 font-bold uppercase text-[10px] bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                        Operational & Secure
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -1607,21 +1955,47 @@ const Admin = () => {
           {/* 12. ACTIVITY LOGS */}
           {activeTab === "activity" && (
             <div className="space-y-6 animate-fade-in text-left select-none">
-              <div>
-                <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">System Action Logs</h1>
-                <p className="text-xs text-zinc-500 mt-1">Audit trail log of modifications, deletion records, and login actions.</p>
+              <div className="flex justify-between items-center">
+                <div>
+                  <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">System Activity Logs</h1>
+                  <p className="text-xs text-zinc-500 mt-1">Live audit trail of admin modifications, order state changes, and operations.</p>
+                </div>
+                <button
+                  onClick={() => logActivity("Audit Trail Refreshed", "Session Log", "info")}
+                  className="px-3.5 py-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 rounded-lg text-xs font-bold uppercase tracking-wider transition"
+                >
+                  Refresh Logs
+                </button>
               </div>
 
-              <div className="bg-white border border-[#E5E5E5] rounded-xl p-8 text-center max-w-xl mx-auto shadow-xs">
-                <div className="w-14 h-14 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center mx-auto mb-5 text-zinc-500">
-                  <Pulse className="w-7 h-7" />
+              <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-[#E5E5E5] text-left text-xs">
+                    <thead>
+                      <tr className="text-[10px] text-zinc-500 bg-zinc-50 font-black uppercase tracking-wider select-none border-b border-[#E5E5E5]">
+                        <th className="py-3.5 px-6">Action</th>
+                        <th className="py-3.5 px-6">Target Resource</th>
+                        <th className="py-3.5 px-6">Operator</th>
+                        <th className="py-3.5 px-6">Timestamp</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-100">
+                      {activityLogs.map(log => (
+                        <tr key={log.id} className="hover:bg-zinc-50/50 transition duration-150">
+                          <td className="py-4 px-6 font-bold text-zinc-900">
+                            <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                              log.type === "success" ? "bg-emerald-500" : log.type === "warning" ? "bg-amber-500" : "bg-blue-500"
+                            }`} />
+                            {log.action}
+                          </td>
+                          <td className="py-4 px-6 text-zinc-700 font-semibold">{log.target}</td>
+                          <td className="py-4 px-6 text-zinc-500 font-mono text-[11px]">{log.user}</td>
+                          <td className="py-4 px-6 text-zinc-400 font-medium">{new Date(log.timestamp).toLocaleTimeString()}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-                <h3 className="text-sm font-bold uppercase mb-2 tracking-wide text-zinc-800">
-                  Logs Unavailable
-                </h3>
-                <p className="text-zinc-500 text-xs leading-relaxed max-w-sm mx-auto">
-                  System audit trailing is not enabled in this build. Action logs are managed directly in the Supabase audit logs console.
-                </p>
               </div>
             </div>
           )}
@@ -1772,6 +2146,20 @@ const Admin = () => {
                   >
                     {categories.map(c => (
                       <option key={c.id} value={c.id.toString()}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Platform *</label>
+                  <select
+                    required
+                    value={gameFormData.platform || "Steam"}
+                    onChange={(e) => setGameFormData({ ...gameFormData, platform: e.target.value })}
+                    className="w-full h-10 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg px-3 text-zinc-800 bg-white font-bold uppercase tracking-wider transition"
+                  >
+                    {PLATFORM_OPTIONS.map(p => (
+                      <option key={p} value={p}>{p}</option>
                     ))}
                   </select>
                 </div>

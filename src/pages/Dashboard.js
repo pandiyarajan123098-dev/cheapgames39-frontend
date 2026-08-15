@@ -28,9 +28,9 @@ import {
 } from "@phosphor-icons/react";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { FaWhatsapp } from "react-icons/fa";
+import { getWhatsAppOrderUrl } from "../utils/whatsapp";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
-const WHATSAPP_NUMBER = "916379490178";
 
 /* ─── Status badge helpers ────────────────────────────────────────── */
 const STATUS_MAP = {
@@ -88,7 +88,14 @@ export default function Dashboard() {
         setOrders(fetchedOrders);
 
         const storageKey = `cg39_recent_${user.id}`;
-        const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
+        let recent = [];
+        try {
+          const raw = localStorage.getItem(storageKey);
+          recent = raw ? JSON.parse(raw) : [];
+          if (!Array.isArray(recent)) recent = [];
+        } catch (e) {
+          console.warn("[Dashboard] localStorage parse error:", e);
+        }
         setRecentGames(recent.slice(0, 5));
 
         const gamesRes = await axios.get(`${API}/games`);
@@ -268,7 +275,7 @@ export default function Dashboard() {
                             #{ord.id.substring(0, 8).toUpperCase()}…
                           </span>
                           <div className="flex items-center gap-1.5 mt-1.5">
-                            <CalendarDays className="w-3 h-3 text-zinc-600" />
+                            <Calendar className="w-3 h-3 text-zinc-600" />
                             <span className="text-[10px] text-zinc-500 font-semibold">{formatDate(ord.created_at)}</span>
                           </div>
                         </div>
@@ -308,14 +315,25 @@ export default function Dashboard() {
                         </div>
                       )}
 
-                      {/* CTA */}
-                      <button
-                        onClick={() => navigate(`/order-status?id=${ord.id}`)}
-                        className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#E00000]/8 hover:bg-[#E00000]/18 border border-[#E00000]/15 hover:border-[#E00000]/35 text-[#E00000] rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition min-h-[40px]"
-                        aria-label={`Open order details for order ${ord.id}`}
-                      >
-                        View Details <ArrowRight className="w-3.5 h-3.5 shrink-0" />
-                      </button>
+                      {/* CTAs */}
+                      <div className="flex flex-wrap items-center gap-2.5">
+                        <button
+                          onClick={() => navigate(`/order-status?id=${ord.id}`)}
+                          className="flex items-center justify-center gap-2 bg-[#E00000]/8 hover:bg-[#E00000]/18 border border-[#E00000]/15 hover:border-[#E00000]/35 text-[#E00000] rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition min-h-[38px]"
+                          aria-label={`Open order details for order ${ord.id}`}
+                        >
+                          View Details <ArrowRight className="w-3.5 h-3.5 shrink-0" />
+                        </button>
+                        <button
+                          onClick={() => window.open(getWhatsAppOrderUrl(ord), "_blank")}
+                          className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition min-h-[38px]"
+                          aria-label="WhatsApp Support for this order"
+                          title="Contact support on WhatsApp for this order"
+                        >
+                          <FaWhatsapp className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>WhatsApp</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

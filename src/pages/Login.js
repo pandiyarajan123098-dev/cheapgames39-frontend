@@ -3,25 +3,42 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'sonner';
 import {
-  Eye, EyeSlash as EyeOff, Envelope as Mail, Lock, SignIn as LogIn, ArrowRight, Warning as AlertCircle
+  Eye,
+  EyeSlash as EyeOff,
+  Envelope as EnvelopeSimple,
+  LockSimple,
+  SignIn as LogIn,
+  Warning as AlertCircle,
 } from "@phosphor-icons/react";
 import ReCAPTCHA from "react-google-recaptcha";
-import logo from "../logo.png";
+import AuthLayout from '../components/AuthLayout';
+
+/* ── reCAPTCHA key ────────────────────────────────────────────────────
+   localhost / 127.0.0.1 → Google's universal test key (always passes,
+   no domain registration required).
+   Production → registered site key.
+──────────────────────────────────────────────────────────────────────── */
+const recaptchaSiteKey =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1"
+    ? "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3"   // Google test key
+    : "6Ld0dAUtAAAAALg-0PUO7PVo_e0gC3Tx7T9YUY73";  // production key
+
+/* ── Shared input style ─────────────────────────────────────────────── */
+const inputCls =
+  "w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-11 pr-4 text-sm text-[#111111] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/10 transition";
 
 const Login = () => {
   const { login, loginWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  const recaptchaSiteKey = window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
-    ? "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3"
-    : "6Ld0dAUtAAAAALg-0PUO7PVo_e0gC3Tx7T9YUY73";
+  const [formData, setFormData]     = useState({ email: '', password: '' });
+  const [loading, setLoading]       = useState(false);
+  const [showPassword, setShowPass] = useState(false);
+  const [captchaToken, setCaptcha]  = useState(null);
+  const [error, setError]           = useState('');
 
-  const [formData, setFormData] = useState({ email: '', password: '' });
-  const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const [error, setError] = useState('');
-
+  /* ── Handlers ─────────────────────────────────────────────── */
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -35,7 +52,7 @@ const Login = () => {
     try {
       await login(formData.email, formData.password);
       toast.success("Welcome back!");
-      setTimeout(() => { navigate("/"); }, 800);
+      setTimeout(() => navigate("/"), 800);
     } catch (err) {
       setError("Unable to sign in. Please check your details and try again.");
       toast.error(err.message || "Invalid email or password");
@@ -52,161 +69,264 @@ const Login = () => {
     }
   };
 
+  /* ── Render ───────────────────────────────────────────────── */
   return (
-    <div className="min-h-screen bg-white text-[#111111] font-sans flex flex-col items-center justify-center px-4 sm:px-6 py-20">
-      <div className="w-full max-w-[440px] animate-page-section">
-
-        {/* Brand */}
-        <div className="flex flex-col items-center mb-8 select-none">
-          <Link to="/" className="flex items-center gap-2.5">
-            <img src={logo} alt="CG39" className="w-9 h-9 object-contain" />
-            <div className="leading-none">
-              <span className="text-xl font-black uppercase tracking-tight">
-                CG<span className="text-[#E00000]">39</span>
-              </span>
-              <span className="block text-[8px] text-zinc-500 font-bold uppercase tracking-[1.5px] mt-0.5">GAME STORE</span>
-            </div>
-          </Link>
+    <AuthLayout>
+      {/* Auth card */}
+      <div
+        style={{
+          background: "#FFFFFF",
+          border: "1px solid #E7E7E7",
+          borderRadius: 20,
+          boxShadow: "0 10px 35px rgba(0,0,0,0.06)",
+          padding: "36px 36px 32px",
+          width: "100%",
+          maxWidth: 460,
+        }}
+        className="sm:px-10 px-6"
+      >
+        {/* Heading */}
+        <div style={{ marginBottom: 24 }}>
+          <h1
+            style={{
+              fontSize: 22,
+              fontWeight: 900,
+              textTransform: "uppercase",
+              letterSpacing: "-0.3px",
+              color: "#111111",
+              margin: 0,
+            }}
+          >
+            Welcome Back
+          </h1>
+          <p style={{ fontSize: 12, color: "#888888", marginTop: 6, lineHeight: 1.6 }}>
+            Sign in to continue shopping and manage your orders.
+          </p>
         </div>
 
-        {/* Card */}
-        <div className="bg-white border border-[#E5E5E5] rounded-2xl p-7 sm:p-9 shadow-[0_4px_24px_rgba(0,0,0,0.08)]">
+        {/* Inline error */}
+        {error && (
+          <div
+            role="alert"
+            style={{
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 10,
+              background: "#FFF1F1",
+              border: "1px solid #FFCCCC",
+              borderRadius: 10,
+              padding: "10px 14px",
+              marginBottom: 20,
+              fontSize: 12,
+              color: "#CC0000",
+              fontWeight: 600,
+            }}
+          >
+            <AlertCircle weight="bold" style={{ width: 15, height: 15, marginTop: 1, flexShrink: 0 }} />
+            <span>{error}</span>
+          </div>
+        )}
 
-          {/* Heading */}
-          <div className="mb-7">
-            <h1 className="text-2xl font-black uppercase tracking-tight text-[#111111]">Welcome Back</h1>
-            <p className="text-xs text-zinc-500 mt-1 leading-relaxed">Sign in to continue shopping and manage your orders.</p>
+        {/* Form */}
+        <form onSubmit={handleSubmit} noValidate style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+
+          {/* Email */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label
+              htmlFor="login-email"
+              style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888" }}
+            >
+              Email Address
+            </label>
+            <div style={{ position: "relative" }}>
+              <EnvelopeSimple
+                weight="bold"
+                style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", width: 16, height: 16, color: "#AAAAAA", pointerEvents: "none" }}
+              />
+              <input
+                id="login-email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                required
+                autoComplete="email"
+                placeholder="your@email.com"
+                style={{ height: 52, paddingLeft: 42, paddingRight: 16 }}
+                className={inputCls}
+              />
+            </div>
           </div>
 
-          {/* Error */}
-          {error && (
-            <div className="flex items-start gap-2.5 bg-red-500/8 border border-red-500/15 rounded-xl px-4 py-3 mb-5 text-xs text-red-400 font-semibold" role="alert">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              <span>{error}</span>
+          {/* Password */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <label
+              htmlFor="login-password"
+              style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#888888" }}
+            >
+              Password
+            </label>
+            <div style={{ position: "relative" }}>
+              <LockSimple
+                weight="bold"
+                style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", width: 16, height: 16, color: "#AAAAAA", pointerEvents: "none" }}
+              />
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                required
+                autoComplete="current-password"
+                placeholder="••••••••"
+                style={{ height: 52, paddingLeft: 42, paddingRight: 48 }}
+                className={inputCls}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPass(!showPassword)}
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                style={{
+                  position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+                  background: "none", border: "none", cursor: "pointer",
+                  color: "#AAAAAA", padding: 6, display: "flex", alignItems: "center", justifyContent: "center",
+                  minWidth: 32, minHeight: 32,
+                }}
+              >
+                {showPassword
+                  ? <EyeOff weight="bold" style={{ width: 16, height: 16 }} />
+                  : <Eye weight="bold" style={{ width: 16, height: 16 }} />}
+              </button>
             </div>
-          )}
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-5" noValidate>
-
-            {/* Email */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-email" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-                <input
-                  id="login-email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                  autoComplete="email"
-                  placeholder="your@email.com"
-                  className="w-full h-12 bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-4 text-sm text-[#111111] placeholder-[#AAAAAA] focus:outline-none focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 transition"
-                />
-              </div>
-            </div>
-
-            {/* Password */}
-            <div className="flex flex-col gap-1.5">
-              <label htmlFor="login-password" className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
-                Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-600 pointer-events-none" />
-                <input
-                  id="login-password"
-                  type={showPassword ? "text" : "password"}
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="w-full h-12 bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-12 text-sm text-[#111111] placeholder-[#AAAAAA] focus:outline-none focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? "Hide password" : "Show password"}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 text-zinc-600 hover:text-zinc-300 transition min-w-[32px] min-h-[32px] flex items-center justify-center"
-                >
-                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-            </div>
-
-            {/* Forgot password */}
-            <div className="flex justify-end -mt-2">
-              <Link to="/forgot-password" className="text-[11px] font-bold text-zinc-500 hover:text-[#E00000] transition uppercase tracking-wider">
+            {/* Forgot password — right aligned */}
+            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 2 }}>
+              <Link
+                to="/forgot-password"
+                style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "#999999", textDecoration: "none" }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#FF0000")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#999999")}
+              >
                 Forgot password?
               </Link>
             </div>
+          </div>
 
-            {/* reCAPTCHA */}
-            <div className="flex justify-center pt-1">
-              <ReCAPTCHA
-                sitekey={recaptchaSiteKey}
-                onChange={(token) => setCaptchaToken(token)}
-                theme="light"
-              />
-            </div>
+          {/* reCAPTCHA */}
+          <div style={{ display: "flex", justifyContent: "center" }}>
+            <ReCAPTCHA
+              sitekey={recaptchaSiteKey}
+              onChange={(token) => setCaptcha(token)}
+              theme="light"
+            />
+          </div>
 
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-12 bg-[#E00000] hover:bg-[#F00000] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold uppercase tracking-wider text-sm rounded-xl transition active:scale-[0.98] flex items-center justify-center gap-2 min-h-[48px]"
-            >
-              {loading ? (
-                <span className="flex items-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin shrink-0" />
-                  Signing In...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <LogIn className="w-4 h-4 shrink-0" />
-                  Sign In
-                </span>
-              )}
-            </button>
+          {/* Sign in button */}
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              height: 52,
+              background: loading ? "#CC0000" : "#FF0000",
+              color: "#FFFFFF",
+              border: "none",
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.08em",
+              cursor: loading ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              opacity: loading ? 0.8 : 1,
+              transition: "background 150ms",
+              width: "100%",
+            }}
+            onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = "#CC0000"; }}
+            onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = "#FF0000"; }}
+          >
+            {loading ? (
+              <>
+                <span
+                  style={{
+                    width: 16, height: 16, border: "2.5px solid rgba(255,255,255,0.35)",
+                    borderTopColor: "#FFFFFF", borderRadius: "50%",
+                    animation: "cg39-auth-spin 0.7s linear infinite", flexShrink: 0,
+                  }}
+                />
+                Signing In…
+              </>
+            ) : (
+              <>
+                <LogIn weight="bold" style={{ width: 16, height: 16 }} />
+                Sign In
+              </>
+            )}
+          </button>
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 select-none">
-              <div className="flex-1 h-px bg-[#E5E5E5]" />
-              <span className="text-[10px] text-[#AAAAAA] font-bold uppercase tracking-wider">or</span>
-              <div className="flex-1 h-px bg-[#E5E5E5]" />
-            </div>
+          {/* Divider */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <div style={{ flex: 1, height: 1, background: "#EEEEEE" }} />
+            <span style={{ fontSize: 10, fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: "#CCCCCC" }}>or</span>
+            <div style={{ flex: 1, height: 1, background: "#EEEEEE" }} />
+          </div>
 
-            {/* Google */}
-            <button
-              type="button"
-              onClick={handleGoogleLogin}
-              className="w-full h-12 bg-white hover:bg-zinc-100 text-zinc-900 rounded-xl font-bold text-sm flex items-center justify-center gap-3 transition active:scale-[0.98] min-h-[48px]"
-            >
-              <img
-                loading="lazy"
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                alt="Google"
-                className="w-5 h-5"
-              />
-              Continue with Google
-            </button>
+          {/* Google */}
+          <button
+            type="button"
+            onClick={handleGoogleLogin}
+            style={{
+              height: 52,
+              background: "#FFFFFF",
+              border: "1px solid #E5E5E5",
+              borderRadius: 12,
+              fontSize: 13,
+              fontWeight: 700,
+              color: "#333333",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              transition: "background 150ms, border-color 150ms",
+              width: "100%",
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "#F7F7F7"; e.currentTarget.style.borderColor = "#CCCCCC"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "#FFFFFF"; e.currentTarget.style.borderColor = "#E5E5E5"; }}
+          >
+            <img
+              loading="lazy"
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google"
+              style={{ width: 18, height: 18 }}
+            />
+            Continue with Google
+          </button>
 
-          </form>
-        </div>
-
-        {/* Account switch */}
-        <p className="text-center text-xs text-zinc-500 mt-6 select-none">
-          Don't have an account?{" "}
-          <Link to="/signup" className="text-[#E00000] hover:text-[#F00000] font-bold transition">
-            Create one <ArrowRight className="inline w-3 h-3 mb-0.5" />
-          </Link>
-        </p>
-
+        </form>
       </div>
-    </div>
+
+      {/* Below-card link */}
+      <p style={{ fontSize: 12, color: "#888888", marginTop: 20, textAlign: "center" }}>
+        Don't have an account?{" "}
+        <Link
+          to="/signup"
+          style={{ color: "#FF0000", fontWeight: 800, textDecoration: "none", textTransform: "uppercase", fontSize: 11, letterSpacing: "0.06em" }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#CC0000")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "#FF0000")}
+        >
+          Create Account
+        </Link>
+      </p>
+
+      {/* Spinner keyframe */}
+      <style>{`
+        @keyframes cg39-auth-spin {
+          from { transform: rotate(0deg); }
+          to   { transform: rotate(360deg); }
+        }
+      `}</style>
+    </AuthLayout>
   );
 };
 

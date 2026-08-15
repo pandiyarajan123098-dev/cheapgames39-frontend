@@ -1,17 +1,59 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  ShieldCheck, 
+import {
+  ShieldCheck,
   CreditCard,
   Headset,
   EnvelopeSimple,
   ArrowRight,
   InstagramLogo,
-  DiscordLogo
+  DiscordLogo,
 } from '@phosphor-icons/react';
 import logo from "../logo.png";
 import { FaWhatsapp } from 'react-icons/fa';
+
+/* ─── Design tokens ──────────────────────────────────────────────────── */
+const C = {
+  bgMain:       '#2B2B2D',   // main footer body
+  bgStrip:      '#222223',   // newsletter top strip
+  bgCard:       '#333336',   // icon bg / trust card
+  border:       'rgba(255,255,255,0.10)',
+  borderLight:  'rgba(255,255,255,0.07)',
+  textPrimary:  '#FFFFFF',
+  textSecondary:'#B8B8B8',
+  textMuted:    '#888888',
+  accent:       '#FF0000',
+  accentHover:  '#CC0000',
+};
+
+/* ─── Tiny helpers ───────────────────────────────────────────────────── */
+const NavLink = ({ to, children }) => (
+  <li>
+    <Link
+      to={to}
+      style={{ color: C.textSecondary, textDecoration: 'none', fontSize: 13, fontWeight: 500, transition: 'color 150ms' }}
+      onMouseEnter={e => (e.currentTarget.style.color = C.accent)}
+      onMouseLeave={e => (e.currentTarget.style.color = C.textSecondary)}
+    >
+      {children}
+    </Link>
+  </li>
+);
+
+const ColHead = ({ children }) => (
+  <h4 style={{
+    color: C.textPrimary,
+    fontSize: 10,
+    fontWeight: 800,
+    textTransform: 'uppercase',
+    letterSpacing: '0.14em',
+    marginBottom: 16,
+    marginTop: 0,
+  }}>
+    {children}
+  </h4>
+);
 
 export const Footer = () => {
   const { user, logout } = useAuth();
@@ -19,218 +61,364 @@ export const Footer = () => {
   const [email, setEmail] = useState('');
 
   const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/');
-    } catch (err) {
-      console.error(err);
-    }
+    try { await logout(); navigate('/'); }
+    catch (err) { console.error(err); }
   };
 
   const handleSubscribe = (e) => {
     e.preventDefault();
-    // Since backend does not support newsletter subscription, do nothing.
-    // Avoid fake success messages/banners.
+    // Newsletter backend not yet supported — intentionally no-op
   };
 
+  /* ─────────────────────────────────────────────────────────────────── */
   return (
-    <footer className="cg39-footer font-sans text-sm selection:bg-[#E10600] selection:text-white">
-      {/* 1. NEWSLETTER BAR (Full Width - Dark Gray) */}
-      <div className="bg-[#161616] border-t border-b border-[#292929]">
-        <div className="max-w-[1280px] mx-auto px-5 sm:px-6 md:px-10 lg:px-12 py-8 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="max-w-xl">
-            <h3 className="text-[#FFFFFF] text-2xl md:text-3xl font-extrabold tracking-wide uppercase mb-2">
-              GET THE BEST DEALS
+    <footer style={{ fontFamily: 'inherit', userSelect: 'none' }}>
+
+      {/* ══ 1. NEWSLETTER STRIP ══════════════════════════════════════ */}
+      <div style={{ background: C.bgStrip, borderTop: `1px solid ${C.border}` }}>
+        <div style={{
+          maxWidth: 1280,
+          margin: '0 auto',
+          padding: '36px 24px',
+          display: 'flex',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 24,
+        }}>
+          <div style={{ maxWidth: 480 }}>
+            <h3 style={{
+              color: C.textPrimary,
+              fontSize: 22,
+              fontWeight: 900,
+              textTransform: 'uppercase',
+              letterSpacing: '-0.3px',
+              margin: '0 0 6px',
+            }}>
+              Get the Best Deals
             </h3>
-            <p className="text-[#B3B3B3] text-sm leading-relaxed">
+            <p style={{ color: C.textSecondary, fontSize: 13, lineHeight: 1.6, margin: 0 }}>
               Stay updated with new games, exclusive deals and special offers.
             </p>
           </div>
-          <form onSubmit={handleSubscribe} className="w-full lg:w-auto flex flex-col sm:flex-row gap-3 items-stretch shrink-0">
-            <div className="relative flex items-center w-full sm:w-[320px] md:w-[360px]">
-              <EnvelopeSimple className="absolute left-4 w-5 h-5 text-[#777777] shrink-0" weight="bold" />
+
+          <form
+            onSubmit={handleSubscribe}
+            className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto"
+          >
+            {/* Email input — full width on mobile */}
+            <div className="relative flex items-center w-full sm:w-[280px]">
+              <EnvelopeSimple
+                weight="bold"
+                style={{ position: 'absolute', left: 14, width: 16, height: 16, color: C.textMuted, pointerEvents: 'none' }}
+              />
               <input
                 type="email"
                 required
                 placeholder="Email address..."
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 bg-[#FFFFFF] text-[#111111] placeholder:text-[#777777] rounded-[10px] text-sm font-semibold outline-none focus:ring-2 focus:ring-[#E10600] transition duration-150"
+                onChange={e => setEmail(e.target.value)}
+                className="w-full"
+                style={{
+                  height: 46,
+                  paddingLeft: 40,
+                  paddingRight: 16,
+                  background: 'rgba(255,255,255,0.07)',
+                  border: `1px solid ${C.border}`,
+                  borderRadius: 10,
+                  color: C.textPrimary,
+                  fontSize: 13,
+                  fontWeight: 500,
+                  outline: 'none',
+                  boxSizing: 'border-box',
+                }}
+                onFocus={e => (e.target.style.borderColor = C.accent)}
+                onBlur={e => (e.target.style.borderColor = C.border)}
               />
             </div>
+
+            {/* SIGN UP button — full width on mobile, auto on desktop */}
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 bg-[#E10600] hover:bg-[#B80000] text-white px-6 py-3 rounded-[10px] text-sm font-bold uppercase tracking-wider transition-all duration-150 active:scale-[0.98] min-h-[46px]"
+              className="w-full sm:w-auto flex items-center justify-center gap-2"
+              style={{
+                height: 46,
+                padding: '0 22px',
+                background: C.accent,
+                border: 'none',
+                borderRadius: 10,
+                color: '#FFFFFF',
+                fontSize: 12,
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.08em',
+                cursor: 'pointer',
+                transition: 'background 150ms',
+                flexShrink: 0,
+              }}
+              onMouseEnter={e => (e.currentTarget.style.background = C.accentHover)}
+              onMouseLeave={e => (e.currentTarget.style.background = C.accent)}
             >
-              <span>SIGN UP</span>
-              <ArrowRight className="w-4 h-4 text-white" weight="bold" />
+              Sign Up
+              <ArrowRight weight="bold" style={{ width: 14, height: 14 }} />
             </button>
           </form>
         </div>
       </div>
 
-      {/* 2. MAIN FOOTER CONTENT (Full Width - Darker Charcoal) */}
-      <div className="bg-[#111111]">
-        <div className="max-w-[1280px] mx-auto px-5 sm:px-6 md:px-10 lg:px-12 py-8 flex flex-col gap-6">
-          
-          {/* PAYMENT / TRUST STRIP */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pb-6 border-b border-[#292929] select-none">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
-                <ShieldCheck className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
+      {/* ══ 2. MAIN BODY ═════════════════════════════════════════════ */}
+      <div style={{ background: C.bgMain }}>
+        <div style={{ maxWidth: 1280, margin: '0 auto', padding: '48px 24px 0' }}>
+
+          {/* ── Trust strip ── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 24,
+            paddingBottom: 36,
+            borderBottom: `1px solid ${C.border}`,
+          }}>
+            {[
+              { icon: ShieldCheck, title: 'Secure Checkout',   sub: 'SSL Encrypted Safe Gateways' },
+              { icon: CreditCard,  title: 'UPI Payment',       sub: 'Instant Verification Transfer' },
+              { icon: Headset,     title: 'Customer Support',  sub: 'Dedicated Support Helpdesk' },
+            ].map(({ icon: Icon, title, sub }) => (
+              <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 12,
+                  background: C.bgCard,
+                  border: `1px solid ${C.border}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}>
+                  <Icon weight="bold" style={{ width: 20, height: 20, color: C.textPrimary }} />
+                </div>
+                <div>
+                  <p style={{ color: C.textPrimary, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', margin: '0 0 3px' }}>
+                    {title}
+                  </p>
+                  <p style={{ color: C.textMuted, fontSize: 12, margin: 0 }}>{sub}</p>
+                </div>
               </div>
-              <div>
-                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">SECURE CHECKOUT</h5>
-                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">SSL Encrypted Safe Gateways</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
-                <CreditCard className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
-              </div>
-              <div>
-                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">UPI PAYMENT</h5>
-                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">Instant Verification Transfer</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-[#161616] border border-[#292929] rounded-xl flex items-center justify-center">
-                <Headset className="w-6 h-6 text-[#FFFFFF]" weight="bold" />
-              </div>
-              <div>
-                <h5 className="text-[#FFFFFF] text-xs font-bold uppercase tracking-wider">CUSTOMER SUPPORT</h5>
-                <p className="text-[#A3A3A3] text-xs mt-0.5 font-medium">Dedicated Support Helpdesk</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* MAIN NAVIGATION */}
-          {/* Professional 2x2 grid on mobile, 4 columns on desktop */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6 py-2">
-            {/* SHOP Column */}
+          {/* ── Nav columns ── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: '40px 32px',
+            padding: '40px 0',
+            borderBottom: `1px solid ${C.border}`,
+          }}>
+
+            {/* SHOP */}
             <div>
-              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">SHOP</h4>
-              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
-                <li><Link to="/games" className="hover:text-[#E10600] transition-colors duration-150">All Games</Link></li>
-                <li><Link to="/offers" className="hover:text-[#E10600] transition-colors duration-150">Best Deals</Link></li>
-                <li><Link to="/games?maxPrice=49" className="hover:text-[#E10600] transition-colors duration-150">Under ₹49</Link></li>
-                <li><Link to="/games?maxPrice=99" className="hover:text-[#E10600] transition-colors duration-150">Under ₹99</Link></li>
-                <li><Link to="/games" className="hover:text-[#E10600] transition-colors duration-150">Categories</Link></li>
+              <ColHead>Shop</ColHead>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <NavLink to="/games">All Games</NavLink>
+                <NavLink to="/offers">Best Deals</NavLink>
+                <NavLink to="/games?maxPrice=49">Under ₹49</NavLink>
+                <NavLink to="/games?maxPrice=99">Under ₹99</NavLink>
+                <NavLink to="/games">Categories</NavLink>
               </ul>
             </div>
 
-            {/* ACCOUNT Column */}
+            {/* ACCOUNT */}
             <div>
-              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">ACCOUNT</h4>
-              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
-                <li><Link to="/dashboard" className="hover:text-[#E10600] transition-colors duration-150">Dashboard</Link></li>
-                <li><Link to="/dashboard" className="hover:text-[#E10600] transition-colors duration-150">Orders</Link></li>
-                <li><Link to="/wishlist" className="hover:text-[#E10600] transition-colors duration-150">Wishlist</Link></li>
-                <li><Link to="/cart" className="hover:text-[#E10600] transition-colors duration-150">Cart</Link></li>
+              <ColHead>Account</ColHead>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <NavLink to="/dashboard">Dashboard</NavLink>
+                <NavLink to="/dashboard">Orders</NavLink>
+                <NavLink to="/wishlist">Wishlist</NavLink>
+                <NavLink to="/cart">Cart</NavLink>
                 {user ? (
                   <li>
-                    <button 
+                    <button
                       onClick={handleLogout}
-                      className="hover:text-[#E10600] transition-colors duration-150 font-bold uppercase text-xs tracking-wider text-left"
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: 0,
+                        cursor: 'pointer',
+                        color: C.textSecondary,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        transition: 'color 150ms',
+                      }}
+                      onMouseEnter={e => (e.currentTarget.style.color = C.accent)}
+                      onMouseLeave={e => (e.currentTarget.style.color = C.textSecondary)}
                     >
                       Logout
                     </button>
                   </li>
                 ) : (
-                  <li><Link to="/login" className="hover:text-[#E10600] transition-colors duration-150">Login</Link></li>
+                  <NavLink to="/login">Login</NavLink>
                 )}
               </ul>
             </div>
 
-            {/* SUPPORT Column */}
+            {/* SUPPORT */}
             <div>
-              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">SUPPORT</h4>
-              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
-                <li><Link to="/faq" className="hover:text-[#E10600] transition-colors duration-150">FAQ</Link></li>
-                <li><Link to="/contact" className="hover:text-[#E10600] transition-colors duration-150">Contact</Link></li>
-                <li><Link to="/order-status" className="hover:text-[#E10600] transition-colors duration-150">Order Tracking</Link></li>
-                <li><Link to="/contact" className="hover:text-[#E10600] transition-colors duration-150">Email Support</Link></li>
+              <ColHead>Support</ColHead>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <NavLink to="/faq">FAQ</NavLink>
+                <NavLink to="/contact">Contact</NavLink>
+                <NavLink to="/order-status">Order Tracking</NavLink>
+                <NavLink to="/contact">Email Support</NavLink>
               </ul>
             </div>
 
-            {/* LEGAL Column */}
+            {/* LEGAL */}
             <div>
-              <h4 className="text-[#FFFFFF] font-extrabold uppercase tracking-widest text-[12px] mb-4 select-none">LEGAL</h4>
-              <ul className="space-y-2 font-semibold text-[#B3B3B3] text-sm">
-                <li><Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Terms</Link></li>
-                <li><Link to="/privacy" className="hover:text-[#E10600] transition-colors duration-150">Privacy</Link></li>
-                <li><Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Refund Policy</Link></li>
+              <ColHead>Legal</ColHead>
+              <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                <NavLink to="/terms">Terms</NavLink>
+                <NavLink to="/privacy">Privacy</NavLink>
+                <NavLink to="/terms">Refund Policy</NavLink>
               </ul>
             </div>
+
           </div>
 
-          {/* 4. SOCIAL MEDIA */}
-          <div className="flex flex-col items-center gap-4 py-3 border-t border-[#292929]">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#FFFFFF]">FOLLOW CG39</span>
-            <div className="flex items-center gap-4">
-              <a
-                href="https://www.instagram.com/cheapgames39.official?igsh=MTUxajEzMjNuZWY2MA=="
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#FFFFFF] hover:text-[#E10600] p-3 bg-[#222222] rounded-full transition-all duration-150 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label="Instagram Profile"
-              >
-                <InstagramLogo className="w-5 h-5 text-white" weight="bold" />
-              </a>
-              <a
-                href="https://discord.gg/d9JKQgH5g"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#FFFFFF] hover:text-[#E10600] p-3 bg-[#222222] rounded-full transition-all duration-150 hover:scale-105 active:scale-95 min-h-[44px] min-w-[44px] flex items-center justify-center"
-                aria-label="Discord Server"
-              >
-                <DiscordLogo className="w-5 h-5 text-white" weight="bold" />
-              </a>
-            </div>
-          </div>
-
-          {/* 5. BRAND & TRUST/SECURITY SECTION */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 py-4 border-t border-[#292929]">
-            {/* Brand Intro */}
-            <div className="flex flex-col items-start gap-3">
-              <div className="flex items-center gap-2.5 select-none">
-                <img src={logo} alt="CG39 Logo" className="w-8 h-8 object-contain shrink-0" />
-                <span className="text-[#FFFFFF] font-extrabold tracking-wider text-sm uppercase">CG39 GAME STORE</span>
+          {/* ── Brand + Trust card ── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 32,
+            padding: '36px 0',
+            borderBottom: `1px solid ${C.border}`,
+            alignItems: 'center',
+          }}>
+            {/* Brand */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <img src={logo} alt="CG39 Logo" style={{ width: 32, height: 32, objectFit: 'contain', flexShrink: 0 }} />
+                <span style={{ color: C.textPrimary, fontWeight: 900, fontSize: 14, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                  CG39 Game Store
+                </span>
               </div>
-              <p className="text-[#E10600] font-extrabold text-[13px] uppercase tracking-wider">
+              <p style={{ color: C.accent, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
                 Great games. Better prices.
               </p>
-              <p className="text-[#B3B3B3] text-sm leading-relaxed max-w-lg">
+              <p style={{ color: C.textSecondary, fontSize: 12, lineHeight: 1.7, margin: 0, maxWidth: 380 }}>
                 Affordable digital PC gaming marketplace with simple ordering, secure payment and customer support.
               </p>
+
+              {/* Social icons */}
+              <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                {[
+                  {
+                    href: 'https://www.instagram.com/cheapgames39.official?igsh=MTUxajEzMjNuZWY2MA==',
+                    label: 'Instagram',
+                    icon: InstagramLogo,
+                  },
+                  {
+                    href: 'https://discord.gg/d9JKQgH5g',
+                    label: 'Discord',
+                    icon: DiscordLogo,
+                  },
+                ].map(({ href, label, icon: Icon }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    style={{
+                      width: 38,
+                      height: 38,
+                      borderRadius: 10,
+                      background: C.bgCard,
+                      border: `1px solid ${C.border}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: C.textSecondary,
+                      transition: 'background 150ms, color 150ms, border-color 150ms',
+                      textDecoration: 'none',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.color = C.accent;
+                      e.currentTarget.style.borderColor = 'rgba(255,0,0,0.35)';
+                      e.currentTarget.style.background = 'rgba(255,0,0,0.08)';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.color = C.textSecondary;
+                      e.currentTarget.style.borderColor = C.border;
+                      e.currentTarget.style.background = C.bgCard;
+                    }}
+                  >
+                    <Icon weight="bold" style={{ width: 18, height: 18 }} />
+                  </a>
+                ))}
+              </div>
             </div>
 
-            {/* Trust / Security */}
-            <div className="flex items-start gap-4 p-5 bg-[#161616] border border-[#292929] rounded-2xl max-w-lg lg:ml-auto">
-              <ShieldCheck className="w-8 h-8 text-[#FFFFFF] shrink-0" weight="bold" />
-              <div className="flex flex-col gap-1">
-                <h5 className="text-[#FFFFFF] font-bold text-xs uppercase tracking-wider">SECURE & TRUSTED</h5>
-                <p className="text-[#B3B3B3] text-xs leading-relaxed">
+            {/* Trust card */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 16,
+              padding: '20px 22px',
+              background: C.bgCard,
+              border: `1px solid ${C.border}`,
+              borderRadius: 16,
+              maxWidth: 380,
+              marginLeft: 'auto',
+            }}>
+              <ShieldCheck weight="bold" style={{ width: 28, height: 28, color: C.textPrimary, flexShrink: 0, marginTop: 2 }} />
+              <div>
+                <p style={{ color: C.textPrimary, fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.12em', margin: '0 0 5px' }}>
+                  Secure &amp; Trusted
+                </p>
+                <p style={{ color: C.textSecondary, fontSize: 12, lineHeight: 1.6, margin: 0 }}>
                   Your information and transactions are handled securely.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* 6. COPYRIGHT & COMPACT LEGAL LINKS */}
-          <div className="pt-4 border-t border-[#292929] flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-[#777777] font-bold uppercase tracking-wider">
-            <p className="text-center md:text-left select-none">© 2026 CG39. ALL RIGHTS RESERVED.</p>
-            <div className="flex flex-wrap justify-center gap-6">
-              <Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Terms</Link>
-              <Link to="/privacy" className="hover:text-[#E10600] transition-colors duration-150">Privacy</Link>
-              <Link to="/terms" className="hover:text-[#E10600] transition-colors duration-150">Refund Policy</Link>
+          {/* ── Copyright bar ── */}
+          <div style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            gap: 12,
+            padding: '18px 0',
+          }}>
+            <p style={{ color: C.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', margin: 0 }}>
+              © 2026 CG39. All rights reserved.
+            </p>
+            <div style={{ display: 'flex', gap: 24 }}>
+              {[
+                { label: 'Terms', to: '/terms' },
+                { label: 'Privacy', to: '/privacy' },
+                { label: 'Refund Policy', to: '/terms' },
+              ].map(({ label, to }) => (
+                <Link
+                  key={to + label}
+                  to={to}
+                  style={{ color: C.textMuted, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.09em', textDecoration: 'none', transition: 'color 150ms' }}
+                  onMouseEnter={e => (e.currentTarget.style.color = C.accent)}
+                  onMouseLeave={e => (e.currentTarget.style.color = C.textMuted)}
+                >
+                  {label}
+                </Link>
+              ))}
             </div>
           </div>
 
         </div>
       </div>
 
-      {/* Global Floating WhatsApp Button */}
+      {/* ══ FLOATING WHATSAPP (unchanged) ════════════════════════════ */}
       <a
         href="https://whatsapp.com/channel/0029Vb8WvNiGehEGfRVnMr2T"
         target="_blank"
@@ -239,7 +427,7 @@ export const Footer = () => {
         title="Contact us on WhatsApp"
         className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full w-[52px] h-[52px] md:w-[56px] md:h-[56px] flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 z-40"
       >
-        <FaWhatsapp size={26} className="text-white shrink-0" />
+        <FaWhatsapp size={26} style={{ color: '#FFFFFF' }} className="shrink-0" />
       </a>
     </footer>
   );

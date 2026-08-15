@@ -71,7 +71,14 @@ const Wishlist = () => {
       });
       const items = res.data || [];
       const historyKey = `cg39_wishlist_prices_${user.id}`;
-      const savedPrices = JSON.parse(localStorage.getItem(historyKey)) || {};
+      let savedPrices = {};
+      try {
+        const raw = localStorage.getItem(historyKey);
+        savedPrices = raw ? JSON.parse(raw) : {};
+        if (typeof savedPrices !== 'object' || Array.isArray(savedPrices)) savedPrices = {};
+      } catch (e) {
+        console.warn("[Wishlist] localStorage parse error:", e);
+      }
       const newPrices = { ...savedPrices };
 
       const updatedWishlist = items.map((item) => {

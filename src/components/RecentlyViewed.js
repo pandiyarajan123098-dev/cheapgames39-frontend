@@ -12,9 +12,15 @@ const RecentlyViewed = () => {
   };
 
   useEffect(() => {
-    const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
-    const recent = JSON.parse(localStorage.getItem(storageKey)) || [];
-    setGames(recent.slice(0, 4)); // Show 2-4 products
+    try {
+      const storageKey = user ? `cg39_recent_${user.id}` : "cg39_guest_recent";
+      const raw = localStorage.getItem(storageKey);
+      const recent = raw ? JSON.parse(raw) : [];
+      setGames(Array.isArray(recent) ? recent.slice(0, 4) : []);
+    } catch (err) {
+      console.warn("[RecentlyViewed] Failed to parse localStorage:", err);
+      setGames([]);
+    }
   }, [user]);
 
   const clearHistory = () => {

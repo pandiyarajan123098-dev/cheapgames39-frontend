@@ -87,7 +87,7 @@ export const GameCard = ({ game, onWishlistRemove }) => {
       throw new Error("Login required");
     }
     await addToCart(game.id);
-    notify.addedToCart(game?.title, imageUrl);
+    // Success feedback is handled by the button's Cart → Check icon transition
   };
 
   /* ================= TOGGLE WISHLIST ================= */
