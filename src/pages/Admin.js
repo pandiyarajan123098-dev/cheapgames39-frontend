@@ -584,7 +584,7 @@ const Admin = () => {
       map[p] = (map[p] || 0) + 1;
     });
     return map;
-  }, [games, PLATFORM_OPTIONS]);
+  }, [games]);
 
   // Dynamic Promotional Deals from real catalog
   const dealsGames = useMemo(() => {
