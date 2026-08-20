@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import {
   ShieldCheck,
@@ -12,6 +14,8 @@ import {
 } from '@phosphor-icons/react';
 import logo from "../logo.png";
 import { FaWhatsapp } from 'react-icons/fa';
+
+const API = process.env.REACT_APP_BACKEND_URL || "http://localhost:5000";
 
 /* ─── Design tokens ──────────────────────────────────────────────────── */
 const C = {
@@ -59,15 +63,33 @@ export const Footer = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
+  const [subscribing, setSubscribing] = useState(false);
 
   const handleLogout = async () => {
     try { await logout(); navigate('/'); }
     catch (err) { console.error(err); }
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
-    // Newsletter backend not yet supported — intentionally no-op
+    if (!email || !email.includes('@')) {
+      toast.error('Please enter a valid email address.');
+      return;
+    }
+    try {
+      setSubscribing(true);
+      const res = await axios.post(`${API}/api/newsletter`, { email });
+      if (res.data?.success) {
+        toast.success(res.data.message || 'Subscribed successfully!');
+        setEmail('');
+      } else {
+        toast.error(res.data?.error || 'Subscription failed.');
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.error || 'Subscription failed. Please try again.');
+    } finally {
+      setSubscribing(false);
+    }
   };
 
   /* ─────────────────────────────────────────────────────────────────── */
@@ -141,7 +163,8 @@ export const Footer = () => {
             {/* SIGN UP button — full width on mobile, auto on desktop */}
             <button
               type="submit"
-              className="w-full sm:w-auto flex items-center justify-center gap-2"
+              disabled={subscribing}
+              className="w-full sm:w-auto flex items-center justify-center gap-2 disabled:opacity-50"
               style={{
                 height: 46,
                 padding: '0 22px',
@@ -153,14 +176,14 @@ export const Footer = () => {
                 fontWeight: 800,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
-                cursor: 'pointer',
+                cursor: subscribing ? 'not-allowed' : 'pointer',
                 transition: 'background 150ms',
                 flexShrink: 0,
               }}
               onMouseEnter={e => (e.currentTarget.style.background = C.accentHover)}
               onMouseLeave={e => (e.currentTarget.style.background = C.accent)}
             >
-              Sign Up
+              {subscribing ? 'Subscribing...' : 'Sign Up'}
               <ArrowRight weight="bold" style={{ width: 14, height: 14 }} />
             </button>
           </form>

@@ -164,6 +164,10 @@ export const GameCard = ({ game, onWishlistRemove }) => {
           src={imageUrl}
           alt={game?.title || "Game Cover"}
           className="cg39-game-card-image"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = "https://cdn.cloudflare.steamstatic.com/steam/apps/1245620/header.jpg";
+          }}
         />
       </div>
 

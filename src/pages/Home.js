@@ -29,7 +29,10 @@ import {
   Headset,
   SealCheck,
   Lightning,
-  Globe
+  Globe,
+  Sparkle,
+  CreditCard,
+  Tag
 } from "@phosphor-icons/react";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { GameCard } from "../components/GameCard";
@@ -37,7 +40,7 @@ import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaSteam, FaXbox, FaPlaystation, FaApple, FaBitcoin } from "react-icons/fa";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -91,59 +94,48 @@ const Home = () => {
   const carouselSlides = useMemo(() => {
     const defaultSlides = [
       {
-        eyebrow: "CG39 DEALS",
-        title: "BIG GAMES.",
-        titleRed: "SMALL PRICES.",
-        desc: "Premium PC games at prices you'll actually love.",
+        eyebrow: "CG39 EXCLUSIVE",
+        title: "LEVEL UP YOUR",
+        titleRed: "LIBRARY",
+        desc: "Premium PC games at incredible prices.",
         btn1Text: "Shop Games",
         btn1Link: "/games",
         btn2Text: "View Deals",
-        btn2Link: "/games?sortBy=discount",
+        btn2Link: "/offers",
         image: DEFAULT_BG_IMAGES[0]
       },
       {
-        eyebrow: "PREMIUM PC GAMES",
-        title: "BEST SELLING",
-        titleRed: "BLOCKBUSTERS",
-        desc: "Get authentic digital keys for top-rated hits.",
-        btn1Text: "Shop Games",
-        btn1Link: "/games",
-        btn2Text: "Best Deals",
-        btn2Link: "/offers",
+        eyebrow: "WEEKEND DEALS",
+        title: "BIG GAMES.",
+        titleRed: "SMALL PRICES.",
+        desc: "Discover amazing PC games at unbeatable prices.",
+        btn1Text: "Explore Deals",
+        btn1Link: "/offers",
+        btn2Text: "Shop Games",
+        btn2Link: "/games",
         image: DEFAULT_BG_IMAGES[1]
       },
       {
-        eyebrow: "WEEKEND DEALS",
-        title: "MASSIVE SAVINGS",
-        titleRed: "ON AAA TITLES",
-        desc: "Save big on blockbuster titles this weekend.",
-        btn1Text: "Browse Deals",
-        btn1Link: "/games?sortBy=discount",
-        btn2Text: "View All",
-        btn2Link: "/games",
+        eyebrow: "PC GAMING",
+        title: "YOUR NEXT ADVENTURE",
+        titleRed: "STARTS HERE",
+        desc: "Explore action, RPG, open-world and more.",
+        btn1Text: "Browse Games",
+        btn1Link: "/games",
+        btn2Text: "View Deals",
+        btn2Link: "/offers",
         image: DEFAULT_BG_IMAGES[2]
-      },
-      {
-        eyebrow: "BUDGET SAVINGS",
-        title: "PC GAMES",
-        titleRed: "UNDER \u20b999",
-        desc: "Affordable titles with secure checkout and instant access.",
-        btn1Text: "Shop Budget",
-        btn1Link: "/games?maxPrice=99",
-        btn2Text: "All Games",
-        btn2Link: "/games",
-        image: DEFAULT_BG_IMAGES[3]
       }
     ];
 
-    if (games && games.length >= 4) {
+    if (games && games.length >= 3) {
       return defaultSlides.map((slide, idx) => {
         const game = games[idx];
-        if (!game) return slide; // guard: fewer games than slides
+        if (!game) return slide;
         return {
           ...slide,
           image: game.image_url || slide.image,
-          desc: game.title ? `Get authentic keys for ${game.title} and more.` : slide.desc
+          desc: slide.desc
         };
       });
     }
@@ -363,7 +355,7 @@ const Home = () => {
     }
   };
 
-  // Compact Horizontal Hero Promotional Banner Carousel
+  // Premium Hero Carousel (High Contrast, White Main Heading & Controlled Gradient)
   const renderPromoBanner = () => {
     if (carouselSlides.length === 0) return null;
     const slide = carouselSlides[carouselIndex];
@@ -377,11 +369,11 @@ const Home = () => {
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          className="relative rounded-2xl overflow-hidden bg-[#161616] border border-[#E5E5E5] min-h-[280px] md:min-h-[340px] flex items-center p-6 md:p-12 shadow-md outline-none focus-visible:ring-2 focus-visible:ring-[#FF0000]"
+          className="relative rounded-[24px] overflow-hidden bg-[#0A0B0E] border border-[#222222] min-h-[340px] sm:min-h-[380px] md:min-h-[420px] flex items-center p-6 sm:p-10 md:p-14 shadow-xl outline-none focus-visible:ring-2 focus-visible:ring-[#E50909]"
           aria-label="Promotional Carousel"
         >
-          {/* Slides Backdrops Container with crossfade (Artwork fully visible and saturated) */}
-          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+          {/* Prominent Right Character / Game Artwork (100% Natural Original Artwork) */}
+          <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[62%] md:w-[58%] pointer-events-none overflow-hidden rounded-r-[24px]">
             {carouselSlides.map((item, idx) => {
               const isActive = idx === carouselIndex;
               const transitionClass = prefersReducedMotion 
@@ -390,75 +382,110 @@ const Home = () => {
               return (
                 <div
                   key={idx}
-                  className={`absolute inset-0 bg-cover ${transitionClass} ${isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-[1.02] z-0"}`}
-                  style={{ 
-                    backgroundImage: `url('${item.image}')`,
-                    objectFit: "cover",
-                    backgroundPosition: "center right",
-                    filter: "brightness(1.05) contrast(1.05)"
-                  }} 
-                />
+                  className={`absolute inset-0 ${transitionClass} ${isActive ? "opacity-100 scale-100 z-10" : "opacity-0 scale-[1.02] z-0"}`}
+                >
+                  <img
+                    src={item.image}
+                    alt={item.title}
+                    className="w-full h-full object-cover object-center sm:object-right"
+                  />
+                  {/* Controlled smooth dark gradient behind the left text - fades naturally toward the artwork */}
+                  <div 
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      background: "linear-gradient(90deg, #0A0B0E 0%, rgba(10,11,14,0.95) 28%, rgba(10,11,14,0.60) 48%, rgba(10,11,14,0.15) 70%, transparent 100%)"
+                    }}
+                  />
+                </div>
               );
             })}
           </div>
 
-          {/* Subtle dark gradient overlay only protecting text (Left to Right) */}
-          <div className="absolute inset-0 z-20 pointer-events-none"
+          {/* Mobile Localized Gradient Protection */}
+          <div 
+            className="sm:hidden absolute inset-0 z-20 pointer-events-none" 
             style={{
-              background: "linear-gradient(90deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.20) 55%, rgba(0,0,0,0.05) 100%)"
+              background: "linear-gradient(90deg, rgba(10,11,14,0.96) 0%, rgba(10,11,14,0.85) 55%, rgba(10,11,14,0.30) 80%, transparent 100%)"
             }}
           />
-          
-          {/* Left Promo Text */}
-          <div className="relative z-30 max-w-xl flex flex-col items-start gap-2 md:gap-3 text-left">
-            <span className="text-[#FF0000] text-[10px] md:text-xs font-black uppercase tracking-widest bg-[#111111]/80 border border-white/10 px-2.5 py-1 rounded shadow-sm" style={{ color: "#FF0000", textShadow: "0 1px 2px rgba(0,0,0,0.5)" }}>
+
+          {/* Left Content Area */}
+          <div className="relative z-30 max-w-lg md:max-w-xl flex flex-col items-start gap-3 sm:gap-4 text-left">
+            {/* Top Eyebrow */}
+            <span className="inline-flex items-center gap-1.5 bg-[#0A0B0E]/70 backdrop-blur-sm border border-[#E50909]/30 text-[#E50909] text-[10px] md:text-xs font-black uppercase tracking-widest px-3 py-1 rounded-md">
               {slide.eyebrow}
             </span>
-            <h1 className="text-2xl md:text-4xl font-black text-[#FFFFFF] uppercase tracking-tight leading-tight" style={{ color: "#FFFFFF", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
-              {slide.title} <br className="hidden sm:inline" /> <span className="text-[#FF0000]" style={{ color: "#FF0000" }}>{slide.titleRed}</span>
+
+            <h1 
+              className="text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-black uppercase tracking-tight leading-[1.08]"
+              style={{
+                color: "#FFFFFF",
+                textShadow: "0 2px 10px rgba(0,0,0,0.95)"
+              }}
+            >
+              <span style={{ color: "#FFFFFF" }}>{slide.title}</span> <br className="hidden sm:inline" />{" "}
+              <span style={{ color: "#E50909" }}>{slide.titleRed}</span>
             </h1>
-            <p className="text-[#F5F5F5] text-xs md:text-sm max-w-sm font-semibold leading-relaxed mb-2" style={{ color: "#F5F5F5", textShadow: "0 2px 8px rgba(0,0,0,0.45)" }}>
+            <p 
+              className="font-medium text-xs sm:text-sm max-w-sm md:max-w-md leading-relaxed mb-1"
+              style={{
+                color: "#E4E4E7",
+                textShadow: "0 1px 6px rgba(0,0,0,0.95)"
+              }}
+            >
               {slide.desc}
             </p>
-            <div className="flex gap-2.5">
+
+            {/* CG39 CTA Buttons (Red Primary + White Secondary) */}
+            <div className="flex flex-wrap gap-3 mt-1">
               <button
                 onClick={() => navigate(slide.btn1Link)}
-                className="bg-[#FF0000] hover:bg-[#CC0000] text-[#FFFFFF] text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shadow-md shadow-[#FF0000]/10 border border-[#FF0000]"
+                className="bg-[#E50909] hover:bg-[#8B0000] text-xs md:text-sm font-black uppercase tracking-wider px-7 py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#E50909]/25 min-h-[44px]"
+                style={{ color: "#FFFFFF" }}
               >
-                {slide.btn1Text}
+                <span style={{ color: "#FFFFFF" }}>{slide.btn1Text}</span>
               </button>
-              <button
-                onClick={() => navigate(slide.btn2Link)}
-                className="bg-[#FFFFFF] hover:bg-[#F5F5F5] text-[#111111] text-[10px] md:text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] border border-white shadow-md shadow-black/10"
-              >
-                {slide.btn2Text}
-              </button>
+              {slide.btn2Text && (
+                <button
+                  onClick={() => navigate(slide.btn2Link)}
+                  className="bg-white hover:bg-[#F2F2F2] text-xs md:text-sm font-black uppercase tracking-wider px-7 py-3.5 rounded-xl transition active:scale-[0.98] border border-[#E5E5E5] min-h-[44px] shadow-sm"
+                  style={{ color: "#000000" }}
+                >
+                  <span style={{ color: "#000000" }}>{slide.btn2Text}</span>
+                </button>
+              )}
             </div>
           </div>
 
-          {/* Previous / Next controls */}
+          {/* Previous / Next Arrow Controls */}
           <button
             onClick={handlePrev}
-            className="absolute left-4 z-40 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-[#FF0000] border border-white/10 hover:border-[#FF0000] text-white hover:scale-105 active:scale-95 transition-all"
+            className="absolute left-3.5 z-40 hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-black/60 hover:bg-[#E50909] border border-white/20 hover:scale-105 active:scale-95 transition-all shadow-md"
+            style={{ color: "#FFFFFF" }}
             aria-label="Previous slide"
           >
-            <ArrowLeft className="w-5 h-5 text-white" weight="bold" />
+            <ArrowLeft className="w-4 h-4" weight="bold" style={{ color: "#FFFFFF" }} />
           </button>
           <button
             onClick={handleNext}
-            className="absolute right-4 z-40 hidden sm:flex items-center justify-center w-10 h-10 rounded-full bg-black/40 hover:bg-[#FF0000] border border-white/10 hover:border-[#FF0000] text-white hover:scale-105 active:scale-95 transition-all"
+            className="absolute right-3.5 z-40 hidden sm:flex items-center justify-center w-9 h-9 rounded-full bg-black/60 hover:bg-[#E50909] border border-white/20 hover:scale-105 active:scale-95 transition-all shadow-md"
+            style={{ color: "#FFFFFF" }}
             aria-label="Next slide"
           >
-            <ArrowRight className="w-5 h-5 text-white" weight="bold" />
+            <ArrowRight className="w-4 h-4" weight="bold" style={{ color: "#FFFFFF" }} />
           </button>
 
-          {/* Dots Indicator */}
-          <div className="absolute bottom-4 left-0 right-0 z-40 flex justify-center gap-2">
+          {/* Pagination Indicators (Active: CG39 Red, Inactive: Light Gray) */}
+          <div className="absolute bottom-4 left-0 right-0 z-40 flex justify-center items-center gap-2">
             {carouselSlides.map((_, idx) => (
               <button
                 key={idx}
                 onClick={() => setCarouselIndex(idx)}
-                className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${idx === carouselIndex ? "bg-[#FF0000] w-6" : "bg-white/40 hover:bg-white/70"}`}
+                className={`rounded-full transition-all duration-300 ${
+                  idx === carouselIndex 
+                    ? "bg-[#E50909] w-6 h-2" 
+                    : "bg-white/40 hover:bg-white/70 w-2 h-2"
+                }`}
                 aria-label={`Go to slide ${idx + 1}`}
               />
             ))}
@@ -468,31 +495,43 @@ const Home = () => {
     );
   };
 
-  // Horizontal Quick Categories navigation rail
+  // Horizontal Circular Category & Platform Navigation Row (Monochrome & Real Data)
   const renderDiscoveryRail = () => {
-    if (categories.length === 0) return null;
+    const platformItems = [
+      { label: "Steam", icon: FaSteam, path: "/games?platform=Steam" },
+      { label: "Games & DLCs", icon: Gamepad2, path: "/games" },
+      { label: "Steam Accounts", icon: FaSteam, path: "/games?platform=Steam&product_type=account" },
+      { label: "PlayStation", icon: FaPlaystation, path: "/games?platform=PlayStation" },
+      { label: "Xbox", icon: FaXbox, path: "/games?platform=Xbox" },
+      { label: "Deals", icon: Tag, path: "/offers" },
+    ];
+
+    // Include top active store categories dynamically
+    const activeTopCategories = categories.slice(0, 4).map(cat => ({
+      label: cat.name,
+      icon: getCategoryIcon(cat.name),
+      path: `/games?category=${cat.id}`
+    }));
+
+    const navItems = [...platformItems, ...activeTopCategories];
+
     return (
-      <div className="w-full bg-white py-4 border-b border-[#E5E5E5] overflow-x-auto scrollbar-none select-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center gap-3 text-xs font-bold uppercase tracking-wider justify-start md:justify-center">
-          <Link
-            to="/games"
-            className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5E5E5] hover:border-zinc-300 hover:bg-[#F9F9F9] text-[#555555] hover:text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
-            aria-label="All Games Category"
-          >
-            <Gamepad className="w-4 h-4 text-[#777777]" weight="bold" />
-            <span>All Games</span>
-          </Link>
-          {categories.slice(0, 10).map((cat) => {
-            const IconComponent = getCategoryIcon(cat.name);
+      <div className="w-full bg-white py-5 select-none overflow-x-auto scrollbar-none">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-start md:justify-center gap-6 md:gap-8">
+          {navItems.map((item, idx) => {
+            const Icon = item.icon;
             return (
               <Link
-                key={cat.id}
-                to={`/games?category=${cat.id}`}
-                className="flex items-center gap-2 bg-[#FFFFFF] border border-[#E5E5E5] hover:border-zinc-300 hover:bg-[#F9F9F9] text-[#555555] hover:text-[#111111] px-4 py-2 rounded-full transition shrink-0 whitespace-nowrap"
-                aria-label={`Category ${cat.name}`}
+                key={idx}
+                to={item.path}
+                className="group flex flex-col items-center gap-2 shrink-0 transition"
               >
-                <IconComponent className="w-4 h-4 text-[#777777]" weight="bold" />
-                <span>{cat.name}</span>
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#FAFAFA] group-hover:bg-[#111111] border border-[#E5E5E5] group-hover:border-[#111111] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105">
+                  <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#222222] group-hover:text-white transition-colors" />
+                </div>
+                <span className="text-[11px] md:text-xs font-semibold text-[#222222] group-hover:text-[#111111] transition-colors whitespace-nowrap">
+                  {item.label}
+                </span>
               </Link>
             );
           })}
@@ -501,120 +540,106 @@ const Home = () => {
     );
   };
 
-  // Compact Deal Banner Grid
+  // Compact Promotional Deal Grid (High Contrast, Translucent Price Container & 100% Legibility)
   const renderDealBanners = () => {
-    const banner1Img = games[4]?.image_url || DEFAULT_BG_IMAGES[0];
-    const banner2Img = games[1]?.image_url || DEFAULT_BG_IMAGES[2];
-    const banner3Img = games[2]?.image_url || DEFAULT_BG_IMAGES[4];
+    // Select top 6 games with highest discount or top featured deals from real database
+    const promoGames = [...games]
+      .filter(g => g.in_stock !== false)
+      .sort((a, b) => {
+        const discA = a.steam_price > a.price ? (a.steam_price - a.price) / a.steam_price : 0;
+        const discB = b.steam_price > b.price ? (b.steam_price - b.price) / b.steam_price : 0;
+        return discB - discA;
+      })
+      .slice(0, 6);
 
-    const dealItems = [
-      {
-        titleWhite: "WEEKEND",
-        titleRed: "DEALS",
-        desc: "Explore selected PC games",
-        image: banner1Img,
-        link: "/games?sortBy=discount"
-      },
-      {
-        titleWhite: "DEALS UNDER",
-        titleRed: "\u20b999",
-        desc: "Save on budget PC games",
-        image: banner2Img,
-        link: "/games?maxPrice=99"
-      },
-      {
-        titleWhite: "AAA",
-        titleRed: "BLOCKBUSTERS",
-        desc: "Blockbuster deals at epic prices",
-        image: banner3Img,
-        link: "/games?minSteamPrice=1500"
-      }
-    ];
+    if (promoGames.length === 0) return null;
 
     return (
-      <section className="py-2 px-4 sm:px-6 max-w-7xl mx-auto w-full select-none mt-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-          {dealItems.map((item, idx) => (
-            <div
-              key={idx}
-              onClick={() => navigate(item.link)}
-              className="relative overflow-hidden rounded-xl border border-[#E5E5E5] hover:border-[#FF0000] h-[95px] md:h-[110px] flex items-center justify-between p-5 cursor-pointer shadow-sm transition-all duration-300 hover:-translate-y-0.5 group"
-            >
-              {/* Background cover (original saturation & color preserved) */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                style={{ 
-                  backgroundImage: `url('${item.image}')`,
-                  objectFit: "cover",
-                  backgroundPosition: "center right",
-                  filter: "brightness(1.05) contrast(1.05)"
-                }}
-              />
-              {/* Subtle dark gradient behind text only (Left to Right) */}
-              <div 
-                className="absolute inset-0 z-10 transition-colors duration-300"
-                style={{
-                  background: "linear-gradient(90deg, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.05) 100%)"
-                }}
-              />
+      <section className="py-3 px-4 sm:px-6 max-w-7xl mx-auto w-full select-none mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5 md:gap-5">
+          {promoGames.map((game) => {
+            const discountPct = game.steam_price > game.price 
+              ? Math.round(((game.steam_price - game.price) / game.steam_price) * 100)
+              : (game.discount_percent || 0);
 
-              {/* Text content */}
-              <div className="relative z-20 text-left">
-                <span className="text-[10px] font-black tracking-wider uppercase block mb-0.5" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                  <span className="text-[#FFFFFF]">{item.titleWhite}</span> <span className="text-[#FF0000]">{item.titleRed}</span>
-                </span>
-                <h4 className="text-[#F2F2F2] text-xs md:text-sm font-extrabold uppercase leading-tight select-none" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.5)" }}>
-                  {item.desc}
-                </h4>
-              </div>
-
-              {/* CTA icon - white circular arrow button with subtle shadow */}
-              <div className="relative z-20 w-8 h-8 rounded-full bg-white/20 hover:bg-[#FF0000] flex items-center justify-center border border-white/20 hover:border-[#FF0000] shadow-[0_2px_6px_rgba(0,0,0,0.3)] transition-all duration-200 shrink-0">
-                <ArrowRight className="w-4 h-4 text-[#FFFFFF]" weight="bold" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    );
-  };
-
-  // Trust Strip Section
-  const renderTrustStrip = () => (
-    <section className="pt-[36px] pb-[36px] px-5 sm:px-6 bg-white select-none">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-[14px] sm:text-[15px] font-bold tracking-[0.12em] text-[#222222] uppercase mb-6 text-center lg:text-left">
-          Why Shop with CG39
-        </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {[
-            { label: "SECURE PAYMENTS",     icon: ShieldCheck, desc: "UPI payments verified manually", color: "text-[#E10600]" },
-            { label: "FAST DIGITAL DELIVERY", icon: Lightning,   desc: "Keys delivered after verification", color: "text-amber-500" },
-            { label: "VERIFIED PROCESS",     icon: SealCheck,   desc: "Transparent ordering process", color: "text-blue-500" },
-            { label: "CUSTOMER SUPPORT",     icon: Headset,     desc: "Quick assistance when you need it", color: "text-[#222222]" }
-          ].map((item, idx) => {
-            const IconComp = item.icon;
             return (
-              <div 
-                key={idx} 
-                className="group flex flex-col items-start text-left p-4 sm:p-5 bg-white border border-[#E8E8E8] rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 hover:border-zinc-300 transition-all duration-200 ease-out min-h-[130px] sm:min-h-[145px] h-full"
+              <div
+                key={game.id}
+                onClick={() => navigate(`/game/${game.id}`)}
+                className="relative overflow-hidden rounded-[20px] bg-[#111318] border border-[#222530] hover:border-[#E50909] h-[135px] sm:h-[145px] md:h-[155px] flex flex-col justify-between p-4 md:p-5 cursor-pointer shadow-lg transition-all duration-300 hover:scale-[1.02] group"
               >
-                <div className="w-11 h-11 rounded-xl bg-[#FAFAFA] border border-[#EEEEEE] flex items-center justify-center shrink-0 mb-3.5 transition-transform duration-200 ease-out group-hover:scale-[1.04]">
-                  <IconComp size={22} className={`${item.color} shrink-0`} />
+                {/* 100% Natural Game Artwork */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105 pointer-events-none"
+                  style={{ 
+                    backgroundImage: `url('${game.image_url || DEFAULT_BG_IMAGES[0]}')`,
+                  }}
+                />
+
+                {/* Localized Bottom/Left Gradient for 100% Text Readability */}
+                <div 
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.10) 70%, transparent 100%)"
+                  }}
+                />
+
+                {/* Top-Right Arrow Action */}
+                <div 
+                  className="absolute top-3.5 right-3.5 z-20 w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center transition-all shadow-md group-hover:bg-[#E50909] group-hover:border-[#E50909]"
+                  style={{
+                    backgroundColor: "rgba(0,0,0,0.65)",
+                    border: "1px solid rgba(255,255,255,0.70)",
+                  }}
+                >
+                  <ArrowRight className="w-3.5 h-3.5" weight="bold" style={{ color: "#FFFFFF" }} />
                 </div>
-                <h3 className="text-[13px] sm:text-[14px] font-bold text-[#222222] uppercase tracking-wide leading-tight mb-1 select-none">
-                  {item.label}
-                </h3>
-                <p className="text-[11px] sm:text-[12px] text-[#777777] leading-[1.4] select-none">
-                  {item.desc}
-                </p>
+
+                {/* Top Game Title */}
+                <div className="relative z-10 max-w-[72%] sm:max-w-[68%] pt-1">
+                  <h3 
+                    className="text-[#F5F1E8] text-xs sm:text-sm md:text-[15px] font-bold tracking-tight leading-snug truncate"
+                    style={{ color: "#F5F1E8", textShadow: "0 1px 4px rgba(0,0,0,0.8)" }}
+                  >
+                    {game.title}
+                  </h3>
+                </div>
+
+                {/* Bottom Pricing & Discount Badge */}
+                <div className="relative z-10 flex items-center gap-2.5">
+                  {discountPct > 0 && (
+                    <span 
+                      className="bg-[#E50909] font-black text-xs md:text-sm px-2.5 py-1.5 rounded-lg shadow-md shrink-0"
+                      style={{ color: "#FFFFFF" }}
+                    >
+                      -{discountPct}%
+                    </span>
+                  )}
+                  {/* Subtle Translucent Dark Price Container */}
+                  <div 
+                    className="flex items-baseline gap-2 px-3 py-1.5 rounded-[10px] shadow-sm backdrop-blur-sm"
+                    style={{
+                      backgroundColor: "rgba(15,15,15,0.75)",
+                      border: "1px solid rgba(255,255,255,0.25)",
+                    }}
+                  >
+                    <span className="font-bold text-sm md:text-base drop-shadow" style={{ color: "#FFFFFF" }}>
+                      ₹{game.price}
+                    </span>
+                    {game.steam_price > game.price && (
+                      <span className="line-through text-xs drop-shadow" style={{ color: "#D9D9D9" }}>
+                        ₹{game.steam_price}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
             );
           })}
         </div>
-      </div>
-    </section>
-  );
+      </section>
+    );
+  };
 
   // Best Selling Games
   const renderBestSellingGames = () => {
@@ -962,42 +987,86 @@ const Home = () => {
     </section>
   );
 
+  // 12. WHY SHOP WITH CG39 (Single Trust Section Before Footer)
+  const renderTrustStrip = () => (
+    <section className="py-10 md:py-12 px-4 sm:px-6 bg-[#F8F8F8] border-t border-[#E5E5E5] select-none">
+      <div className="max-w-7xl mx-auto">
+        <SectionHeader eyebrow="Trust & Guarantee" title="Why Shop with" accent="CG39" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[
+            { label: "SECURE PAYMENTS",       icon: ShieldCheck, desc: "UPI payments verified manually" },
+            { label: "FAST DIGITAL DELIVERY", icon: Lightning,   desc: "Keys delivered after verification" },
+            { label: "VERIFIED PROCESS",       icon: SealCheck,   desc: "Transparent ordering process" },
+            { label: "CUSTOMER SUPPORT",       icon: Headset,     desc: "Quick assistance when you need it" }
+          ].map((item, idx) => {
+            const IconComp = item.icon;
+            return (
+              <div 
+                key={idx} 
+                className="group flex flex-col items-start text-left p-4 sm:p-5 bg-white border border-[#E8E8E8] rounded-2xl shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:-translate-y-0.5 hover:border-zinc-300 transition-all duration-200 ease-out min-h-[130px] sm:min-h-[145px] h-full"
+              >
+                <div className="w-11 h-11 rounded-xl bg-[#FAFAFA] border border-[#EEEEEE] flex items-center justify-center shrink-0 mb-3.5 transition-transform duration-200 ease-out group-hover:scale-[1.04]">
+                  <IconComp size={22} className="text-[#111111] group-hover:text-[#E50909] shrink-0 transition-colors" />
+                </div>
+                <h3 className="text-[13px] sm:text-[14px] font-bold text-[#222222] uppercase tracking-wide leading-tight mb-1 select-none">
+                  {item.label}
+                </h3>
+                <p className="text-[11px] sm:text-[12px] text-[#777777] leading-[1.4] select-none">
+                  {item.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <div className="bg-white text-[#111111] overflow-x-hidden min-h-screen animate-page-section">
       
-      {/* 1. HERO SPOTLIGHT CAROUSEL */}
+      {/* 01. HEADER (Handled in App.js layout) */}
+
+      {/* 02. HERO */}
       {renderPromoBanner()}
  
-      {/* 2. QUICK CATEGORY NAVIGATION STRIP */}
+      {/* 03. PLATFORM / CATEGORY NAVIGATION */}
       {renderDiscoveryRail()}
 
-      {/* 3. COMPACT DEAL BANNER GRID */}
+      {/* 04. PROMOTIONAL SHOWCASE */}
       {renderDealBanners()}
  
-      {/* 4. BEST SELLING Games */}
+      {/* 05. BEST SELLING GAMES */}
       {renderBestSellingGames()}
 
-      {/* 5. WHY SHOP WITH CG39 (TRUST SECTION) */}
-      {renderTrustStrip()}
- 
-      {/* PRODUCT GRID LISTINGS & OTHER GAME SECTIONS */}
-      {renderBestSellingDeals()}
-      {renderTrendingNow()}
-      {renderPriceDiscovery()}
-      {renderCategories()}
- 
-      {hasHistory && <RecentlyViewed />}
-      {hasHistory && renderRecommendations()}
- 
-      {/* PREMIUM DEALS */}
-      {renderMidPromoBanner()}
- 
-      {/* HOW IT WORKS */}
+      {/* 06. HOW CG39 WORKS */}
       {renderHowItWorks()}
  
-      {/* SUPPORT */}
-      {renderSupportCTA()}
+      {/* 07. TODAY'S DEALS */}
+      {renderBestSellingDeals()}
+
+      {/* 08. TRENDING NOW */}
+      {renderTrendingNow()}
+
+      {/* 09. SHOP BY BUDGET */}
+      {renderPriceDiscovery()}
+
+      {/* 10. BROWSE BY CATEGORY */}
+      {renderCategories()}
  
+      {/* 11. RECENTLY VIEWED */}
+      {hasHistory && <RecentlyViewed />}
+      {hasHistory && renderRecommendations()}
+
+      {/* 12. WHY SHOP WITH CG39 */}
+      {renderTrustStrip()}
+
+      {/* CUSTOMER REVIEWS & SUPPORT */}
+      {renderReviews()}
+      {renderSupportCTA()}
+
+      {/* 13. FOOTER (Handled in App.js layout) */}
+
     </div>
   );
 };

@@ -301,19 +301,24 @@ const Checkout = () => {
       setStep(3);
       sessionStorage.setItem("cg39_checkout_step", "3");
 
-      toast.success("Payment submitted successfully! Support notified.");
-      
       // WhatsApp notification with complete order details
-      const orderPayload = res.data || serverOrder || {
+      const orderPayload = {
+        ...(serverOrder || {}),
+        ...(res.data || {}),
         id: orderId,
-        total_price: payableAmount,
+        total_price: res.data?.total_price || serverOrder?.total_price || payableAmount,
         transaction_id: transactionId.trim(),
-        billing_name: formData.billing_name,
-        billing_email: formData.billing_email,
-        billing_phone: formData.billing_phone,
+        billing_name: res.data?.billing_name || serverOrder?.billing_name || formData.billing_name,
+        billing_email: res.data?.billing_email || serverOrder?.billing_email || formData.billing_email,
+        billing_phone: res.data?.billing_phone || serverOrder?.billing_phone || formData.billing_phone,
+        order_items: (res.data?.order_items && res.data.order_items.length > 0)
+          ? res.data.order_items
+          : (serverOrder?.order_items && serverOrder.order_items.length > 0)
+          ? serverOrder.order_items
+          : []
       };
 
-      const waUrl = getWhatsAppOrderUrl(orderPayload, cart);
+      const waUrl = getWhatsAppOrderUrl(orderPayload);
       window.open(waUrl, "_blank");
     } catch (error) {
       const errMsg = error.response?.data?.error || "Failed to submit transaction details";
@@ -890,15 +895,21 @@ const Checkout = () => {
               </button>
               <button
                 onClick={() => {
-                  const orderPayload = serverOrder || {
+                  const orderPayload = {
+                    ...(serverOrder || {}),
                     id: orderId,
-                    total_price: payableAmount,
-                    transaction_id: transactionId.trim(),
-                    billing_name: formData.billing_name,
-                    billing_email: formData.billing_email,
-                    billing_phone: formData.billing_phone,
+                    total_price: serverOrder?.total_price || payableAmount,
+                    transaction_id: transactionId ? transactionId.trim() : (serverOrder?.transaction_id || "Awaiting UTR"),
+                    billing_name: serverOrder?.billing_name || formData.billing_name,
+                    billing_email: serverOrder?.billing_email || formData.billing_email,
+                    billing_phone: serverOrder?.billing_phone || formData.billing_phone,
+                    order_items: (serverOrder?.order_items && serverOrder.order_items.length > 0)
+                      ? serverOrder.order_items
+                      : (purchasedGameIds && purchasedGameIds.length > 0)
+                      ? purchasedGameIds.map(id => ({ game_id: id, quantity: 1 }))
+                      : []
                   };
-                  window.open(getWhatsAppOrderUrl(orderPayload, cart), "_blank");
+                  window.open(getWhatsAppOrderUrl(orderPayload), "_blank");
                 }}
                 className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98] border-0"
                 aria-label="Contact support on WhatsApp"

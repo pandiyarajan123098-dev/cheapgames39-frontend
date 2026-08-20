@@ -103,14 +103,15 @@ const Admin = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderDrawer, setShowOrderDrawer] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [orderActionLoading, setOrderActionLoading] = useState(false);
 
-  // Real Order Notifications (Orders awaiting verification or new orders)
+  // Real Order Notifications (Orders awaiting verification or with submitted UTR)
   const pendingOrders = useMemo(() => {
     return orders.filter(o => 
       o.status === "submitted" || 
-      o.status === "pending" || 
-      o.status === "pending_payment" ||
-      o.payment_status === "pending"
+      o.status === "pending_payment" || 
+      o.status === "pending" ||
+      (o.transaction_id && o.payment_status !== "paid" && o.status !== "completed" && o.status !== "cancelled")
     );
   }, [orders]);
 
@@ -472,7 +473,9 @@ const Admin = () => {
 
   /* ================= ORDERS ACTIONS ================= */
   const handleUpdateOrderField = async (orderId, payload) => {
+    if (orderActionLoading) return;
     try {
+      setOrderActionLoading(true);
       const res = await axios.put(`${API}/admin/orders/${orderId}`, payload, {
         headers: { Authorization: `Bearer ${accessToken}` }
       });
@@ -484,35 +487,41 @@ const Admin = () => {
           ...res.data
         }));
       }
-      fetchOrders();
-      fetchStats();
+      await fetchOrders();
+      await fetchStats();
     } catch (err) {
       console.error("Order update error:", err);
       toast.error(err.response?.data?.error || "Failed to update order details");
+    } finally {
+      setOrderActionLoading(false);
     }
   };
 
   const handleVerifyPayment = (orderId) => {
     if (!window.confirm("Verify transaction and mark order as PAID / Processing?")) return;
-    handleUpdateOrderField(orderId, { status: "processing" });
+    handleUpdateOrderField(orderId, { payment_status: "paid", status: "processing" });
     logActivity("Verified Payment (Processing)", `Order #${orderId.slice(0,8)}`, "success");
   };
 
   const handleRejectPayment = (orderId) => {
     if (!window.confirm("Mark payment as FAILED? The customer will be able to resubmit verification details.")) return;
-    handleUpdateOrderField(orderId, { status: "pending_payment" });
+    handleUpdateOrderField(orderId, { payment_status: "failed", status: "pending_payment" });
     logActivity("Rejected Payment (Pending Payment)", `Order #${orderId.slice(0,8)}`, "warning");
   };
 
   const handleSaveDeliveryDetails = (orderId) => {
     handleUpdateOrderField(orderId, {
-      status: "completed"
+      status: "completed",
+      delivery_method: deliveryMethod,
+      delivery_details: deliveryDetails
     });
     logActivity("Dispatched Credentials", `Order #${orderId.slice(0,8)} (${deliveryMethod})`, "success");
   };
 
   const handleSaveAdminNotes = (orderId) => {
-    toast.success("Notes saved for session");
+    handleUpdateOrderField(orderId, {
+      admin_notes: tempNotes
+    });
     logActivity("Saved Admin Notes", `Order #${orderId.slice(0,8)}`, "info");
   };
 
@@ -942,8 +951,7 @@ const Admin = () => {
                           <div
                             key={ord.id}
                             onClick={() => {
-                              setSelectedOrder(ord);
-                              setShowOrderDrawer(true);
+                              handleOpenOrderDrawer(ord);
                               setShowNotifications(false);
                             }}
                             className={`p-3.5 hover:bg-zinc-50 transition cursor-pointer flex items-start gap-3 ${
@@ -2372,14 +2380,16 @@ const Admin = () => {
                 {selectedOrder.transaction_id && selectedOrder.payment_status !== "paid" && (
                   <div className="flex gap-2.5 pt-2 select-none">
                     <button
+                      disabled={orderActionLoading}
                       onClick={() => handleVerifyPayment(selectedOrder.id)}
-                      className="flex-1 py-2 bg-[#16A34A] hover:bg-green-700 text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
+                      className="flex-1 py-2 bg-[#16A34A] hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
                     >
-                      Verify (PAID)
+                      {orderActionLoading ? "Processing..." : "Verify (PAID)"}
                     </button>
                     <button
+                      disabled={orderActionLoading}
                       onClick={() => handleRejectPayment(selectedOrder.id)}
-                      className="py-2 px-3 bg-red-50 hover:bg-red-100 text-[#DC2626] font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
+                      className="py-2 px-3 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-[#DC2626] font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
                     >
                       Reject
                     </button>
@@ -2388,7 +2398,7 @@ const Admin = () => {
               </div>
 
               {/* Digital Activation details input */}
-              {selectedOrder.payment_status === "paid" && (
+              {(selectedOrder.payment_status === "paid" || selectedOrder.status === "processing" || selectedOrder.status === "delivered" || selectedOrder.status === "completed") && (
                 <div className="bg-zinc-50 border border-zinc-200/50 rounded-xl p-4 space-y-3 select-none">
                   <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Digital key coordinates delivery</span>
                   <div>
@@ -2413,10 +2423,11 @@ const Admin = () => {
                     />
                   </div>
                   <button
+                    disabled={orderActionLoading}
                     onClick={() => handleSaveDeliveryDetails(selectedOrder.id)}
-                    className="w-full py-2 bg-[#E10600] hover:bg-[#C80500] text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
+                    className="w-full py-2 bg-[#E10600] hover:bg-[#C80500] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
                   >
-                    Mark as Delivered & Send details
+                    {orderActionLoading ? "Updating..." : "Mark as Delivered & Send details"}
                   </button>
                 </div>
               )}
@@ -2431,10 +2442,11 @@ const Admin = () => {
                   className="w-full h-12 border border-zinc-200 focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-2 text-zinc-800 font-semibold bg-white"
                 />
                 <button
+                  disabled={orderActionLoading}
                   onClick={() => handleSaveAdminNotes(selectedOrder.id)}
-                  className="w-full py-1.5 bg-zinc-200 hover:bg-zinc-300 text-zinc-700 font-bold rounded-lg uppercase tracking-wider text-[9px] transition cursor-pointer"
+                  className="w-full py-1.5 bg-zinc-200 hover:bg-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed text-zinc-700 font-bold rounded-lg uppercase tracking-wider text-[9px] transition cursor-pointer"
                 >
-                  Save Notes
+                  {orderActionLoading ? "Saving..." : "Save Notes"}
                 </button>
               </div>
 
@@ -2442,8 +2454,9 @@ const Admin = () => {
               {selectedOrder.status !== "cancelled" && selectedOrder.status !== "completed" && (
                 <div className="pt-2 select-none">
                   <button
+                    disabled={orderActionLoading}
                     onClick={() => handleCancelOrder(selectedOrder.id)}
-                    className="w-full py-2 bg-red-50 hover:bg-red-100 text-[#DC2626] font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer flex items-center justify-center gap-1"
+                    className="w-full py-2 bg-red-50 hover:bg-red-100 disabled:opacity-50 disabled:cursor-not-allowed text-[#DC2626] font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer flex items-center justify-center gap-1"
                   >
                     <Trash className="w-3.5 h-3.5" /> Cancel Order
                   </button>

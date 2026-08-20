@@ -173,9 +173,10 @@ export default function HeroSlider({ games }) {
                     <div className="flex items-center gap-2.5 mt-1.5 w-full sm:w-auto">
                       <button
                         onClick={(e) => handleAddToCart(e, game.id, game.title, game.image_url)}
-                        className="h-11 px-5 rounded-xl bg-[#E10600] hover:bg-[#c40000] active:scale-[0.98] text-white text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 shrink-0"
+                        className="h-11 px-5 rounded-xl bg-[#E10600] hover:bg-[#c40000] active:scale-[0.98] text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 shrink-0"
+                        style={{ color: "#FFFFFF" }}
                       >
-                        <ShoppingCart className="w-4 h-4" /> SHOP GAMES
+                        <ShoppingCart className="w-4 h-4" style={{ color: "#FFFFFF" }} /> <span style={{ color: "#FFFFFF" }}>SHOP GAMES</span>
                       </button>
                       <button
                         onClick={(e) => {

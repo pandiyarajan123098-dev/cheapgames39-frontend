@@ -11,6 +11,7 @@ export const formatWhatsAppOrderMessage = (order, fallbackItems = []) => {
     return "Hi CG39 Support,\n\nI need help with my order.\n\nThank you,\nCG39 Game Store";
   }
 
+  const customerName = order.billing_name || order.profiles?.full_name || "";
   const orderId = order.id ? `#${String(order.id).slice(0, 8).toUpperCase()}` : "N/A";
   const txnId = order.transaction_id || "Awaiting UTR";
   const amount = order.total_price !== undefined ? `₹${order.total_price}` : "₹0";
@@ -28,9 +29,9 @@ export const formatWhatsAppOrderMessage = (order, fallbackItems = []) => {
   if (rawItems.length > 0) {
     itemsText = rawItems
       .map((item) => {
-        const title = item.games?.title || item.title || item.name || "Game Product";
-        const qty = item.quantity || 1;
-        const unitPrice = item.price || item.games?.price || 0;
+        const title = item.games?.title || item.game?.title || item.title || item.name || "Game Product";
+        const qty = Number(item.quantity) || 1;
+        const unitPrice = item.price !== undefined ? Number(item.price) : (item.games?.price !== undefined ? Number(item.games.price) : 0);
         const lineTotal = unitPrice ? unitPrice * qty : (order.total_price || 0);
         return `• ${title} × ${qty} — ₹${lineTotal}`;
       })
@@ -39,11 +40,13 @@ export const formatWhatsAppOrderMessage = (order, fallbackItems = []) => {
     itemsText = `• Game Product × 1 — ${amount}`;
   }
 
+  const customerLine = customerName ? `Customer: ${customerName}\n` : "";
+
   return `Hi CG39 Support,
 
 I have submitted my payment.
 
-Order ID: ${orderId}
+${customerLine}Order ID: ${orderId}
 Transaction ID: ${txnId}
 Amount: ${amount}
 

@@ -450,88 +450,7 @@ const Games = () => {
     );
   };
 
-  // Trust Strip Section
-  const TRUST_FEATURES = [
-    {
-      icon: <ShieldCheck className="w-5 h-5 shrink-0" style={{ color: '#FF0000' }} weight="bold" />,
-      title: 'Secure Payments',
-      desc: '100% verified transactions',
-    },
-    {
-      icon: <FaWhatsapp className="w-5 h-5 shrink-0" style={{ color: '#25D366' }} />,
-      title: 'WhatsApp Support',
-      desc: '24/7 direct client help',
-    },
-    {
-      icon: <BadgeCheck className="w-5 h-5 shrink-0" style={{ color: '#3B82F6' }} weight="bold" />,
-      title: 'Verified Process',
-      desc: 'Direct Steam credentials',
-    },
-    {
-      icon: <Package className="w-5 h-5 shrink-0" style={{ color: '#F59E0B' }} weight="bold" />,
-      title: 'Digital Delivery',
-      desc: 'Instant activation codes',
-    },
-  ];
 
-  const renderTrustStrip = () => (
-    <section
-      aria-label="Trust features"
-      className="mb-5 select-none"
-      style={{
-        background: '#FFFFFF',
-        border: '1px solid #E8E8E8',
-        borderRadius: '18px',
-        padding: '16px 24px',
-        boxShadow: '0 3px 15px rgba(0,0,0,0.035)',
-      }}
-    >
-      <div className="grid grid-cols-2 md:grid-cols-4">
-        {TRUST_FEATURES.map((feature, idx) => (
-          <div
-            key={feature.title}
-            className={`flex items-center gap-3 py-2 px-3 md:px-4 group cursor-default
-              ${
-                idx < TRUST_FEATURES.length - 1
-                  ? 'border-b md:border-b-0 md:border-r border-[#EFEFEF]'
-                  : ''
-              }
-              ${idx % 2 === 0 && idx < TRUST_FEATURES.length - 1 ? 'md:border-r' : ''}
-            `}
-            style={{ transition: 'opacity 150ms ease' }}
-          >
-            <div className="shrink-0">{feature.icon}</div>
-            <div className="flex flex-col min-w-0 leading-tight">
-              <span
-                style={{
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  color: '#111111',
-                  letterSpacing: '-0.01em',
-                  lineHeight: 1.3,
-                }}
-              >
-                {feature.title}
-              </span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  color: '#888888',
-                  lineHeight: 1.4,
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {feature.desc}
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
 
   // Desktop Page Pagination numbers
   const renderDesktopPageNumbers = () => {
@@ -804,9 +723,6 @@ const Games = () => {
 
         {/* ACTIVE FILTER CHIPS ROW */}
         {renderFilterChips()}
-
-        {/* TRUST STRIP BADGES */}
-        {renderTrustStrip()}
 
         {/* Mobile results header */}
         <div className="text-[#A1A1AA] text-xs uppercase tracking-wider font-extrabold mb-4 block md:hidden select-none px-1">

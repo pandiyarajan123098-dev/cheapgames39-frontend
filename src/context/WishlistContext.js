@@ -45,13 +45,21 @@ export const WishlistProvider = ({ children }) => {
       return false;
     }
     const exists = wishlist.some((item) => String(item.game_id) === String(gameId));
+    
+    // OPTIMISTIC UPDATE: Update state immediately for instant feedback
+    if (exists) {
+      setWishlist((prev) => prev.filter((item) => String(item.game_id) !== String(gameId)));
+      toast.success("Removed from wishlist");
+    } else {
+      setWishlist((prev) => [...prev, { game_id: gameId, id: `temp-${Date.now()}` }]);
+      toast.success("Added to wishlist");
+    }
+
     try {
       if (exists) {
         await axios.delete(`${API}/wishlist/${gameId}`, {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        setWishlist((prev) => prev.filter((item) => String(item.game_id) !== String(gameId)));
-        toast.success("Removed from wishlist");
         return false;
       } else {
         await axios.post(
@@ -59,13 +67,17 @@ export const WishlistProvider = ({ children }) => {
           {},
           { headers: { Authorization: `Bearer ${accessToken}` } }
         );
-        // Refetch to get populated games data
-        await fetchWishlist();
-        toast.success("Added to wishlist");
+        // Sync in background without re-triggering loading spinners
+        const res = await axios.get(`${API}/wishlist`, {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        setWishlist(res.data || []);
         return true;
       }
     } catch (err) {
       console.error("Toggle wishlist error:", err);
+      // Rollback optimistic update on failure
+      fetchWishlist();
       toast.error("Wishlist action failed");
       return exists;
     }

@@ -52,7 +52,14 @@ import {
   Wallet,
   Package
 } from "@phosphor-icons/react";
-import { FaWhatsapp } from "react-icons/fa";
+import { FaWhatsapp, FaXbox, FaPlaystation, FaSteam } from "react-icons/fa";
+import { 
+  SiEpicgames, 
+  SiUbisoft, 
+  SiBattledotnet,
+  SiRockstargames,
+  SiGogdotcom
+} from "react-icons/si";
 
 export const Header = () => {
   const { user, logout, logoutLoading } = useAuth();
@@ -409,15 +416,15 @@ export const Header = () => {
 
   const renderPlatformsSection = () => {
     const lockedPlatforms = [
-      { label: "Epic Games", icon: Polygon },
-      { label: "PlayStation", icon: Shapes },
-      { label: "Xbox", icon: CircleNotch },
-      { label: "Nintendo", icon: DeviceMobile },
+      { label: "Epic Games", icon: SiEpicgames },
+      { label: "PlayStation", icon: FaPlaystation },
+      { label: "Xbox", icon: FaXbox },
+      { label: "Nintendo", icon: Gamepad2 },
       { label: "EA", icon: Flame },
-      { label: "Ubisoft", icon: Spiral },
-      { label: "Battle.net", icon: ShieldChevron },
-      { label: "Rockstar Games", icon: Star },
-      { label: "GOG", icon: Disc },
+      { label: "Ubisoft", icon: SiUbisoft },
+      { label: "Battle.net", icon: SiBattledotnet },
+      { label: "Rockstar Games", icon: SiRockstargames },
+      { label: "GOG", icon: SiGogdotcom },
     ];
 
     const isAllSteamActive = location.pathname === "/games" && new URLSearchParams(location.search).get("platform") === "Steam";
@@ -435,7 +442,7 @@ export const Header = () => {
           >
             <div className="flex items-center gap-3.5 min-w-0">
               <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                <SteamLogo weight="bold" className="w-[18px] h-[18px] text-[#666666] shrink-0" />
+                <FaSteam className="w-[18px] h-[18px] text-[#666666] shrink-0" />
               </div>
               <span className="text-sm truncate">Steam</span>
             </div>
@@ -455,7 +462,7 @@ export const Header = () => {
                 }`}
               >
                 <div className="flex items-center gap-2.5 min-w-0">
-                  <Package className={`w-3.5 h-3.5 shrink-0 ${isAllSteamActive ? "text-[#333333]" : "text-[#777777]"}`} weight={isAllSteamActive ? "bold" : "regular"} />
+                  <FaSteam className={`w-3.5 h-3.5 shrink-0 ${isAllSteamActive ? "text-[#333333]" : "text-[#777777]"}`} />
                   <span className="truncate">All Steam Products</span>
                 </div>
                 <ChevronRight className={`w-3.5 h-3.5 text-[#999999] shrink-0 transition-opacity ${isAllSteamActive ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`} />
@@ -556,65 +563,32 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation Menus */}
-          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-[#555555] select-none h-full">
+          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#555555] select-none h-full">
             
-            {/* STEAM Dropdown */}
-            {(() => {
-              const active = categories.some(cat => isItemActive(`/games?category=${cat.id}`)) || isItemActive("/games");
-              return (
-                <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
-                    <span>Steam</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
-                  </button>
-                  <div className="absolute left-0 top-full w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
-                    <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.08em] uppercase px-4 py-1.5 block select-none border-b border-[#F5F5F5] mb-1">Steam Catalog</span>
-                    {categories
-                      .filter(c => ["Action", "Open World", "RPG", "Racing", "Horror", "Adventure", "Fighting"].includes(c.name))
-                      .map(cat => 
-                        renderDropdownItem({
-                          key: cat.id,
-                          label: cat.name,
-                          path: `/games?category=${cat.id}`,
-                          icon: Gamepad2
-                        })
-                      )}
-                  </div>
-                </div>
-              );
-            })()}
+            {/* HOME */}
+            <Link 
+              to="/" 
+              className={`hover:text-[#E00000] py-4 transition h-full flex items-center ${location.pathname === "/" ? "text-[#111111] font-bold" : ""}`}
+            >
+              Home
+            </Link>
 
-            {/* CATEGORIES Dropdown */}
-            {(() => {
-              const active = categories.some(cat => isItemActive(`/games?category=${cat.id}`));
-              return (
-                <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
-                    <span>Categories</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
-                  </button>
-                  <div className="absolute left-0 top-full w-52 max-h-[300px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
-                    {categories.map(cat => 
-                      renderDropdownItem({
-                        key: cat.id,
-                        label: cat.name,
-                        path: `/games?category=${cat.id}`,
-                        icon: Gamepad2
-                      })
-                    )}
-                  </div>
-                </div>
-              );
-            })()}
+            {/* GAMES */}
+            <Link 
+              to="/games" 
+              className={`hover:text-[#E00000] py-4 transition h-full flex items-center ${location.pathname === "/games" && !location.search.includes("platform") ? "text-[#111111] font-bold" : ""}`}
+            >
+              Games
+            </Link>
 
             {/* DEALS Dropdown */}
             {(() => {
               const active = ["/offers", "/games?maxPrice=49", "/games?maxPrice=99", "/games?maxPrice=199", "/games?minSteamPrice=1500"].some(p => isItemActive(p));
               return (
                 <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${active ? "text-[#111111] font-bold" : ""}`}>
                     <span>Deals</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#E00000]" : "text-[#999999]"}`} />
                   </button>
                   <div className="absolute left-0 top-full w-48 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                     {[
@@ -622,7 +596,7 @@ export const Header = () => {
                       { label: "Under ₹49", path: "/games?maxPrice=49", icon: Tag },
                       { label: "Under ₹99", path: "/games?maxPrice=99", icon: Tag },
                       { label: "Under ₹199", path: "/games?maxPrice=199", icon: Tag },
-                      { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tag }
+                      { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tags }
                     ].map((item, idx) => 
                       renderDropdownItem({
                         key: idx,
@@ -636,13 +610,59 @@ export const Header = () => {
               );
             })()}
 
-            {/* ALL Games */}
+            {/* PLATFORMS Dropdown */}
             {(() => {
-              const active = isItemActive("/games");
+              const isPlatformActive = location.pathname === "/games" && location.search.includes("platform");
               return (
-                <Link to="/games" className={`hover:text-[#B50000] py-4 transition h-full flex items-center ${active ? "text-[#222222] font-semibold" : ""}`}>
-                  All Games
-                </Link>
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${isPlatformActive ? "text-[#111111] font-bold" : ""}`}>
+                    <span>Platforms</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${isPlatformActive ? "text-[#E00000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-56 max-h-[360px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
+                    <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.08em] uppercase px-4 py-1.5 block select-none border-b border-[#F5F5F5] mb-1">Platforms</span>
+                    
+                    {/* Steam (Unlocked) */}
+                    <Link
+                      to="/games?platform=Steam"
+                      className="flex items-center justify-between px-4 py-2.5 hover:bg-[#F8F8F8] text-[#222222] font-semibold text-xs transition select-none"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <FaSteam className="w-4 h-4 text-[#444444]" />
+                        <span>Steam</span>
+                      </div>
+                      <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold uppercase">Available</span>
+                    </Link>
+
+                    {/* Locked platforms */}
+                    {[
+                      { label: "Epic Games", icon: SiEpicgames },
+                      { label: "PlayStation", icon: FaPlaystation },
+                      { label: "Xbox", icon: FaXbox },
+                      { label: "Nintendo", icon: Gamepad2 },
+                      { label: "EA", icon: Flame },
+                      { label: "Ubisoft", icon: SiUbisoft },
+                      { label: "Battle.net", icon: SiBattledotnet },
+                      { label: "Rockstar Games", icon: SiRockstargames },
+                      { label: "GOG", icon: SiGogdotcom },
+                    ].map((plat, idx) => {
+                      const Icon = plat.icon;
+                      return (
+                        <div
+                          key={idx}
+                          className="flex items-center justify-between px-4 py-2 text-[#999999] opacity-60 text-xs cursor-not-allowed select-none"
+                          title={`${plat.label} (Coming Soon)`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className="w-3.5 h-3.5 text-[#999999]" />
+                            <span>{plat.label}</span>
+                          </div>
+                          <LockSimple className="w-3 h-3 text-[#AAAAAA]" weight="bold" />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })()}
 
@@ -651,9 +671,9 @@ export const Header = () => {
               const active = ["/contact", "/faq"].some(p => isItemActive(p));
               return (
                 <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${active ? "text-[#111111] font-bold" : ""}`}>
                     <span>Support</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#E00000]" : "text-[#999999]"}`} />
                   </button>
                   <div className="absolute left-0 top-full w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                     {renderDropdownItem({
