@@ -35,30 +35,49 @@ import {
   Sword as Dumbbell,
   Envelope as Mail,
   Tag as Tags,
-  SteamLogo,
-  Polygon,
-  Shapes,
-  CircleNotch,
-  DeviceMobile,
-  Flame,
-  Spiral,
-  ShieldChevron,
-  Star,
-  Disc,
   LockSimple,
   Desktop,
   UserCircle,
   PuzzlePiece,
   Wallet,
-  Package
+  Package,
+  Brain,
+  Cpu,
+  Trophy,
+  Target,
+  Flame,
+  Users,
+  Handshake,
+  Sparkle,
+  Stairs,
+  Crown,
+  Cube,
+  EyeSlash,
+  RocketLaunch,
+  Hourglass,
+  Smiley,
+  Star,
+  DiceFive,
+  Cards,
+  Buildings,
+  Sun,
+  BookOpen,
+  MusicNotes,
+  Briefcase,
+  Anchor,
+  Key,
+  Globe,
+  ShieldCheck
 } from "@phosphor-icons/react";
-import { FaWhatsapp, FaXbox, FaPlaystation, FaSteam } from "react-icons/fa";
+import { FaWhatsapp, FaSteam, FaPlaystation, FaXbox } from "react-icons/fa";
+import { BsNintendoSwitch } from "react-icons/bs";
 import { 
   SiEpicgames, 
   SiUbisoft, 
-  SiBattledotnet,
-  SiRockstargames,
-  SiGogdotcom
+  SiEa, 
+  SiBattledotnet, 
+  SiRockstargames, 
+  SiGogdotcom 
 } from "react-icons/si";
 
 export const Header = () => {
@@ -285,15 +304,64 @@ export const Header = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, location.search, categories]);
 
+  // Map category names to appropriate Phosphor icons
+  const categoryIconMap = {
+    "bundle": Package,
+    "action": Swords,
+    "adventure": Compass,
+    "rpg": Shield,
+    "strategy": Brain,
+    "simulation": Cpu,
+    "sports": Trophy,
+    "racing": Car,
+    "fps": Target,
+    "tps": Target,
+    "horror": Ghost,
+    "open world": Map,
+    "survival": Flame,
+    "multiplayer": Users,
+    "co-op": Handshake,
+    "indie": Sparkle,
+    "platformer": Stairs,
+    "puzzle": PuzzlePiece,
+    "fighting": Dumbbell,
+    "battle royale": Crown,
+    "sandbox": Cube,
+    "stealth": EyeSlash,
+    "sci-fi": RocketLaunch,
+    "fantasy": Sparkle,
+    "historical": Hourglass,
+    "vr": Gamepad2,
+    "casual": Smiley,
+    "anime": Star,
+    "roguelike": DiceFive,
+    "mmorpg": ShieldCheck,
+    "card": Cards,
+    "turn based": Hourglass,
+    "city builder": Buildings,
+    "military": Swords,
+    "cyberpunk": Cpu,
+    "western": Sun,
+    "educational": BookOpen,
+    "music": MusicNotes,
+    "driving": Car,
+    "management": Briefcase,
+    "detective": Gamepad2,
+    "zombie": Skull,
+    "space": Globe,
+    "naval": Anchor,
+    "hack and slash": Swords,
+    "metroidvania": Key,
+    "soulslike": Flame,
+    "steam": Gamepad2,
+    "pc": Gamepad2,
+  };
+
   const getCategoryIcon = (name) => {
     const key = name.toLowerCase();
-    if (key.includes("action")) return Swords;
-    if (key.includes("adventure")) return Compass;
-    if (key.includes("open world") || key.includes("openworld")) return Map;
-    if (key.includes("rpg") || key.includes("fantasy")) return Shield;
-    if (key.includes("racing") || key.includes("cars")) return Car;
-    if (key.includes("horror") || key.includes("survival horror") || key.includes("survival")) return Ghost;
-    if (key.includes("fighting")) return Dumbbell;
+    for (const [pattern, icon] of Object.entries(categoryIconMap)) {
+      if (key.includes(pattern)) return icon;
+    }
     return Gamepad2;
   };
 
@@ -415,12 +483,12 @@ export const Header = () => {
   };
 
   const renderPlatformsSection = () => {
-    const lockedPlatforms = [
+    const platforms = [
       { label: "Epic Games", icon: SiEpicgames },
       { label: "PlayStation", icon: FaPlaystation },
       { label: "Xbox", icon: FaXbox },
-      { label: "Nintendo", icon: Gamepad2 },
-      { label: "EA", icon: Flame },
+      { label: "Nintendo", icon: BsNintendoSwitch },
+      { label: "EA", icon: SiEa },
       { label: "Ubisoft", icon: SiUbisoft },
       { label: "Battle.net", icon: SiBattledotnet },
       { label: "Rockstar Games", icon: SiRockstargames },
@@ -471,24 +539,30 @@ export const Header = () => {
           </div>
         </div>
 
-        {/* 2. LOCKED PLATFORMS */}
-        {lockedPlatforms.map((platform, idx) => {
+        {/* 2. OTHER PLATFORMS */}
+        {platforms.map((platform, idx) => {
           const Icon = platform.icon;
+          const path = `/games?platform=${encodeURIComponent(platform.label)}`;
+          const active = isItemActive(path);
           return (
-            <div
+            <Link
               key={idx}
-              className="h-10 flex items-center justify-between px-4 rounded-lg text-[#888888] opacity-60 cursor-not-allowed select-none mx-1 my-0.5 bg-transparent"
-              aria-disabled="true"
-              title={`${platform.label} (Coming Soon)`}
+              to={path}
+              onClick={() => setMobileMenuOpen(false)}
+              className={`h-11 flex items-center justify-between px-4 rounded-lg transition-all duration-150 select-none mx-1 my-0.5 ${
+                active 
+                  ? "bg-[#F8F8F8] text-[#222222] font-semibold" 
+                  : "text-[#555555] hover:text-[#222222] hover:bg-[#F8F8F8] font-medium"
+              }`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                  <Icon className="w-[18px] h-[18px] text-[#888888] stroke-[1.8] shrink-0" />
+                  <Icon className={`w-[18px] h-[18px] shrink-0 ${active ? "text-[#B50000]" : "text-[#666666]"}`} />
                 </div>
-                <span className="text-sm font-medium text-[#888888] truncate">{platform.label}</span>
+                <span className="text-sm truncate">{platform.label}</span>
               </div>
-              <LockSimple className="w-3.5 h-3.5 text-[#AAAAAA] shrink-0" weight="bold" />
-            </div>
+              <ChevronRight className="w-3.5 h-3.5 stroke-[1.8] text-[#999999] shrink-0" />
+            </Link>
           );
         })}
       </div>
@@ -520,11 +594,13 @@ export const Header = () => {
   };
 
   const renderAccountSection = () => {
+    const isAdmin = user?.email === "pandiyarajan007123@gmail.com" || user?.role === "admin";
     return (
       <div className="flex flex-col gap-0.5">
         {user ? (
           <>
             {renderMenuItem({ label: "My Account", path: "/dashboard", icon: User })}
+            {isAdmin && renderMenuItem({ label: "Admin Panel", path: "/admin", icon: LayoutDashboard })}
             {renderMenuItem({ 
               label: "Log Out", 
               path: "#logout", 
@@ -563,32 +639,104 @@ export const Header = () => {
           </Link>
 
           {/* Desktop Navigation Menus */}
-          <nav className="hidden lg:flex items-center gap-6 text-sm font-medium text-[#555555] select-none h-full">
+          <nav className="hidden lg:flex items-center gap-5 text-sm font-medium text-[#555555] select-none h-full">
             
-            {/* HOME */}
-            <Link 
-              to="/" 
-              className={`hover:text-[#E00000] py-4 transition h-full flex items-center ${location.pathname === "/" ? "text-[#111111] font-bold" : ""}`}
-            >
-              Home
-            </Link>
+            {/* PLATFORMS Dropdown */}
+            {(() => {
+              const active = ["platform"].some(param => new URLSearchParams(location.search).get(param));
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Platforms</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-56 max-h-[350px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
+                    {renderDropdownItem({
+                      label: "Steam",
+                      path: "/games?platform=Steam",
+                      icon: FaSteam
+                    })}
+                    {renderDropdownItem({
+                      label: "Epic Games",
+                      path: "/games?platform=Epic Games",
+                      icon: SiEpicgames
+                    })}
+                    {renderDropdownItem({
+                      label: "PlayStation",
+                      path: "/games?platform=PlayStation",
+                      icon: FaPlaystation
+                    })}
+                    {renderDropdownItem({
+                      label: "Xbox",
+                      path: "/games?platform=Xbox",
+                      icon: FaXbox
+                    })}
+                    {renderDropdownItem({
+                      label: "Nintendo",
+                      path: "/games?platform=Nintendo",
+                      icon: BsNintendoSwitch
+                    })}
+                    {renderDropdownItem({
+                      label: "EA",
+                      path: "/games?platform=EA",
+                      icon: SiEa
+                    })}
+                    {renderDropdownItem({
+                      label: "Ubisoft",
+                      path: "/games?platform=Ubisoft",
+                      icon: SiUbisoft
+                    })}
+                    {renderDropdownItem({
+                      label: "Battle.net",
+                      path: "/games?platform=Battle.net",
+                      icon: SiBattledotnet
+                    })}
+                    {renderDropdownItem({
+                      label: "Rockstar Games",
+                      path: "/games?platform=Rockstar Games",
+                      icon: SiRockstargames
+                    })}
+                    {renderDropdownItem({
+                      label: "GOG",
+                      path: "/games?platform=GOG",
+                      icon: SiGogdotcom
+                    })}
+                  </div>
+                </div>
+              );
+            })()}
 
-            {/* GAMES */}
-            <Link 
-              to="/games" 
-              className={`hover:text-[#E00000] py-4 transition h-full flex items-center ${location.pathname === "/games" && !location.search.includes("platform") ? "text-[#111111] font-bold" : ""}`}
-            >
-              Games
-            </Link>
+            {/* CATEGORIES Dropdown */}
+            {(() => {
+              const active = categories.some(cat => isItemActive(`/games?category=${cat.id}`));
+              return (
+                <div className="relative group py-4 h-full flex items-center">
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
+                    <span>Categories</span>
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
+                  </button>
+                  <div className="absolute left-0 top-full w-52 max-h-[300px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
+                    {categories.map(cat => 
+                      renderDropdownItem({
+                        key: cat.id,
+                        label: cat.name,
+                        path: `/games?category=${cat.id}`,
+                        icon: getCategoryIcon(cat.name)
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* DEALS Dropdown */}
             {(() => {
               const active = ["/offers", "/games?maxPrice=49", "/games?maxPrice=99", "/games?maxPrice=199", "/games?minSteamPrice=1500"].some(p => isItemActive(p));
               return (
                 <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${active ? "text-[#111111] font-bold" : ""}`}>
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
                     <span>Deals</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#E00000]" : "text-[#999999]"}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
                   </button>
                   <div className="absolute left-0 top-full w-48 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                     {[
@@ -596,7 +744,7 @@ export const Header = () => {
                       { label: "Under ₹49", path: "/games?maxPrice=49", icon: Tag },
                       { label: "Under ₹99", path: "/games?maxPrice=99", icon: Tag },
                       { label: "Under ₹199", path: "/games?maxPrice=199", icon: Tag },
-                      { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tags }
+                      { label: "Premium Deals", path: "/games?minSteamPrice=1500", icon: Tag }
                     ].map((item, idx) => 
                       renderDropdownItem({
                         key: idx,
@@ -610,59 +758,13 @@ export const Header = () => {
               );
             })()}
 
-            {/* PLATFORMS Dropdown */}
+            {/* ALL Games */}
             {(() => {
-              const isPlatformActive = location.pathname === "/games" && location.search.includes("platform");
+              const active = isItemActive("/games");
               return (
-                <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${isPlatformActive ? "text-[#111111] font-bold" : ""}`}>
-                    <span>Platforms</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${isPlatformActive ? "text-[#E00000]" : "text-[#999999]"}`} />
-                  </button>
-                  <div className="absolute left-0 top-full w-56 max-h-[360px] overflow-y-auto bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0 scrollbar-thin">
-                    <span className="text-[10px] font-semibold text-zinc-400 tracking-[0.08em] uppercase px-4 py-1.5 block select-none border-b border-[#F5F5F5] mb-1">Platforms</span>
-                    
-                    {/* Steam (Unlocked) */}
-                    <Link
-                      to="/games?platform=Steam"
-                      className="flex items-center justify-between px-4 py-2.5 hover:bg-[#F8F8F8] text-[#222222] font-semibold text-xs transition select-none"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0">
-                        <FaSteam className="w-4 h-4 text-[#444444]" />
-                        <span>Steam</span>
-                      </div>
-                      <span className="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded font-bold uppercase">Available</span>
-                    </Link>
-
-                    {/* Locked platforms */}
-                    {[
-                      { label: "Epic Games", icon: SiEpicgames },
-                      { label: "PlayStation", icon: FaPlaystation },
-                      { label: "Xbox", icon: FaXbox },
-                      { label: "Nintendo", icon: Gamepad2 },
-                      { label: "EA", icon: Flame },
-                      { label: "Ubisoft", icon: SiUbisoft },
-                      { label: "Battle.net", icon: SiBattledotnet },
-                      { label: "Rockstar Games", icon: SiRockstargames },
-                      { label: "GOG", icon: SiGogdotcom },
-                    ].map((plat, idx) => {
-                      const Icon = plat.icon;
-                      return (
-                        <div
-                          key={idx}
-                          className="flex items-center justify-between px-4 py-2 text-[#999999] opacity-60 text-xs cursor-not-allowed select-none"
-                          title={`${plat.label} (Coming Soon)`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <Icon className="w-3.5 h-3.5 text-[#999999]" />
-                            <span>{plat.label}</span>
-                          </div>
-                          <LockSimple className="w-3 h-3 text-[#AAAAAA]" weight="bold" />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
+                <Link to="/games" className={`hover:text-[#B50000] py-4 transition h-full flex items-center ${active ? "text-[#222222] font-semibold" : ""}`}>
+                  All Games
+                </Link>
               );
             })()}
 
@@ -671,9 +773,9 @@ export const Header = () => {
               const active = ["/contact", "/faq"].some(p => isItemActive(p));
               return (
                 <div className="relative group py-4 h-full flex items-center">
-                  <button className={`flex items-center gap-1.5 hover:text-[#E00000] transition h-full ${active ? "text-[#111111] font-bold" : ""}`}>
+                  <button className={`flex items-center gap-1.5 hover:text-[#B50000] transition h-full ${active ? "text-[#222222] font-semibold" : ""}`}>
                     <span>Support</span>
-                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#E00000]" : "text-[#999999]"}`} />
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-180 ${active ? "text-[#B50000]" : "text-[#999999]"}`} />
                   </button>
                   <div className="absolute left-0 top-full w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-1.5 z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 transform translate-y-2 group-hover:translate-y-0">
                     {renderDropdownItem({
@@ -836,7 +938,7 @@ export const Header = () => {
                         className="flex items-center gap-2.5 px-4 py-2 text-xs text-[#444444] hover:text-[#111111] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        <LayoutDashboard className="w-3.5 h-3.5 text-[#999999]" />
+                        <User className="w-3.5 h-3.5 text-[#999999]" />
                         My Account
                       </Link>
 
@@ -846,7 +948,7 @@ export const Header = () => {
                           className="flex items-center gap-2.5 px-4 py-2 text-xs text-[#E00000] hover:bg-[#E00000]/5 font-bold transition rounded-lg mx-1"
                           onClick={() => setUserMenuOpen(false)}
                         >
-                          <Shield className="w-3.5 h-3.5" />
+                          <LayoutDashboard className="w-3.5 h-3.5" />
                           Admin Panel
                         </Link>
                       )}

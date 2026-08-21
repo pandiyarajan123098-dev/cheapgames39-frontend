@@ -90,9 +90,7 @@ const Cart = () => {
       }
     };
     
-    if (cart.length > 0) {
-      loadUpsell();
-    }
+    loadUpsell();
   }, [cart]);
 
   /* ================= CHECKOUT ================= */
@@ -135,7 +133,7 @@ const Cart = () => {
         <div className="max-w-[1320px] mx-auto">
           {renderBreadcrumbs()}
           <div className="text-center py-24 bg-[#111111] border border-white/8 rounded-3xl p-8 max-w-lg mx-auto shadow-xl space-y-5 select-none">
-            <div className="bg-white/5 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2 border border-white/8 shadow-xl">
+            <div className="bg-[#FAFAFA] border border-[#E5E5E5] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-2 shadow-xs">
               <ShoppingCart className="w-8 h-8 text-[#E00000]" />
             </div>
             <h2 className="text-2xl font-bold uppercase tracking-tight text-white font-sans">YOUR CART IS EMPTY</h2>
@@ -149,6 +147,22 @@ const Cart = () => {
               Browse Games
             </Link>
           </div>
+
+          {/* Suggested Games Section */}
+          {upsellGames.length > 0 && (
+            <div className="space-y-6 mt-12">
+              <div className="pb-2 border-b border-[#E5E5E5] text-left">
+                <h3 className="text-base font-black uppercase tracking-tight text-[#1A1A1A]">
+                  Suggested <span className="text-[#E00000]">Games</span>
+                </h3>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
+                {upsellGames.map(game => (
+                  <GameCard key={game.id} game={game} />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -156,7 +170,7 @@ const Cart = () => {
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] text-white pt-[68px] md:pt-[74px] pb-20 px-4 sm:px-6 font-sans">
-      <div className="max-w-[1320px] mx-auto animate-page-section">
+      <div className="max-w-[1320px] mx-auto">
         
         {/* BREADCRUMB */}
         {renderBreadcrumbs()}
@@ -344,38 +358,6 @@ const Cart = () => {
             </div>
           </div>
 
-        </div>
-
-        {/* TRUST STRIP */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 border-t border-white/8 pt-8 mt-12 select-none">
-          <div className="flex gap-2.5">
-            <ShieldCheck className="w-[18px] h-[18px] text-emerald-500 shrink-0 mt-0.5" />
-            <div className="leading-tight">
-              <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Secure Checkout</span>
-              <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">UPI and bank validation verified</span>
-            </div>
-          </div>
-          <div className="flex gap-2.5">
-            <CreditCard className="w-[18px] h-[18px] text-amber-500 shrink-0 mt-0.5" />
-            <div className="leading-tight">
-              <span className="text-[11px] font-bold text-white uppercase tracking-wider block">UPI Payment</span>
-              <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Supports all major UPI applications</span>
-            </div>
-          </div>
-          <div className="flex gap-2.5">
-            <FaWhatsapp className="w-[18px] h-[18px] text-[#E00000] shrink-0 mt-0.5" />
-            <div className="leading-tight">
-              <span className="text-[11px] font-bold text-white uppercase tracking-wider block">WhatsApp Support</span>
-              <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Contact us on WhatsApp for order assistance</span>
-            </div>
-          </div>
-          <div className="flex gap-2.5">
-            <Gamepad2 className="w-[18px] h-[18px] text-blue-500 shrink-0 mt-0.5" />
-            <div className="leading-tight">
-              <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Digital Game Delivery</span>
-              <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Account credentials coordinates setup</span>
-            </div>
-          </div>
         </div>
 
         {/* RECOMMENDED GAMES */}

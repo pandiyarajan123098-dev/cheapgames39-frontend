@@ -486,41 +486,65 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
-/* ── 10. TOASTER RICHCOLORS CONTRAST OVERRIDES ── */
-[data-sonner-toast][data-type="success"] {
-  background-color: #16A34A !important;
-  border-color: #15803D !important;
-  color: #FFFFFF !important;
-}
-[data-sonner-toast][data-type="success"] * {
-  color: #FFFFFF !important;
+/* ── 10. PREMIUM GLASSMORPHIC TOASTER OVERRIDES ── */
+[data-sonner-toast] {
+  background-color: rgba(20, 20, 22, 0.96) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  color: #F4F4F5 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(0, 0, 0, 0.4) !important;
+  border-radius: 12px !important;
 }
 
-[data-sonner-toast][data-type="error"] {
-  background-color: #DC2626 !important;
-  border-color: #B91C1C !important;
+[data-sonner-toast] [data-title] {
   color: #FFFFFF !important;
+  font-weight: 600 !important;
 }
-[data-sonner-toast][data-type="error"] * {
-  color: #FFFFFF !important;
+
+[data-sonner-toast] [data-description] {
+  color: #A1A1AA !important;
+}
+
+/* Status Icon colors */
+[data-sonner-toast][data-type="success"] [data-icon] {
+  color: #10B981 !important; /* Emerald 500 */
+}
+
+[data-sonner-toast][data-type="error"] [data-icon] {
+  color: #EF4444 !important; /* Red 500 */
+}
+
+[data-sonner-toast][data-type="info"] [data-icon] {
+  color: #3B82F6 !important; /* Blue 500 */
+}
+
+[data-sonner-toast][data-type="warning"] [data-icon] {
+  color: #F59E0B !important; /* Amber 500 */
 }
 
 /* Fix Sonner Close Button Visibility */
 [data-sonner-toast] [data-close-button] {
-  background-color: #222222 !important;
-  border-color: #222222 !important;
-  color: #FFFFFF !important;
+  background-color: #27272A !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #A1A1AA !important;
   opacity: 1 !important;
-  width: 20px !important;
-  height: 20px !important;
+  width: 18px !important;
+  height: 18px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
   box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
   border-radius: 50% !important;
   left: auto !important;
-  right: -6px !important;
-  top: -6px !important;
+  right: -5px !important;
+  top: -5px !important;
+  transition: all 150ms ease !important;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+  background-color: #3F3F46 !important;
+  color: #FFFFFF !important;
 }
 
 [data-sonner-toast] [data-close-button] svg {
@@ -635,9 +659,9 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .cg39-wishlist-btn.active {
-  background-color: #fee2e2;
-  color: #E00000;
-  border-color: #fecaca;
+  background-color: #ffffff;
+  color: #E10600;
+  border-color: #e5e7eb;
 }
 
 /* Platform Badge */
@@ -1178,5 +1202,31 @@ h1, h2, h3, h4, h5, h6 {
   .cg39-details-btn {
     transition: none !important;
     transform: none !important;
+  }
+}
+
+/* ── Infinite Marquee Proof Slider ── */
+.proof-marquee-container {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+}
+
+.proof-marquee-track {
+  display: flex;
+  width: max-content;
+  animation: proof-scroll 45s linear infinite;
+}
+
+.proof-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes proof-scroll {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
   }
 }

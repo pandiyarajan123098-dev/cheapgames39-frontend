@@ -57,6 +57,14 @@ const Checkout = () => {
   const [transactionId, setTransactionId] = useState("");
   const [purchasedGameIds, setPurchasedGameIds] = useState([]);
   const [copied, setCopied] = useState(false);
+ 
+  // Store Settings state
+  const [storeSettings, setStoreSettings] = useState({
+    store_name: "CG39 Game Store",
+    whatsapp_support: "+91 6379490178",
+    upi_id: "pandiyarajan39@ptyes",
+    upi_qr_url: null
+  });
 
   // Prefill form from user profile with safe fallback
   const [formData, setFormData] = useState({
@@ -118,6 +126,21 @@ const Checkout = () => {
       }
     }
   }, [accessToken]);
+ 
+  // Load dynamic store settings
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await axios.get(`${API_BASE}/settings`);
+        if (res.data) {
+          setStoreSettings(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load store settings:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Keep form in sync when user data loads asynchronously
   useEffect(() => {
@@ -349,7 +372,7 @@ const Checkout = () => {
   };
 
   const handleCopyUPI = () => {
-    navigator.clipboard.writeText("pandiyarajan39@ptyes");
+    navigator.clipboard.writeText(storeSettings.upi_id);
     setCopied(true);
     toast.success("UPI ID Copied to clipboard");
     setTimeout(() => setCopied(false), 2000);
@@ -695,11 +718,23 @@ const Checkout = () => {
                   />
                 </div>
 
+                {/* QR Code Scan-to-pay */}
+                {storeSettings.upi_qr_url && (
+                  <div className="flex flex-col items-center justify-center bg-white border border-[#E5E5E5] rounded-xl p-4 select-none shadow-xs">
+                    <span className="text-[10px] text-zinc-500 uppercase font-black tracking-wider mb-2">Scan QR Code to Pay</span>
+                    <img 
+                      src={storeSettings.upi_qr_url} 
+                      alt="UPI QR Code" 
+                      className="w-44 h-44 object-contain rounded-lg p-1 bg-white border border-zinc-100 shadow-xs"
+                    />
+                  </div>
+                )}
+
                 {/* UPI address display */}
                 <div className="flex items-center justify-between bg-[#080808] border border-white/8 rounded-xl p-4 select-none">
                   <div className="min-w-0">
                     <span className="text-[10px] text-zinc-500 block uppercase font-bold tracking-wider">UPI Address</span>
-                    <span className="font-mono text-sm truncate text-white block mt-0.5 select-all">pandiyarajan39@ptyes</span>
+                    <span className="font-mono text-sm truncate text-white block mt-0.5 select-all">{storeSettings.upi_id}</span>
                   </div>
                   <button
                     onClick={handleCopyUPI}

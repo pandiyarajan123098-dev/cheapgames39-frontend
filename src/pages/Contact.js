@@ -258,34 +258,34 @@ const Contact = () => {
               </div>
             </div>
 
-            {/* WHATSAPP CARD */}
+            {/* WHATSAPP & INSTAGRAM DIRECT LINKS */}
             <div className="bg-[#111111] border border-white/8 rounded-2xl p-6 flex flex-col gap-4">
               <h2 className="text-sm font-black uppercase tracking-widest text-zinc-400 select-none">
-                Prefer WhatsApp?
+                Connect Directly
               </h2>
               <p className="text-xs text-zinc-500 leading-relaxed select-none">
-                For order-related assistance, reach us directly on WhatsApp.
+                For order-related assistance or quick questions, message us on WhatsApp or Instagram.
               </p>
-              <a
-                href={`https://wa.me/${WHATSAPP_NUMBER}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Contact CG39 support on WhatsApp"
-                className="flex items-center justify-center gap-2.5 bg-[#25D366] hover:bg-[#20ba56] text-white font-bold px-5 py-3.5 rounded-xl text-xs uppercase tracking-wider transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
-              >
-                <FaWhatsapp size={18} />
-                Message on WhatsApp
-              </a>
-              <a
-                href={INSTAGRAM_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="DM CG39 on Instagram"
-                className="flex items-center justify-center gap-2.5 bg-instagram-gradient text-white font-bold px-5 py-3.5 rounded-xl text-xs uppercase tracking-wider transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
-              >
-                <Instagram className="w-4 h-4 shrink-0" />
-                DM on Instagram
-              </a>
+              <div className="flex items-center gap-3">
+                <a
+                  href={`https://wa.me/${WHATSAPP_NUMBER}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Contact CG39 support on WhatsApp"
+                  className="flex-1 flex items-center justify-center bg-[#0d0d0d] hover:bg-[#161616] text-zinc-400 hover:text-white border border-white/8 rounded-xl p-3.5 transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
+                >
+                  <FaWhatsapp size={20} />
+                </a>
+                <a
+                  href={INSTAGRAM_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="DM CG39 on Instagram"
+                  className="flex-1 flex items-center justify-center bg-[#0d0d0d] hover:bg-[#161616] text-zinc-400 hover:text-white border border-white/8 rounded-xl p-3.5 transition hover:-translate-y-0.5 active:scale-[0.98] min-h-[48px]"
+                >
+                  <Instagram className="w-5 h-5 shrink-0" />
+                </a>
+              </div>
             </div>
 
             {/* QUICK HELP LINKS */}

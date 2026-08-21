@@ -17,7 +17,7 @@ import {
   Shield,
   Car,
   Ghost as Skull,
-  Ghost as Flame,
+  Flame,
   GameController as Gamepad,
   GameController as Gamepad2,
   Headset as Headphones,
@@ -26,7 +26,33 @@ import {
   Gift,
   MapTrifold as Map,
   Ghost,
-  Sword as Dumbbell
+  Sword as Dumbbell,
+  Brain,
+  Cpu,
+  Trophy,
+  Target,
+  Users,
+  Handshake,
+  Sparkle,
+  Stairs,
+  PuzzlePiece,
+  Crown,
+  Cube,
+  EyeSlash,
+  RocketLaunch,
+  Hourglass,
+  Smiley,
+  Star,
+  DiceFive,
+  Cards,
+  Buildings,
+  Sun,
+  BookOpen,
+  MusicNotes,
+  Briefcase,
+  Anchor,
+  Key,
+  Globe
 } from "@phosphor-icons/react";
 import { FaWhatsapp } from "react-icons/fa";
 import { GameCard } from "../components/GameCard";
@@ -299,16 +325,55 @@ const Games = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Map category names to appropriate Lucide icons
+  // Map category names to appropriate Phosphor icons
   const categoryIconMap = {
+    "bundle": Package,
     "action": Swords,
-    "open world": Map,
-    "rpg": Shield,
-    "racing": Car,
-    "horror": Ghost,
-    "survival": Ghost,
-    "fighting": Dumbbell,
     "adventure": Compass,
+    "rpg": Shield,
+    "strategy": Brain,
+    "simulation": Cpu,
+    "sports": Trophy,
+    "racing": Car,
+    "fps": Target,
+    "tps": Target,
+    "horror": Ghost,
+    "open world": Map,
+    "survival": Flame,
+    "multiplayer": Users,
+    "co-op": Handshake,
+    "indie": Sparkle,
+    "platformer": Stairs,
+    "puzzle": PuzzlePiece,
+    "fighting": Dumbbell,
+    "battle royale": Crown,
+    "sandbox": Cube,
+    "stealth": EyeSlash,
+    "sci-fi": RocketLaunch,
+    "fantasy": Sparkle,
+    "historical": Hourglass,
+    "vr": Gamepad2,
+    "casual": Smiley,
+    "anime": Star,
+    "roguelike": DiceFive,
+    "mmorpg": ShieldCheck,
+    "card": Cards,
+    "turn based": Hourglass,
+    "city builder": Buildings,
+    "military": Swords,
+    "cyberpunk": Cpu,
+    "western": Sun,
+    "educational": BookOpen,
+    "music": MusicNotes,
+    "driving": Car,
+    "management": Briefcase,
+    "detective": Search,
+    "zombie": Skull,
+    "space": Globe,
+    "naval": Anchor,
+    "hack and slash": Swords,
+    "metroidvania": Key,
+    "soulslike": Flame,
     "steam": Gamepad2,
     "pc": Gamepad2,
   };
@@ -770,8 +835,8 @@ const Games = () => {
         {/* EMPTY STATE */}
         {!loading && paginatedGames.length === 0 && !error && (
           <div className="text-center py-20 bg-[#0d0d0d] border border-white/8 rounded-3xl p-8 max-w-lg mx-auto shadow-xl select-none">
-            <div className="bg-black/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 border border-white/5">
-              <Search className="w-7 h-7 text-zinc-600" />
+            <div className="bg-[#FAFAFA] border border-[#E5E5E5] w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5 shadow-sm">
+              <Search className="w-7 h-7 text-[#E10600]" />
             </div>
             <h3 className="text-2xl font-bold mb-2 uppercase tracking-tight text-white">NO GAMES FOUND</h3>
             <p className="text-gray-400 text-xs mb-6 uppercase tracking-wider max-w-xs mx-auto leading-normal">

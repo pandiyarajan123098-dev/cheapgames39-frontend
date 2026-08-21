@@ -16,10 +16,10 @@ import { CheckCircle, X, ArrowRight } from '@phosphor-icons/react';
 
 /* ─── Durations (ms) ──────────────────────────────────────────────── */
 const DUR = {
-  success: 2800,
-  info:    2800,
-  warning: 3500,
-  error:   4500,
+  success: 1800,
+  info:    1800,
+  warning: 2500,
+  error:   3500,
 };
 
 const CartToast = ({ tId, title, imageUrl }) => {

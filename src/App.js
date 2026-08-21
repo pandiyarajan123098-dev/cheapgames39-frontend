@@ -101,10 +101,9 @@ function App() {
               <MainLayout>
                 <Toaster
                   position="top-right"
-                  theme="light"
-                  richColors
+                  theme="dark"
                   closeButton
-                  duration={3000}
+                  duration={1800}
                   gap={10}
                   offset={20}
                   visibleToasts={4}

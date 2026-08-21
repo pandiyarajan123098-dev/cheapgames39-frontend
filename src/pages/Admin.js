@@ -10,7 +10,7 @@ import {
   Monitor,
   Tag,
   ChartLineUp,
-  CurrencyCircleDollar,
+  CurrencyInr,
   Gear,
   MagnifyingGlass,
   Plus,
@@ -34,8 +34,9 @@ import {
   UserGear,
   Pulse,
   CaretRight,
-  X,
-  List
+  List,
+  Star,
+  X
 } from "@phosphor-icons/react";
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
@@ -72,6 +73,11 @@ const timeAgo = (dateStr) => {
 const Admin = () => {
   const { user, accessToken, logout } = useAuth();
   const navigate = useNavigate();
+ 
+  const longValueStyle = {
+    overflowWrap: "anywhere",
+    wordBreak: "break-word"
+  };
 
   // Active navigation tab
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -84,6 +90,15 @@ const Admin = () => {
   const [reviews, setReviews] = useState([]);
   const [usersList, setUsersList] = useState([]);
   const [contacts, setContacts] = useState([]);
+ 
+  // Settings state
+  const [storeSettings, setStoreSettings] = useState({
+    store_name: "CG39 Game Store",
+    whatsapp_support: "+91 6379490178",
+    upi_id: "pandiyarajan39@ptyes",
+    upi_qr_url: ""
+  });
+  const [settingsLoading, setSettingsLoading] = useState(false);
 
   // Stats Card state
   const [stats, setStats] = useState({ revenue: 0, orders: 0, products: 0, users: 0, rating: 4.8 });
@@ -198,6 +213,7 @@ const Admin = () => {
     fetchAdminReviews();
     fetchUsersList();
     fetchContacts();
+    fetchSettings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
@@ -285,6 +301,26 @@ const Admin = () => {
       setLoadingReviews(false);
     }
   };
+ 
+  const handleReviewStatusUpdate = async (reviewId, status) => {
+    try {
+      const rev = reviews.find(r => r.id === reviewId);
+      const gameTitle = rev?.games?.title || "Game";
+      const customerName = rev?.profiles?.full_name || "Customer";
+
+      const res = await axios.put(`${API}/admin/reviews/${reviewId}/status`, { status }, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      if (res.status === 200) {
+        toast.success(`Review ${status} successfully`);
+        logActivity(`Review status updated to ${status}`, `${gameTitle} by ${customerName}`, "success");
+        fetchAdminReviews();
+      }
+    } catch (err) {
+      console.error("Error updating review status:", err);
+      toast.error(err.response?.data?.error || "Failed to update review status");
+    }
+  };
 
   const fetchUsersList = async () => {
     try {
@@ -311,6 +347,33 @@ const Admin = () => {
       console.error("Contacts fetch error:", err);
     } finally {
       setLoadingContacts(false);
+    }
+  };
+
+  const fetchSettings = async () => {
+    try {
+      const res = await axios.get(`${API}/settings`);
+      if (res.data) {
+        setStoreSettings(res.data);
+      }
+    } catch (err) {
+      console.error("Settings fetch error:", err);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setSettingsLoading(true);
+      await axios.put(`${API}/admin/settings`, storeSettings, {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      toast.success("Store configurations updated successfully!");
+      logActivity("Updated Settings", "Store config changes saved", "success");
+    } catch (err) {
+      console.error("Settings save error:", err);
+      toast.error(err.response?.data?.error || "Failed to update settings");
+    } finally {
+      setSettingsLoading(false);
     }
   };
 
@@ -540,18 +603,6 @@ const Admin = () => {
   };
 
   /* ================= REVIEWS ACTIONS ================= */
-  const handleUpdateReviewStatus = async (reviewId, status) => {
-    try {
-      await axios.put(`${API}/admin/reviews/${reviewId}/status`, { status }, {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      toast.success(`Review moderation status set to ${status}`);
-      fetchAdminReviews();
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to moderate review");
-    }
-  };
 
   const handleDeleteReview = async (reviewId) => {
     if (!window.confirm("Are you sure you want to delete this review comment?")) return;
@@ -725,11 +776,12 @@ const Admin = () => {
     { id: "dashboard", label: "Dashboard", icon: <SquaresFour className="w-5 h-5" /> },
     { id: "products", label: "Games", icon: <GameController className="w-5 h-5" /> },
     { id: "orders", label: "Orders", icon: <Package className="w-5 h-5" /> },
+    { id: "reviews", label: "Reviews", icon: <Star className="w-5 h-5" /> },
     { id: "users", label: "Customers", icon: <Users className="w-5 h-5" /> },
     { id: "categories", label: "Categories", icon: <Folders className="w-5 h-5" /> },
     { id: "platforms", label: "Platforms", icon: <Monitor className="w-5 h-5" /> },
     { id: "offers", label: "Offers & Deals", icon: <Tag className="w-5 h-5" /> },
-    { id: "payments", label: "Payments", icon: <CurrencyCircleDollar className="w-5 h-5" /> },
+    { id: "payments", label: "Payments", icon: <CurrencyInr className="w-5 h-5" /> },
     { id: "analytics", label: "Analytics", icon: <ChartLineUp className="w-5 h-5" /> },
     { id: "support", label: "Support", icon: <ChatCircle className="w-5 h-5" /> },
     { id: "settings", label: "Settings", icon: <Gear className="w-5 h-5" /> },
@@ -1054,7 +1106,7 @@ const Admin = () => {
                     <span className="text-[10px] text-[#16A34A] font-bold mt-1.5 block">Completed Orders</span>
                   </div>
                   <div className="w-11 h-11 rounded-lg bg-green-50 text-[#16A34A] flex items-center justify-center shrink-0 border border-green-100">
-                    <CurrencyCircleDollar className="w-5.5 h-5.5" />
+                    <CurrencyInr className="w-5.5 h-5.5" />
                   </div>
                 </div>
 
@@ -1199,7 +1251,7 @@ const Admin = () => {
                                 <p className="text-[10px] text-zinc-400 truncate">{cust.email}</p>
                               </div>
                             </div>
-                            <span className="text-[9px] text-zinc-400 font-bold shrink-0">{new Date(cust.created_at).toLocaleDateString()}</span>
+                            <span className="text-[9px] text-zinc-400 font-bold shrink-0">{cust.created_at ? new Date(cust.created_at).toLocaleDateString() : "Not specified"}</span>
                           </div>
                         ))}
                       </div>
@@ -1526,7 +1578,7 @@ const Admin = () => {
                             <td className="py-4 px-6 font-semibold text-zinc-700">{cust.orders_count || 0}</td>
                             <td className="py-4 px-6 font-black text-zinc-900 text-sm">₹{cust.total_spent?.toLocaleString() || 0}</td>
                             <td className="py-4 px-6 text-zinc-500 font-medium">
-                              {new Date(cust.created_at).toLocaleDateString()}
+                              {cust.created_at ? new Date(cust.created_at).toLocaleDateString() : "Not specified"}
                             </td>
                             <td className="py-4 px-6">
                               <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
@@ -1924,6 +1976,160 @@ const Admin = () => {
             </div>
           )}
 
+          {/* 10.5 REVIEWS MANAGEMENT */}
+          {activeTab === "reviews" && (
+            <div className="space-y-6 animate-fade-in text-left">
+              <div className="flex justify-between items-center select-none">
+                <div>
+                  <h1 className="text-2xl font-black text-zinc-900 uppercase tracking-tight">Customer Reviews</h1>
+                  <p className="text-xs text-zinc-500 mt-1">Approve, reject, and moderate customer reviews for your products.</p>
+                </div>
+                <button
+                  onClick={fetchAdminReviews}
+                  className="px-3 py-1.5 bg-[#E10600] hover:bg-[#C80500] text-white rounded-lg font-bold text-xs uppercase tracking-wider transition flex items-center gap-1.5 cursor-pointer"
+                  disabled={loadingReviews}
+                >
+                  <ArrowClockwise className={`w-3.5 h-3.5 ${loadingReviews ? "animate-spin" : ""}`} />
+                  Refresh
+                </button>
+              </div>
+
+              <div className="bg-white border border-[#E5E5E5] rounded-xl overflow-hidden shadow-xs">
+                {loadingReviews ? (
+                  <div className="py-20 flex justify-center items-center">
+                    <ArrowClockwise className="w-8 h-8 text-[#E10600] animate-spin" />
+                  </div>
+                ) : reviews.length === 0 ? (
+                  <div className="py-20 text-center select-none text-zinc-400 text-xs font-semibold">
+                    No customer reviews found.
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-[#E5E5E5] text-xs text-left">
+                      <thead>
+                        <tr className="text-[10px] text-zinc-500 bg-zinc-50 font-black uppercase tracking-wider select-none border-b border-[#E5E5E5]">
+                          <th className="py-3.5 px-6">Customer</th>
+                          <th className="py-3.5 px-6">Game / Product</th>
+                          <th className="py-3.5 px-6 text-center">Rating</th>
+                          <th className="py-3.5 px-6">Review Comment</th>
+                          <th className="py-3.5 px-6">Purchase Info</th>
+                          <th className="py-3.5 px-6">Date</th>
+                          <th className="py-3.5 px-6 text-center">Status</th>
+                          <th className="py-3.5 px-6 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-zinc-100">
+                        {reviews.map(rev => {
+                          const customerName = rev.profiles?.full_name || "Verified Customer";
+                          const customerEmail = rev.profiles?.email || "";
+                          const gameTitle = rev.games?.title || "Unknown Game";
+                          const ratingStars = rev.rating;
+                          const purchaseOrder = rev.purchase_info;
+                          const dateStr = new Date(rev.created_at).toLocaleDateString(undefined, {
+                            year: 'numeric', month: 'short', day: 'numeric'
+                          });
+
+                          return (
+                            <tr key={rev.id} className="hover:bg-zinc-50/50 transition duration-150">
+                              {/* Customer info */}
+                              <td className="py-4 px-6">
+                                <div className="font-bold text-zinc-800">{customerName}</div>
+                                {customerEmail && <div className="text-[10px] text-zinc-500 font-medium mt-0.5">{customerEmail}</div>}
+                              </td>
+
+                              {/* Game info */}
+                              <td className="py-4 px-6 font-bold text-zinc-800 max-w-[160px] truncate" title={gameTitle}>
+                                {gameTitle}
+                              </td>
+
+                              {/* Rating */}
+                              <td className="py-4 px-6 text-center">
+                                <div className="flex gap-0.5 justify-center">
+                                  {[1, 2, 3, 4, 5].map(star => (
+                                    <Star
+                                      key={star}
+                                      weight="fill"
+                                      className={`w-3.5 h-3.5 ${star <= ratingStars ? "text-yellow-500" : "text-zinc-200"}`}
+                                    />
+                                  ))}
+                                </div>
+                              </td>
+
+                              {/* Review Comment */}
+                              <td className="py-4 px-6 text-zinc-700 max-w-xs font-medium whitespace-pre-wrap break-words" title={rev.comment}>
+                                {rev.comment}
+                              </td>
+
+                              {/* Purchase Info */}
+                              <td className="py-4 px-6 font-medium">
+                                {purchaseOrder ? (
+                                  <div className="space-y-0.5">
+                                    <span className="font-mono text-[10px] bg-emerald-50 text-emerald-700 px-1.5 py-0.5 rounded border border-emerald-100 uppercase font-bold">
+                                      #{purchaseOrder.order_id.substring(0, 8).toUpperCase()}
+                                    </span>
+                                    <div className="text-[9px] text-zinc-500 font-bold uppercase tracking-wider mt-0.5">
+                                      {purchaseOrder.status}
+                                    </div>
+                                  </div>
+                                ) : rev.is_verified ? (
+                                  <span className="text-[9px] bg-green-50 text-emerald-600 px-1.5 py-0.5 rounded font-bold uppercase">
+                                    Verified
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] bg-zinc-100 text-zinc-500 px-1.5 py-0.5 rounded font-bold uppercase">
+                                    Not Verified
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Date */}
+                              <td className="py-4 px-6 text-zinc-400 font-medium">
+                                {dateStr}
+                              </td>
+
+                              {/* Status */}
+                              <td className="py-4 px-6 text-center">
+                                {rev.status === "approved" ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-green-50 text-[#16A34A] border border-green-100">Approved</span>
+                                ) : rev.status === "rejected" ? (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-red-50 text-red-600 border border-red-100">Rejected</span>
+                                ) : (
+                                  <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">Pending</span>
+                                )}
+                              </td>
+
+                              {/* Actions */}
+                              <td className="py-4 px-6 text-right">
+                                <div className="flex gap-2 justify-end">
+                                  {rev.status !== "approved" && (
+                                    <button
+                                      onClick={() => handleReviewStatusUpdate(rev.id, "approved")}
+                                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-[10px] uppercase tracking-wider transition select-none cursor-pointer"
+                                    >
+                                      Approve
+                                    </button>
+                                  )}
+                                  {rev.status !== "rejected" && (
+                                    <button
+                                      onClick={() => handleReviewStatusUpdate(rev.id, "rejected")}
+                                      className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded font-bold text-[10px] uppercase tracking-wider transition select-none cursor-pointer"
+                                    >
+                                      Reject
+                                    </button>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* 11. SETTINGS */}
           {activeTab === "settings" && (
             <div className="space-y-6 animate-fade-in text-left select-none">
@@ -1937,19 +2143,88 @@ const Admin = () => {
                 {/* Store Profile settings */}
                 <div className="bg-white border border-[#E5E5E5] rounded-xl p-6 shadow-xs">
                   <h3 className="text-xs font-black uppercase tracking-wider text-zinc-800 mb-4 border-b border-zinc-100 pb-2 flex items-center gap-1.5"><Gear className="w-4 h-4" /> Store Configurations</h3>
-                  <div className="space-y-3.5 text-xs">
+                  <div className="space-y-4 text-xs">
                     <div>
-                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">Store Name</span>
-                      <p className="text-zinc-800 font-semibold">CG39 Game Store</p>
+                      <label className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1.5">Store Name</label>
+                      <input 
+                        type="text" 
+                        value={storeSettings.store_name} 
+                        onChange={(e) => setStoreSettings({ ...storeSettings, store_name: e.target.value })}
+                        className="w-full bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg px-3 py-2 text-zinc-800 font-semibold focus:border-[#E10600] focus:ring-1 focus:ring-[#E10600]/30 outline-none transition" 
+                      />
                     </div>
                     <div>
-                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">WhatsApp Customer Support</span>
-                      <p className="text-zinc-800 font-semibold">+91 6379490178</p>
+                      <label className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1.5">WhatsApp Customer Support</label>
+                      <input 
+                        type="text" 
+                        value={storeSettings.whatsapp_support} 
+                        onChange={(e) => setStoreSettings({ ...storeSettings, whatsapp_support: e.target.value })}
+                        className="w-full bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg px-3 py-2 text-zinc-800 font-semibold focus:border-[#E10600] focus:ring-1 focus:ring-[#E10600]/30 outline-none transition" 
+                      />
                     </div>
                     <div>
-                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1">UPI Payment Address</span>
-                      <p className="text-zinc-800 font-mono">pandiyarajan39@ptyes</p>
+                      <label className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1.5">UPI Payment Address</label>
+                      <input 
+                        type="text" 
+                        value={storeSettings.upi_id} 
+                        onChange={(e) => setStoreSettings({ ...storeSettings, upi_id: e.target.value })}
+                        className="w-full bg-[#FAFAFA] border border-[#E5E5E5] rounded-lg px-3 py-2 text-zinc-800 font-mono focus:border-[#E10600] focus:ring-1 focus:ring-[#E10600]/30 outline-none transition" 
+                      />
                     </div>
+                    
+                    {/* QR Code Upload */}
+                    <div>
+                      <span className="text-zinc-400 uppercase font-bold tracking-wider text-[9px] block mb-1.5">UPI Payment QR Code</span>
+                      
+                      {storeSettings.upi_qr_url ? (
+                        <div className="space-y-2 text-left">
+                          <img 
+                            src={storeSettings.upi_qr_url} 
+                            alt="UPI QR Code Preview" 
+                            className="w-32 h-32 object-contain border border-[#E5E5E5] rounded-lg p-1 bg-white" 
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setStoreSettings({ ...storeSettings, upi_qr_url: "" })}
+                            className="px-3 py-1 bg-red-50 hover:bg-red-100 text-red-600 font-bold rounded-lg text-[9px] uppercase tracking-wider transition cursor-pointer border border-red-100"
+                          >
+                            Delete QR Code
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <input 
+                            type="file" 
+                            accept="image/*" 
+                            onChange={(e) => {
+                              const file = e.target.files[0];
+                              if (file) {
+                                if (file.size > 200 * 1024) {
+                                  toast.error("QR Code image must be smaller than 200KB");
+                                  return;
+                                }
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  setStoreSettings({ ...storeSettings, upi_qr_url: reader.result });
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="w-full text-zinc-500 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[10px] file:font-black file:uppercase file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 transition cursor-pointer text-[10px]" 
+                          />
+                          <span className="text-[10px] text-zinc-400">Supported formats: JPG, PNG. Max size 200KB.</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={settingsLoading}
+                      onClick={handleSaveSettings}
+                      className="w-full py-2 bg-[#E10600] hover:bg-[#C80500] disabled:opacity-50 text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer flex items-center justify-center min-h-[36px]"
+                    >
+                      {settingsLoading ? "Saving..." : "Save Configurations"}
+                    </button>
                   </div>
                 </div>
 
@@ -2057,7 +2332,7 @@ const Admin = () => {
                               {adm.role || "admin"}
                             </td>
                             <td className="py-4 px-6 text-zinc-500 font-medium">
-                              {new Date(adm.created_at).toLocaleDateString()}
+                              {adm.created_at ? new Date(adm.created_at).toLocaleDateString() : "Not specified"}
                             </td>
                           </tr>
                         ))}
@@ -2331,21 +2606,60 @@ const Admin = () => {
             </div>
 
             <div className="space-y-6 flex-1 text-xs">
-              {/* Customer Stats */}
-              <div className="bg-zinc-50 border border-zinc-200/50 rounded-xl p-4 space-y-2">
-                <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block mb-1">Customer Info</span>
-                <div className="grid grid-cols-2 gap-y-2">
-                  <span className="text-zinc-500 font-bold">Billing Name:</span>
-                  <span className="text-zinc-800 font-semibold">{selectedOrder.billing_name || "Verified Customer"}</span>
-                  
-                  <span className="text-zinc-500 font-bold">Billing Email:</span>
-                  <span className="text-zinc-800 font-semibold break-all">{selectedOrder.billing_email || "Not specified"}</span>
-                  
-                  <span className="text-zinc-500 font-bold">Contact Phone:</span>
-                  <span className="text-zinc-800 font-semibold">{selectedOrder.billing_phone || "Not specified"}</span>
-                  
-                  <span className="text-zinc-500 font-bold">Address / Coordinates:</span>
-                  <span className="text-zinc-800 font-semibold break-all">{selectedOrder.billing_address || "None"}</span>
+              {/* Customer Info Card */}
+              <div className="bg-[#FAFAFA] border border-[#E5E5E5] rounded-xl p-5 space-y-4 text-left">
+                <span className="text-[10px] font-black uppercase tracking-wider text-[#666666] block border-b border-[#E5E5E5] pb-2 select-none">
+                  CUSTOMER INFO
+                </span>
+                
+                <div className="space-y-3.5 sm:space-y-0 sm:grid sm:grid-cols-[140px_1fr] sm:gap-x-4 sm:gap-y-3">
+                  {/* Billing Name */}
+                  <div className="flex flex-col sm:contents">
+                    <span className="text-[#666666] font-medium text-xs select-none">
+                      Billing Name
+                    </span>
+                    <span className="text-[#111111] font-semibold text-xs mt-1 sm:mt-0" style={longValueStyle}>
+                      {selectedOrder.billing_name || selectedOrder.profiles?.full_name || (
+                        <span className="text-[#666666]/60 italic font-normal">Not specified</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Billing Email */}
+                  <div className="flex flex-col sm:contents">
+                    <span className="text-[#666666] font-medium text-xs select-none">
+                      Billing Email
+                    </span>
+                    <span className="text-[#111111] font-semibold text-xs mt-1 sm:mt-0" style={longValueStyle}>
+                      {selectedOrder.billing_email || selectedOrder.profiles?.email || (
+                        <span className="text-[#666666]/60 italic font-normal">Not specified</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Contact Phone */}
+                  <div className="flex flex-col sm:contents">
+                    <span className="text-[#666666] font-medium text-xs select-none">
+                      Contact Phone
+                    </span>
+                    <span className="text-[#111111] font-semibold text-xs mt-1 sm:mt-0" style={longValueStyle}>
+                      {selectedOrder.billing_phone || (
+                        <span className="text-[#666666]/60 italic font-normal">Not specified</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {/* Address / Coordinates */}
+                  <div className="flex flex-col sm:contents">
+                    <span className="text-[#666666] font-medium text-xs select-none">
+                      Address / Coordinates
+                    </span>
+                    <span className="text-[#111111] font-semibold text-xs mt-1 sm:mt-0" style={longValueStyle}>
+                      {selectedOrder.billing_address || (
+                        <span className="text-[#666666]/60 italic font-normal">Not specified</span>
+                      )}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -2427,7 +2741,11 @@ const Admin = () => {
                     onClick={() => handleSaveDeliveryDetails(selectedOrder.id)}
                     className="w-full py-2 bg-[#E10600] hover:bg-[#C80500] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer"
                   >
-                    {orderActionLoading ? "Updating..." : "Mark as Delivered & Send details"}
+                    {orderActionLoading 
+                      ? "Updating..." 
+                      : (selectedOrder.status === "completed" || selectedOrder.status === "delivered")
+                        ? "Update Delivery details"
+                        : "Mark as Delivered & Send details"}
                   </button>
                 </div>
               )}

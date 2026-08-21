@@ -7,7 +7,7 @@ import {
   Shield,
   Car,
   Ghost as Skull,
-  Ghost as Flame,
+  Flame,
   GameController as Gamepad,
   Lightning as Zap,
   ShieldCheck,
@@ -32,7 +32,31 @@ import {
   Globe,
   Sparkle,
   CreditCard,
-  Tag
+  Tag,
+  Package,
+  Brain,
+  Cpu,
+  Trophy,
+  Target,
+  Users,
+  Handshake,
+  Stairs,
+  PuzzlePiece,
+  Crown,
+  Cube,
+  EyeSlash,
+  RocketLaunch,
+  Hourglass,
+  Smiley,
+  DiceFive,
+  Cards,
+  Buildings,
+  Sun,
+  BookOpen,
+  MusicNotes,
+  Briefcase,
+  Anchor,
+  Key
 } from "@phosphor-icons/react";
 import RecentlyViewed from "../components/RecentlyViewed";
 import { GameCard } from "../components/GameCard";
@@ -41,6 +65,15 @@ import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import { FaWhatsapp, FaSteam, FaXbox, FaPlaystation, FaApple, FaBitcoin } from "react-icons/fa";
+import { BsNintendoSwitch } from "react-icons/bs";
+import { 
+  SiEpicgames, 
+  SiUbisoft, 
+  SiEa, 
+  SiBattledotnet, 
+  SiRockstargames, 
+  SiGogdotcom 
+} from "react-icons/si";
 
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
@@ -66,6 +99,19 @@ const SectionHeader = ({ eyebrow, title, accent, action, onAction }) => (
     )}
   </div>
 );
+
+const proofImages = [
+  "/proofs/proof1.jpg",
+  "/proofs/proof2.jpg",
+  "/proofs/proof3.jpg",
+  "/proofs/proof4.jpg",
+  "/proofs/proof5.jpg",
+  "/proofs/proof6.jpg",
+  "/proofs/proof7.jpg",
+  "/proofs/proof8.jpg",
+  "/proofs/proof9.jpg",
+  "/proofs/proof10.jpg"
+];
 
 const Home = () => {
   const navigate = useNavigate();
@@ -125,10 +171,32 @@ const Home = () => {
         btn2Text: "View Deals",
         btn2Link: "/offers",
         image: DEFAULT_BG_IMAGES[2]
+      },
+      {
+        eyebrow: "BEST OFFERS",
+        title: "EXPLORE NEW",
+        titleRed: "WORLDS",
+        desc: "Grab your favorite titles at rock-bottom prices.",
+        btn1Text: "Browse All",
+        btn1Link: "/games",
+        btn2Text: "Offers",
+        btn2Link: "/offers",
+        image: DEFAULT_BG_IMAGES[3]
+      },
+      {
+        eyebrow: "TOP SELLER",
+        title: "CONQUER EVERY",
+        titleRed: "CHALLENGE",
+        desc: "Check out our best-selling action adventure games today.",
+        btn1Text: "Shop Catalog",
+        btn1Link: "/games",
+        btn2Text: "Deals",
+        btn2Link: "/offers",
+        image: DEFAULT_BG_IMAGES[4]
       }
     ];
 
-    if (games && games.length >= 3) {
+    if (games && games.length >= defaultSlides.length) {
       return defaultSlides.map((slide, idx) => {
         const game = games[idx];
         if (!game) return slide;
@@ -294,16 +362,55 @@ const Home = () => {
     return tiers;
   }, [games]);
 
-  // Map category names to appropriate Lucide icons
+  // Map category names to appropriate Phosphor icons
   const categoryIconMap = {
+    "bundle": Package,
     "action": Swords,
-    "open world": Map,
-    "rpg": Shield,
-    "racing": Car,
-    "horror": Ghost,
-    "survival": Ghost,
-    "fighting": Dumbbell,
     "adventure": Compass,
+    "rpg": Shield,
+    "strategy": Brain,
+    "simulation": Cpu,
+    "sports": Trophy,
+    "racing": Car,
+    "fps": Target,
+    "tps": Target,
+    "horror": Ghost,
+    "open world": Map,
+    "survival": Flame,
+    "multiplayer": Users,
+    "co-op": Handshake,
+    "indie": Sparkle,
+    "platformer": Stairs,
+    "puzzle": PuzzlePiece,
+    "fighting": Dumbbell,
+    "battle royale": Crown,
+    "sandbox": Cube,
+    "stealth": EyeSlash,
+    "sci-fi": RocketLaunch,
+    "fantasy": Sparkle,
+    "historical": Hourglass,
+    "vr": Gamepad,
+    "casual": Smiley,
+    "anime": Star,
+    "roguelike": DiceFive,
+    "mmorpg": ShieldCheck,
+    "card": Cards,
+    "turn based": Hourglass,
+    "city builder": Buildings,
+    "military": Swords,
+    "cyberpunk": Cpu,
+    "western": Sun,
+    "educational": BookOpen,
+    "music": MusicNotes,
+    "driving": Car,
+    "management": Briefcase,
+    "detective": Gamepad,
+    "zombie": Skull,
+    "space": Globe,
+    "naval": Anchor,
+    "hack and slash": Swords,
+    "metroidvania": Key,
+    "soulslike": Flame,
     "steam": Gamepad2,
     "pc": Gamepad2,
   };
@@ -497,23 +604,18 @@ const Home = () => {
 
   // Horizontal Circular Category & Platform Navigation Row (Monochrome & Real Data)
   const renderDiscoveryRail = () => {
-    const platformItems = [
+    const navItems = [
       { label: "Steam", icon: FaSteam, path: "/games?platform=Steam" },
-      { label: "Games & DLCs", icon: Gamepad2, path: "/games" },
-      { label: "Steam Accounts", icon: FaSteam, path: "/games?platform=Steam&product_type=account" },
+      { label: "Epic Games", icon: SiEpicgames, path: "/games?platform=Epic Games" },
       { label: "PlayStation", icon: FaPlaystation, path: "/games?platform=PlayStation" },
       { label: "Xbox", icon: FaXbox, path: "/games?platform=Xbox" },
-      { label: "Deals", icon: Tag, path: "/offers" },
+      { label: "Nintendo", icon: BsNintendoSwitch, path: "/games?platform=Nintendo" },
+      { label: "EA", icon: SiEa, path: "/games?platform=EA" },
+      { label: "Ubisoft", icon: SiUbisoft, path: "/games?platform=Ubisoft" },
+      { label: "Battle.net", icon: SiBattledotnet, path: "/games?platform=Battle.net" },
+      { label: "Rockstar Games", icon: SiRockstargames, path: "/games?platform=Rockstar Games" },
+      { label: "GOG", icon: SiGogdotcom, path: "/games?platform=GOG" },
     ];
-
-    // Include top active store categories dynamically
-    const activeTopCategories = categories.slice(0, 4).map(cat => ({
-      label: cat.name,
-      icon: getCategoryIcon(cat.name),
-      path: `/games?category=${cat.id}`
-    }));
-
-    const navItems = [...platformItems, ...activeTopCategories];
 
     return (
       <div className="w-full bg-white py-5 select-none overflow-x-auto scrollbar-none">
@@ -1022,6 +1124,47 @@ const Home = () => {
     </section>
   );
 
+  // Infinite scroll proof images slider
+  const renderProofSlider = () => {
+    // Duplicate the array to create a seamless infinite loop
+    const doubleProofs = [...proofImages, ...proofImages];
+    return (
+      <section className="py-10 bg-white border-b border-[#E5E5E5] select-none overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 mb-6">
+          <SectionHeader 
+            eyebrow="Success Proofs" 
+            title="Delivered &" 
+            accent="Verified" 
+          />
+        </div>
+        
+        <div className="relative w-full overflow-hidden">
+          {/* Left/Right fading gradients for premium aesthetic */}
+          <div className="absolute left-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none" />
+          <div className="absolute right-0 top-0 bottom-0 w-12 sm:w-24 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none" />
+          
+          <div className="proof-marquee-container py-2">
+            <div className="proof-marquee-track">
+              {doubleProofs.map((src, idx) => (
+                <div 
+                  key={idx} 
+                  className="w-[140px] sm:w-[170px] h-[250px] sm:h-[300px] mx-2 sm:mx-3 shrink-0 rounded-2xl overflow-hidden border border-[#E5E5E5] bg-white shadow-sm hover:border-[#E10600] hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 cursor-pointer"
+                >
+                  <img 
+                    src={src} 
+                    alt={`Delivered order proof ${idx + 1}`} 
+                    className="w-full h-full object-cover select-none pointer-events-none"
+                    loading="lazy"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
   return (
     <div className="bg-white text-[#111111] overflow-x-hidden min-h-screen animate-page-section">
       
@@ -1063,6 +1206,7 @@ const Home = () => {
 
       {/* CUSTOMER REVIEWS & SUPPORT */}
       {renderReviews()}
+      {renderProofSlider()}
       {renderSupportCTA()}
 
       {/* 13. FOOTER (Handled in App.js layout) */}

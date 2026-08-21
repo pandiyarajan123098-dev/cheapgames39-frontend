@@ -23,7 +23,9 @@ import {
   EyeSlash as EyeOff,
   Clock as Clock3,
   Copy,
-  Play
+  Play,
+  CheckCircle,
+  XCircle
 } from "@phosphor-icons/react";
 import { toast } from "sonner";
 import { notify } from "../utils/notify";
@@ -112,12 +114,16 @@ const GameDetails = () => {
 
   const fetchReviews = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}/reviews/${id}`);
+      const headers = {};
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+      const res = await axios.get(`${API}/reviews/${id}`, { headers });
       setDbReviews(res.data || []);
     } catch (err) {
       console.error("Fetch reviews error:", err);
     }
-  }, [id]);
+  }, [id, accessToken]);
 
   const checkEligibility = useCallback(async () => {
     if (!user || !accessToken) return;
@@ -367,7 +373,6 @@ const GameDetails = () => {
     try {
       setCartLoading(true);
       await addToCart(game.id);
-      notify.addedToCart(game.title, game.image_url);
     } catch (err) {
       toast.error(err.message || "Failed to add to cart");
     } finally {
@@ -379,7 +384,6 @@ const GameDetails = () => {
     try {
       setBuyNowLoading(true);
       await addToCart(game.id);
-      notify.addedToCart(game.title, game.image_url);
       navigate("/checkout");
     } catch (err) {
       toast.error(err.message || "Failed to purchase game");
@@ -646,34 +650,51 @@ const GameDetails = () => {
               </button>
             </div>
 
-            {/* Trust strip */}
-            <div className="grid grid-cols-2 gap-4 border-t border-white/8 pt-6 select-none">
-              <div className="flex gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <div className="leading-tight">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Verified Delivery</span>
-                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Checked manually by support</span>
+            {/* Purchase Guarantees Card */}
+            <div className="bg-[#111111]/40 border border-white/5 rounded-2xl p-5 space-y-4 select-none mt-6 text-left">
+              <span className="text-[10px] font-black uppercase tracking-wider text-zinc-500 block border-b border-white/5 pb-2">
+                Store Guarantees
+              </span>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-xs font-bold text-white block">100% Secure Checkout</span>
+                    <span className="text-[10px] text-zinc-500 font-medium block mt-0.5">UPI & verified payment verification</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Zap className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                <div className="leading-tight">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Digital Delivery</span>
-                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Delivered via secure credentials</span>
+
+                <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                    <Zap className="w-4 h-4 text-amber-400" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-xs font-bold text-white block">Instant Digital Delivery</span>
+                    <span className="text-[10px] text-zinc-500 font-medium block mt-0.5">Dispatch coordinates within 5-30 mins</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <FaWhatsapp className="w-4 h-4 text-[#E10600] shrink-0 mt-0.5" />
-                <div className="leading-tight">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">WhatsApp Support</span>
-                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Direct chat support 24/7</span>
+
+                <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    <Gamepad2 className="w-4 h-4 text-blue-400" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-xs font-bold text-white block">Genuine Games Only</span>
+                    <span className="text-[10px] text-zinc-500 font-medium block mt-0.5">Authentic offline accounts & licenses</span>
+                  </div>
                 </div>
-              </div>
-              <div className="flex gap-2">
-                <Star className="w-4 h-4 text-yellow-500 shrink-0 mt-0.5" />
-                <div className="leading-tight">
-                  <span className="text-[11px] font-bold text-white uppercase tracking-wider block">Verified Reviews</span>
-                  <span className="text-[9px] text-zinc-500 font-medium block mt-0.5">Only verified buyers write reviews</span>
+
+                <div className="flex gap-3 items-start">
+                  <div className="w-8 h-8 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                    <Check className="w-4 h-4 text-red-400" />
+                  </div>
+                  <div className="leading-tight">
+                    <span className="text-xs font-bold text-white block">Buyer Protection</span>
+                    <span className="text-[10px] text-zinc-500 font-medium block mt-0.5">Replacement warranty for setup issues</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -831,11 +852,21 @@ const GameDetails = () => {
                   <p className="text-xs text-zinc-500">Please log in to submit a verified review.</p>
                   <button onClick={() => navigate("/login")} className="bg-[#E00000] hover:bg-[#F00000] text-xs font-bold px-4 py-2 rounded-lg uppercase transition min-h-[44px] w-full" aria-label="Login to leave review">Login</button>
                 </div>
-              ) : eligibility.alreadyReviewed ? (
-                <div className="text-center py-4 select-none">
-                  <Check className="w-8 h-8 text-green-500 mx-auto mb-2" />
-                  <p className="text-xs text-green-400 font-bold">Review Already Submitted</p>
-                  <p className="text-[10px] text-zinc-500 mt-1">Thank you for sharing your feedback with the community!</p>
+              ) : eligibility.reviewStatus === "pending" ? (
+                <div className="text-center py-4 select-none bg-amber-500/5 border border-amber-500/10 rounded-xl p-4">
+                  <Clock className="w-8 h-8 text-amber-500 mx-auto mb-2 animate-pulse" />
+                  <p className="text-xs text-amber-400 font-bold">Review Pending Approval</p>
+                  <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed max-w-xs mx-auto">
+                    Your review is currently pending moderation. It will be visible on the store once approved by the admin.
+                  </p>
+                </div>
+              ) : eligibility.reviewStatus === "approved" ? (
+                <div className="text-center py-4 select-none bg-green-500/5 border border-green-500/10 rounded-xl p-4">
+                  <CheckCircle className="w-8 h-8 text-green-500 mx-auto mb-2 animate-bounce" />
+                  <p className="text-xs text-green-400 font-bold">Review Approved</p>
+                  <p className="text-[10px] text-zinc-500 mt-1.5 leading-relaxed max-w-xs mx-auto">
+                    Your review is approved and now publicly visible on the game page. Thank you!
+                  </p>
                 </div>
               ) : !eligibility.hasPurchased ? (
                 <div className="text-center py-4 select-none">
@@ -844,7 +875,18 @@ const GameDetails = () => {
                   <p className="text-[10px] text-zinc-500 mt-1.5 leading-normal max-w-xs mx-auto">Only clients who purchased this specific game can submit reviews.</p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmitReview} className="space-y-4">
+                <form onSubmit={handleSubmitReview} className="space-y-4 text-left">
+                  {eligibility.reviewStatus === "rejected" && (
+                    <div className="bg-red-500/5 border border-red-500/10 rounded-xl p-3.5 text-left text-xs mb-2">
+                      <div className="flex gap-2 text-red-400 font-bold mb-1">
+                        <XCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                        <span>Previous Review Rejected</span>
+                      </div>
+                      <p className="text-[10px] text-zinc-400 font-medium leading-relaxed">
+                        Your previous review for this game was rejected. You are welcome to submit a new review below.
+                      </p>
+                    </div>
+                  )}
                   <span className="text-[10px] text-zinc-500 uppercase font-black block select-none">Write a Review</span>
                   
                   <div className="flex items-center gap-2">
@@ -877,15 +919,15 @@ const GameDetails = () => {
                   <button
                     type="submit"
                     disabled={reviewLoading}
-                    className="w-full bg-[#E00000] hover:bg-[#F00000] py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 transition min-h-[44px]"
+                    className="w-full bg-[#E00000] hover:bg-[#F00000] text-white py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider disabled:opacity-50 transition min-h-[44px]"
                     aria-label="Submit Verified Review"
                   >
                     {reviewLoading ? "Submitting..." : "Submit Review"}
                   </button>
                 </form>
-              )}
-            </div>
-          </div>
+               )}
+             </div>
+           </div>
 
           {/* Right: reviews list */}
           <div className="lg:col-span-8 space-y-6">
@@ -913,11 +955,23 @@ const GameDetails = () => {
                       </span>
                     </div>
 
-                    {rev.is_verified && (
-                      <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded mb-3 select-none">
-                        <Check className="w-3 h-3" /> Verified Purchase
-                      </span>
-                    )}
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {rev.is_verified && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-emerald-400 font-bold bg-emerald-500/5 border border-emerald-500/10 px-2 py-0.5 rounded select-none">
+                          <Check className="w-3 h-3" /> Verified Purchase
+                        </span>
+                      )}
+                      {rev.status === "pending" && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-amber-400 font-bold bg-amber-500/5 border border-amber-500/10 px-2 py-0.5 rounded select-none">
+                          <Clock className="w-3 h-3 animate-pulse" /> Pending Approval
+                        </span>
+                      )}
+                      {rev.status === "rejected" && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-red-400 font-bold bg-red-500/5 border border-red-500/10 px-2 py-0.5 rounded select-none">
+                          <XCircle className="w-3 h-3" /> Rejected
+                        </span>
+                      )}
+                    </div>
 
                     <p className="text-zinc-300 text-xs leading-relaxed italic">
                       "{rev.comment}"

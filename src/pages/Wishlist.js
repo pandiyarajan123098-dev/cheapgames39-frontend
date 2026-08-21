@@ -54,6 +54,22 @@ const Wishlist = () => {
   const [removingId, setRemovingId] = useState(null);
   const [sortBy, setSortBy] = useState("default");
   const [sortOpen, setSortOpen] = useState(false);
+  const [suggestedGames, setSuggestedGames] = useState([]);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const res = await axios.get(`${API}/games`);
+        const all = res.data || [];
+        const wishlistIds = wishlist.map(item => item.game_id || item.games?.id);
+        const filtered = all.filter(g => !wishlistIds.includes(g.id) && g.in_stock !== false);
+        setSuggestedGames(filtered.slice(0, 4));
+      } catch (err) {
+        console.error("Failed to load suggested games:", err);
+      }
+    };
+    fetchSuggestions();
+  }, [wishlist]);
 
   /* ── Guest redirect ── */
   useEffect(() => {
@@ -236,22 +252,40 @@ const Wishlist = () => {
 
         {/* EMPTY STATE */}
         {wishlist.length === 0 ? (
-          <div className="bg-white border border-[#E5E5E5] rounded-2xl p-14 text-center flex flex-col items-center gap-5 max-w-md mx-auto shadow-sm select-none text-[#222222]">
-            <div className="w-14 h-14 rounded-full bg-[#E10600]/5 border border-[#E10600]/10 flex items-center justify-center">
-              <Heart className="w-7 h-7 text-[#E10600]" weight="bold" />
+          <div className="space-y-12">
+            <div className="bg-white border border-[#E5E5E5] rounded-2xl p-14 text-center flex flex-col items-center gap-5 max-w-md mx-auto shadow-sm select-none text-[#222222]">
+              <div className="w-14 h-14 rounded-full bg-[#FAFAFA] border border-[#E5E5E5] flex items-center justify-center">
+                <Heart className="w-7 h-7 text-[#E10600]" weight="bold" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black uppercase tracking-tight text-[#222222] mb-2">Your Wishlist is Empty</h3>
+                <p className="text-sm text-[#666666] font-semibold leading-relaxed max-w-xs mx-auto">
+                  Save games you want to check out later.
+                </p>
+              </div>
+              <Link
+                to="/games"
+                className="flex items-center gap-2 bg-[#E10600] hover:bg-[#c40000] text-white px-7 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition min-h-[44px]"
+              >
+                Browse Games
+              </Link>
             </div>
-            <div>
-              <h3 className="text-lg font-black uppercase tracking-tight text-[#222222] mb-2">Your Wishlist is Empty</h3>
-              <p className="text-sm text-[#666666] font-semibold leading-relaxed max-w-xs mx-auto">
-                Save games you want to check out later.
-              </p>
-            </div>
-            <Link
-              to="/games"
-              className="flex items-center gap-2 bg-[#E10600] hover:bg-[#c40000] text-white px-7 py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition min-h-[44px]"
-            >
-              Browse Games
-            </Link>
+
+            {/* Suggested Games Section */}
+            {suggestedGames.length > 0 && (
+              <div className="space-y-6 mt-12">
+                <div className="pb-2 border-b border-[#E5E5E5] text-left">
+                  <h3 className="text-base font-black uppercase tracking-tight text-[#1A1A1A]">
+                    Suggested <span className="text-[#E10600]">Games</span>
+                  </h3>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                  {suggestedGames.map(game => (
+                    <GameCard key={game.id} game={game} />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <>

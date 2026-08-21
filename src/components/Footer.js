@@ -326,7 +326,7 @@ export const Footer = () => {
                   CG39 Game Store
                 </span>
               </div>
-              <p style={{ color: C.accent, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em', margin: 0 }}>
+              <p style={{ color: '#A1A1AA', fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.15em', margin: 0 }}>
                 Great games. Better prices.
               </p>
               <p style={{ color: C.textSecondary, fontSize: 12, lineHeight: 1.7, margin: 0, maxWidth: 380 }}>
