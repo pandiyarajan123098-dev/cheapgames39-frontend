@@ -354,8 +354,8 @@ const OrderStatus = () => {
                   <div className="flex flex-col gap-0">
                     {TIMELINE_STEPS.map((step, i) => {
                       const StepIcon = step.icon;
-                      const isDone   = statusInfo.stepIndex > step.idx;
-                      const isActive = statusInfo.stepIndex === step.idx;
+                      const isDone   = statusInfo.stepIndex > step.idx || (statusInfo.stepIndex >= 6 && step.idx === 6);
+                      const isActive = statusInfo.stepIndex === step.idx && !(statusInfo.stepIndex >= 6 && step.idx === 6);
                       const isLast   = i === TIMELINE_STEPS.length - 1;
                       return (
                         <div key={step.idx} className="flex gap-4 relative"
@@ -517,13 +517,13 @@ const OrderStatus = () => {
                         Keep these details private. Do not share your game credentials with anyone else.
                       </div>
                       <div className="bg-[#080808] border border-white/8 rounded-xl p-4 relative">
-                        <pre className="whitespace-pre-wrap font-mono text-xs text-white break-all pr-14 select-all leading-relaxed">
+                        <pre className="whitespace-pre-wrap font-mono text-xs text-white break-all pr-20 select-all leading-relaxed">
                           {showCredentials
                             ? order.delivery_details
                             : order.delivery_details.replace(/./g, "•").substring(0, 40) + "\n(Details Masked)"
                           }
                         </pre>
-                        <div className="absolute right-3 top-3 flex flex-col gap-1.5">
+                        <div className="absolute right-3 top-3 flex flex-row gap-1.5">
                           <button
                             onClick={() => setShowCredentials(!showCredentials)}
                             className="bg-white/5 hover:bg-white/10 p-2 rounded-lg transition"
