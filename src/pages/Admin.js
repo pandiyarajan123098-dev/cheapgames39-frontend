@@ -126,7 +126,9 @@ const Admin = () => {
       o.status === "submitted" || 
       o.status === "pending_payment" || 
       o.status === "pending" ||
-      (o.transaction_id && o.payment_status !== "paid" && o.status !== "completed" && o.status !== "cancelled")
+      o.payment_status === "verification_pending" ||
+      o.payment_status === "rejected" ||
+      (o.transaction_id && o.payment_status !== "paid" && o.payment_status !== "verified" && o.status !== "completed" && o.status !== "cancelled")
     );
   }, [orders]);
 
@@ -562,23 +564,30 @@ const Admin = () => {
 
   const handleVerifyPayment = (orderId) => {
     if (!window.confirm("Verify transaction and mark order as PAID / Processing?")) return;
-    handleUpdateOrderField(orderId, { payment_status: "paid", status: "processing" });
+    handleUpdateOrderField(orderId, { payment_status: "verified", status: "processing" });
     logActivity("Verified Payment (Processing)", `Order #${orderId.slice(0,8)}`, "success");
   };
 
   const handleRejectPayment = (orderId) => {
-    if (!window.confirm("Mark payment as FAILED? The customer will be able to resubmit verification details.")) return;
-    handleUpdateOrderField(orderId, { payment_status: "failed", status: "pending_payment" });
+    if (!window.confirm("Mark payment as REJECTED? The customer will be able to resubmit verification details.")) return;
+    handleUpdateOrderField(orderId, { payment_status: "rejected", status: "created" });
     logActivity("Rejected Payment (Pending Payment)", `Order #${orderId.slice(0,8)}`, "warning");
   };
 
   const handleSaveDeliveryDetails = (orderId) => {
+    const newStatus = selectedOrder?.status === "processing" ? "delivery" : selectedOrder?.status;
     handleUpdateOrderField(orderId, {
-      status: "completed",
+      status: newStatus,
       delivery_method: deliveryMethod,
       delivery_details: deliveryDetails
     });
     logActivity("Dispatched Credentials", `Order #${orderId.slice(0,8)} (${deliveryMethod})`, "success");
+  };
+
+  const handleCompleteOrder = (orderId) => {
+    if (!window.confirm("Mark this order as COMPLETED?")) return;
+    handleUpdateOrderField(orderId, { status: "completed" });
+    logActivity("Completed Order", `Order #${orderId.slice(0,8)}`, "success");
   };
 
   const handleSaveAdminNotes = (orderId) => {
@@ -622,9 +631,9 @@ const Admin = () => {
   const calculatedStats = useMemo(() => {
     const today = new Date().toDateString();
     const todayOrders = orders.filter(o => new Date(o.created_at).toDateString() === today);
-    const awaitingVerif = orders.filter(o => o.status === 'submitted' || o.payment_status === 'submitted');
+    const awaitingVerif = orders.filter(o => o.status === 'submitted' || o.payment_status === 'submitted' || o.payment_status === 'verification_pending');
     const processing = orders.filter(o => o.status === 'processing');
-    const todayCompleted = todayOrders.filter(o => ["completed", "paid", "delivered", "processing"].includes(o.status));
+    const todayCompleted = todayOrders.filter(o => ["completed", "paid", "verified", "delivered", "delivery", "processing"].includes(o.status) || ["paid", "verified"].includes(o.payment_status));
     const todayRevSum = todayCompleted.reduce((sum, o) => sum + (o.total_price || 0), 0);
 
     return {
@@ -679,15 +688,15 @@ const Admin = () => {
 
     if (orderStatusFilter !== "ALL") {
       if (orderStatusFilter === "PENDING_PAYMENT") {
-        result = result.filter(o => o.status === "pending_payment");
+        result = result.filter(o => o.status === "pending_payment" || o.payment_status === "pending");
       } else if (orderStatusFilter === "SUBMITTED") {
-        result = result.filter(o => o.status === "submitted" || o.payment_status === "submitted");
+        result = result.filter(o => o.status === "submitted" || o.payment_status === "submitted" || o.payment_status === "verification_pending");
       } else if (orderStatusFilter === "PAID") {
-        result = result.filter(o => o.payment_status === "paid");
+        result = result.filter(o => o.payment_status === "paid" || o.payment_status === "verified");
       } else if (orderStatusFilter === "PROCESSING") {
         result = result.filter(o => o.status === "processing");
       } else if (orderStatusFilter === "DELIVERED") {
-        result = result.filter(o => o.status === "completed" || o.status === "delivered");
+        result = result.filter(o => o.status === "completed" || o.status === "delivery" || o.status === "delivered");
       } else if (orderStatusFilter === "CANCELLED") {
         result = result.filter(o => o.status === "cancelled");
       }
@@ -2691,7 +2700,7 @@ const Admin = () => {
                   <span className="font-mono text-zinc-800 font-bold text-sm bg-zinc-100 px-2 py-0.5 rounded">{selectedOrder.transaction_id || "None Submitted"}</span>
                 </div>
 
-                {selectedOrder.transaction_id && selectedOrder.payment_status !== "paid" && (
+                {selectedOrder.transaction_id && selectedOrder.payment_status !== "paid" && selectedOrder.payment_status !== "verified" && selectedOrder.status !== "cancelled" && selectedOrder.status !== "completed" && (
                   <div className="flex gap-2.5 pt-2 select-none">
                     <button
                       disabled={orderActionLoading}
@@ -2712,7 +2721,7 @@ const Admin = () => {
               </div>
 
               {/* Digital Activation details input */}
-              {(selectedOrder.payment_status === "paid" || selectedOrder.status === "processing" || selectedOrder.status === "delivered" || selectedOrder.status === "completed") && (
+              {(selectedOrder.payment_status === "paid" || selectedOrder.payment_status === "verified" || selectedOrder.status === "processing" || selectedOrder.status === "delivery" || selectedOrder.status === "completed") && (
                 <div className="bg-zinc-50 border border-zinc-200/50 rounded-xl p-4 space-y-3 select-none">
                   <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Digital key coordinates delivery</span>
                   <div>
@@ -2743,10 +2752,20 @@ const Admin = () => {
                   >
                     {orderActionLoading 
                       ? "Updating..." 
-                      : (selectedOrder.status === "completed" || selectedOrder.status === "delivered")
+                      : (selectedOrder.status === "completed" || selectedOrder.status === "delivery")
                         ? "Update Delivery details"
                         : "Mark as Delivered & Send details"}
                   </button>
+
+                  {selectedOrder.status === "delivery" && (
+                    <button
+                      disabled={orderActionLoading}
+                      onClick={() => handleCompleteOrder(selectedOrder.id)}
+                      className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold rounded-lg uppercase tracking-wider text-[10px] transition cursor-pointer mt-2"
+                    >
+                      {orderActionLoading ? "Processing..." : "Complete Order"}
+                    </button>
+                  )}
                 </div>
               )}
 

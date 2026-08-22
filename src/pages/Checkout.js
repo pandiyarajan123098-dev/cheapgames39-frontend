@@ -75,10 +75,12 @@ const Checkout = () => {
 
   const idempotencyKey = useRef(generateUUID());
 
-  // Restore state from sessionStorage on mount (Refresh Safety)
+  // Restore state from sessionStorage or URL query params on mount (Refresh Safety)
   useEffect(() => {
-    const savedStep = sessionStorage.getItem("cg39_checkout_step");
-    const savedOrderId = sessionStorage.getItem("cg39_checkout_order_id");
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryOrderId = searchParams.get("order_id");
+    const savedOrderId = queryOrderId || sessionStorage.getItem("cg39_checkout_order_id");
+    const savedStep = queryOrderId ? "2" : sessionStorage.getItem("cg39_checkout_step");
     const savedFormData = sessionStorage.getItem("cg39_checkout_form_data");
     const savedGameIds = sessionStorage.getItem("cg39_checkout_game_ids");
 
@@ -93,7 +95,7 @@ const Checkout = () => {
       } catch (e) {}
     }
 
-    if (savedOrderId && savedStep) {
+    if (savedOrderId) {
       const fetchOrderDetails = async () => {
         try {
           setLoading(true);
@@ -103,12 +105,20 @@ const Checkout = () => {
           setOrderId(savedOrderId);
           setServerOrder(res.data);
           
-          // Determine the correct step based on the retrieved order's status
+          if (queryOrderId) {
+            sessionStorage.setItem("cg39_checkout_order_id", savedOrderId);
+          }
+
+          // Determine the correct step based on the retrieved order's status and payment_status
           const orderStatus = res.data.status?.toLowerCase();
-          if (orderStatus === "pending") {
-            setStep(2);
-          } else if (orderStatus === "submitted" || orderStatus === "paid" || orderStatus === "processing") {
+          const paymentStatus = res.data.payment_status?.toLowerCase();
+          if (paymentStatus === "verification_pending" || paymentStatus === "verified" || orderStatus === "completed" || orderStatus === "delivery" || orderStatus === "processing") {
             setStep(3);
+            sessionStorage.setItem("cg39_checkout_step", "3");
+          } else {
+            // pending or rejected
+            setStep(2);
+            sessionStorage.setItem("cg39_checkout_step", "2");
           }
         } catch (err) {
           console.error("Order recovery error:", err);
@@ -685,6 +695,12 @@ const Checkout = () => {
                   <p className="text-xs text-zinc-500 select-none">Order #{orderId?.substring(0, 8).toUpperCase()} · Awaiting your UPI payment.</p>
                 </div>
 
+                {serverOrder?.payment_status === "rejected" && (
+                  <div className="bg-red-500/10 border border-red-500/20 text-red-400 rounded-xl p-4 text-xs font-semibold leading-relaxed mb-1 select-none">
+                    Your payment reference could not be verified. Please make the payment again and submit a valid reference.
+                  </div>
+                )}
+
                 {/* Instructions */}
                 <div className="bg-[#080808] border border-white/8 rounded-xl p-5 select-none">
                   <span className="text-[10px] text-zinc-400 uppercase font-black tracking-wider block mb-3">Concise Instructions</span>
@@ -874,11 +890,11 @@ const Checkout = () => {
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500 uppercase font-bold">Payable Amount</span>
-                <span className="font-bold text-white">₹{payableAmount}</span>
+                <span className="font-bold text-white">₹{payableAmount || serverOrder?.total_price || 0}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-zinc-500 uppercase font-bold">Transaction Reference ID</span>
-                <span className="font-mono text-zinc-300">{transactionId}</span>
+                <span className="font-mono text-zinc-300">{transactionId || serverOrder?.transaction_id || "N/A"}</span>
               </div>
               <div className="flex justify-between items-center pt-3.5 border-t border-white/5">
                 <span className="text-zinc-500 uppercase font-bold">Verification Status</span>

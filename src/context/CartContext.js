@@ -18,11 +18,17 @@ export const CartProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
 
   // Helper to fetch latest games from DB to validate pricing/stale items
-  const fetchLatestGamesMap = async () => {
+  const fetchLatestGamesMap = async (gameIds) => {
     try {
-      const { data, error } = await supabase
+      if (gameIds && gameIds.length === 0) return {};
+      let query = supabase
         .from("games")
         .select("id, title, price, steam_price, image_url");
+      
+      if (gameIds && gameIds.length > 0) {
+        query = query.in("id", gameIds);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       const map = {};
       data.forEach(g => {
@@ -73,7 +79,6 @@ export const CartProvider = ({ children }) => {
   const fetchCart = useCallback(async () => {
     try {
       setLoading(true);
-      const latestGames = await fetchLatestGamesMap();
 
       if (!user) {
         // Guest user: read from localStorage
@@ -86,6 +91,9 @@ export const CartProvider = ({ children }) => {
             localCart = [];
           }
         }
+
+        const guestGameIds = localCart.map(item => item.game_id).filter(Boolean);
+        const latestGames = await fetchLatestGamesMap(guestGameIds);
 
         // Refresh prices & filter out stale games
         if (latestGames) {
@@ -165,27 +173,21 @@ export const CartProvider = ({ children }) => {
 
       let verifiedCart = data || [];
 
-      // Filter out stale games & sync prices
-      if (latestGames) {
-        const staleItemIds = [];
-        verifiedCart = verifiedCart
-          .map(item => {
-            const liveGame = latestGames[item.game_id];
-            if (!liveGame) {
-              staleItemIds.push(item.id);
-              return null;
-            }
-            return {
-              ...item,
-              games: liveGame // Always use DB price
-            };
-          })
-          .filter(Boolean);
+      // Filter out stale games & sync prices directly from joined details
+      const staleItemIds = [];
+      verifiedCart = verifiedCart
+        .map(item => {
+          if (!item.games) {
+            staleItemIds.push(item.id);
+            return null; // Stale/deleted game
+          }
+          return item;
+        })
+        .filter(Boolean);
 
-        // Delete stale cart items from database in background
-        if (staleItemIds.length > 0) {
-          supabase.from("cart").delete().in("id", staleItemIds).then(() => {});
-        }
+      // Delete stale cart items from database in background
+      if (staleItemIds.length > 0) {
+        supabase.from("cart").delete().in("id", staleItemIds).then(() => {});
       }
 
       setCart(verifiedCart);
@@ -200,6 +202,16 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     fetchCart();
+  }, [fetchCart]);
+
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "cg39_cart_sync" || e.key === "cg39_guest_cart") {
+        fetchCart();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, [fetchCart]);
 
   /* =====================================================
@@ -231,6 +243,7 @@ export const CartProvider = ({ children }) => {
       }
 
       localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       await fetchCart();
       return;
     }
@@ -261,6 +274,7 @@ export const CartProvider = ({ children }) => {
         if (error) throw error;
       }
 
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       await fetchCart();
     } catch (error) {
       console.error("Add to cart error:", error.message);
@@ -287,6 +301,7 @@ export const CartProvider = ({ children }) => {
         if (idx > -1) {
           localCart[idx].quantity = quantity;
           localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+          localStorage.setItem("cg39_cart_sync", Date.now().toString());
           await fetchCart();
         }
       }
@@ -301,6 +316,7 @@ export const CartProvider = ({ children }) => {
 
       if (error) throw error;
 
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       await fetchCart();
     } catch (error) {
       console.error("Update cart error:", error.message);
@@ -320,6 +336,7 @@ export const CartProvider = ({ children }) => {
         let localCart = JSON.parse(localCartRaw);
         localCart = localCart.filter(item => item.id !== cart_id);
         localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+        localStorage.setItem("cg39_cart_sync", Date.now().toString());
         await fetchCart();
       }
       return;
@@ -333,6 +350,7 @@ export const CartProvider = ({ children }) => {
 
       if (error) throw error;
 
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       await fetchCart();
     } catch (error) {
       console.error("Remove cart error:", error.message);
@@ -347,6 +365,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     if (!user) {
       localStorage.removeItem("cg39_guest_cart");
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       setCart([]);
       setCartCount(0);
       updateAbandonedCartTracking([]);
@@ -359,6 +378,7 @@ export const CartProvider = ({ children }) => {
         .delete()
         .eq("user_id", user.id);
 
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       setCart([]);
       setCartCount(0);
       updateAbandonedCartTracking([]);
@@ -380,6 +400,7 @@ export const CartProvider = ({ children }) => {
         let localCart = JSON.parse(localCartRaw);
         localCart = localCart.filter(item => !gameIds.includes(item.game_id));
         localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+        localStorage.setItem("cg39_cart_sync", Date.now().toString());
         await fetchCart();
       }
       return;
@@ -394,6 +415,7 @@ export const CartProvider = ({ children }) => {
 
       if (error) throw error;
 
+      localStorage.setItem("cg39_cart_sync", Date.now().toString());
       await fetchCart();
     } catch (error) {
       console.error("Remove game items from cart error:", error.message);

@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react";
 import ReCAPTCHA from "react-google-recaptcha";
 import AuthLayout from '../components/AuthLayout';
+import axios from 'axios';
 
 /* ── reCAPTCHA key ────────────────────────────────────────────────────
    Uses environment variable if configured, otherwise falls back to
@@ -20,6 +21,8 @@ import AuthLayout from '../components/AuthLayout';
 const recaptchaSiteKey =
   process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
   "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3";
+
+const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
 /* ── Shared input style ─────────────────────────────────────────────── */
 const inputCls =
@@ -52,12 +55,19 @@ const Login = () => {
 
     setLoading(true);
     try {
+      // Server-side reCAPTCHA token verification
+      const verifyRes = await axios.post(`${API}/verify-captcha`, { token: captchaToken });
+      if (!verifyRes.data.success) {
+        throw new Error("Captcha verification failed. Please try again.");
+      }
+
       await login(formData.email, formData.password);
       toast.success("Welcome back!");
       setTimeout(() => navigate("/"), 800);
     } catch (err) {
+      const errMsg = err.response?.data?.error || err.message || "Invalid email or password";
       setError("Unable to sign in. Please check your details and try again.");
-      toast.error(err.message || "Invalid email or password");
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

@@ -51,30 +51,35 @@ const getStatusDisplay = (status, paymentStatus) => {
     badgeClass: "bg-purple-500/10 text-purple-400 border border-purple-500/20",
     icon: <AlertTriangle className="w-4 h-4 text-purple-400" />,
   };
-  if (s === "delivered" || s === "completed") return {
-    text: "Game Accounts Delivered", stepIndex: 6,
+  if (s === "completed") return {
+    text: "Order Completed", stepIndex: 6,
     badgeClass: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
     icon: <CheckCircle2 className="w-4 h-4 text-emerald-400" />,
   };
-  if (s === "processing") return {
-    text: "Preparing Game Details", stepIndex: 4,
+  if (s === "delivery") return {
+    text: "Digital Delivery Released", stepIndex: 5,
+    badgeClass: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+    icon: <CheckCircle2 className="w-4 h-4 text-emerald-400 animate-pulse" />,
+  };
+  if (s === "processing" || p === "verified") return {
+    text: "Processing Order", stepIndex: 4,
     badgeClass: "bg-blue-500/10 text-blue-400 border border-blue-500/20",
     icon: <Clock3 className="w-4 h-4 text-blue-400 animate-pulse" />,
   };
-  if (s === "submitted" || p === "submitted") return {
-    text: "UTR Submitted — Verifying Payment", stepIndex: 2,
+  if (p === "verification_pending" || p === "submitted") return {
+    text: "Awaiting Payment Verification", stepIndex: 3,
     badgeClass: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20",
     icon: <Clock3 className="w-4 h-4 text-yellow-400" />,
   };
-  if (s === "pending_payment" || s === "pending") return {
-    text: "Awaiting UPI Payment", stepIndex: 1,
-    badgeClass: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
-    icon: <Clock3 className="w-4 h-4 text-amber-400 animate-pulse" />,
+  if (p === "rejected" || p === "failed") return {
+    text: "Payment Rejected", stepIndex: 2,
+    badgeClass: "bg-red-500/10 text-red-400 border border-red-500/20",
+    icon: <AlertTriangle className="w-4 h-4 text-red-400" />,
   };
   return {
-    text: status ? status.toUpperCase() : "Awaiting Verification", stepIndex: 2,
-    badgeClass: "bg-white/8 text-zinc-300 border border-white/10",
-    icon: <Clock3 className="w-4 h-4 text-zinc-400" />,
+    text: "Payment Pending", stepIndex: 2,
+    badgeClass: "bg-amber-500/10 text-amber-400 border border-amber-500/20",
+    icon: <Clock3 className="w-4 h-4 text-amber-400 animate-pulse" />,
   };
 };
 
@@ -176,7 +181,7 @@ const OrderStatus = () => {
 
   /* ── Computed ── */
   const statusInfo  = order ? getStatusDisplay(order.status, order.payment_status) : null;
-  const isDelivered = statusInfo?.stepIndex >= 6;
+  const isDelivered = order && (order.status === "delivery" || order.status === "completed");
   const steamTotal  = order?.order_items?.reduce(
     (sum, i) => sum + (i.games?.steam_price || 0) * i.quantity, 0
   ) || 0;
@@ -241,17 +246,19 @@ const OrderStatus = () => {
                   Enter your Order ID to track delivery status and access your game credentials.
                 </p>
               </div>
-              <div className="relative">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Enter 36-character Order ID (e.g. a94106a1-...)"
-                  value={orderId}
-                  onChange={(e) => setOrderId(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && fetchOrderDetails(orderId)}
-                  className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-4 py-3.5 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 outline-none transition text-sm font-mono text-center placeholder-[#AAAAAA] text-[#111111]"
-                  style={{ height: "48px" }}
-                />
+              <div className="flex flex-col gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none" />
+                  <input
+                    type="text"
+                    placeholder="Enter 36-character Order ID (e.g. a94106a1-...)"
+                    value={orderId}
+                    onChange={(e) => setOrderId(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && fetchOrderDetails(orderId)}
+                    className="w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-10 pr-4 py-3.5 focus:border-[#E00000] focus:ring-1 focus:ring-[#E00000]/20 outline-none transition text-sm font-mono text-center placeholder-[#AAAAAA] text-[#111111]"
+                    style={{ height: "48px" }}
+                  />
+                </div>
                 <button
                   onClick={() => fetchOrderDetails(orderId)}
                   disabled={loading}
@@ -364,7 +371,7 @@ const OrderStatus = () => {
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
                               isDone   ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
                               : isActive ? "bg-[#E00000]/10 border-[#E00000] text-[#E00000]"
-                              : "bg-[#F8F8F8] border-[#E5E5E5] text-[#777777]"
+                              : "bg-zinc-900 border-zinc-700 text-zinc-500"
                             }`}>
                               {isDone
                                 ? <Check className="w-4 h-4" />
@@ -372,15 +379,15 @@ const OrderStatus = () => {
                               }
                             </div>
                             {!isLast && (
-                              <div className={`w-px flex-1 min-h-[24px] my-1 ${isDone ? "bg-emerald-500/30" : "bg-[#E5E5E5]"}`} />
+                              <div className={`w-px flex-1 min-h-[24px] my-1 ${isDone ? "bg-emerald-500/30" : "bg-zinc-800"}`} />
                             )}
                           </div>
                           <div className={`pb-5 flex-1 min-w-0 ${isLast ? "pb-0" : ""}`}>
                             <span className={`text-xs font-black uppercase tracking-wide block leading-tight ${
-                              isDone ? "text-emerald-500" : isActive ? "text-[#111111]" : "text-[#777777]"
+                              isDone ? "text-emerald-500" : isActive ? "text-white" : "text-zinc-500"
                             }`}>{step.label}</span>
                             <span className={`text-[10px] mt-0.5 block ${
-                              isDone ? "text-[#777777]" : isActive ? "text-[#555555]" : "text-[#999999]"
+                              isDone ? "text-zinc-500" : isActive ? "text-zinc-300" : "text-zinc-600"
                             }`}>{step.desc}</span>
                           </div>
                         </div>
@@ -468,6 +475,21 @@ const OrderStatus = () => {
                       </span>
                     </div>
                   </div>
+
+                  {/* CONTINUE PAYMENT BUTTON */}
+                  {order && (order.payment_status === "pending" || order.payment_status === "rejected") && (
+                    <button
+                      onClick={() => {
+                        sessionStorage.setItem("cg39_checkout_step", "2");
+                        sessionStorage.setItem("cg39_checkout_order_id", order.id);
+                        sessionStorage.setItem("cg39_checkout_game_ids", JSON.stringify(order.order_items?.map(i => i.game_id) || []));
+                        navigate(`/checkout?order_id=${order.id}`);
+                      }}
+                      className="w-full mt-2 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-3 font-bold text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 min-h-[44px]"
+                    >
+                      <CreditCard className="w-4 h-4" /> Continue Payment
+                    </button>
+                  )}
 
                   {/* Customer info */}
                   <div className="border-t border-white/5 pt-4 flex flex-col gap-2.5 text-xs">

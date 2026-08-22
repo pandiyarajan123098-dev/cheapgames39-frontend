@@ -24,7 +24,8 @@ import {
   Warning as AlertTriangle,
   Package,
   Envelope as Mail,
-  ShoppingCart
+  ShoppingCart,
+  CreditCard
 } from "@phosphor-icons/react";
 import { Breadcrumbs } from "../components/Breadcrumbs";
 import { FaWhatsapp } from "react-icons/fa";
@@ -33,20 +34,32 @@ import { getWhatsAppOrderUrl } from "../utils/whatsapp";
 const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
 /* ─── Status badge helpers ────────────────────────────────────────── */
-const STATUS_MAP = {
-  pending:         { label: "Awaiting Payment",    cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  pending_payment: { label: "Awaiting Payment",    cls: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  submitted:       { label: "Payment Submitted",   cls: "bg-amber-50 text-amber-700 border-amber-200" },
-  paid:            { label: "Paid",                cls: "bg-blue-50 text-blue-700 border-blue-200" },
-  processing:      { label: "Processing",          cls: "bg-indigo-50 text-indigo-700 border-indigo-200" },
-  delivered:       { label: "Delivered",           cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  completed:       { label: "Completed",           cls: "bg-emerald-50 text-emerald-700 border-emerald-200" },
-  cancelled:       { label: "Cancelled",           cls: "bg-red-50 text-red-700 border-red-200" },
-};
+const getOrderStatusDisplay = (status, paymentStatus) => {
+  const s = (status || "").toLowerCase();
+  const p = (paymentStatus || "").toLowerCase();
 
-const getStatus = (status) => {
-  const key = (status || "").toLowerCase();
-  return STATUS_MAP[key] || { label: status?.toUpperCase() || "PENDING", cls: "bg-white/8 text-zinc-300 border-white/10" };
+  if (s === "cancelled") {
+    return { label: "Cancelled", cls: "bg-red-500/10 text-red-400 border border-red-500/20" };
+  }
+  if (s === "refunded") {
+    return { label: "Refunded", cls: "bg-purple-500/10 text-purple-400 border border-purple-500/20" };
+  }
+  if (s === "completed") {
+    return { label: "Completed", cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" };
+  }
+  if (s === "delivery") {
+    return { label: "Digital Delivery", cls: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" };
+  }
+  if (s === "processing" || p === "verified") {
+    return { label: "Processing", cls: "bg-indigo-500/10 text-indigo-400 border border-indigo-500/20" };
+  }
+  if (p === "verification_pending" || p === "submitted") {
+    return { label: "Awaiting Payment Verification", cls: "bg-yellow-500/10 text-yellow-400 border border-yellow-500/20" };
+  }
+  if (p === "rejected" || p === "failed") {
+    return { label: "Payment Rejected", cls: "bg-red-500/10 text-red-400 border border-red-500/20" };
+  }
+  return { label: "Payment Pending", cls: "bg-amber-500/10 text-amber-400 border border-amber-500/20" };
 };
 
 /* ─── Skeleton ────────────────────────────────────────────────────── */
@@ -254,8 +267,8 @@ export default function Dashboard() {
             {!loading && orders.length > 0 && (
               <div className="flex flex-col gap-4">
                 {orders.map((ord) => {
-                  const st = getStatus(ord.status);
-                  const isDelivered = ord.status === "completed" || ord.status === "delivered";
+                  const st = getOrderStatusDisplay(ord.status, ord.payment_status);
+                  const isDelivered = ord.status === "completed" || ord.status === "delivery";
                   const itemCount = ord.order_items?.length || 0;
                   const firstTitle = ord.order_items?.[0]?.games?.title || "Game";
                   const previewLabel = itemCount > 1
@@ -324,6 +337,22 @@ export default function Dashboard() {
                         >
                           View Details <ArrowRight className="w-3.5 h-3.5 shrink-0" />
                         </button>
+
+                        {(ord.payment_status === "pending" || ord.payment_status === "rejected") && (
+                          <button
+                            onClick={() => {
+                              sessionStorage.setItem("cg39_checkout_step", "2");
+                              sessionStorage.setItem("cg39_checkout_order_id", ord.id);
+                              sessionStorage.setItem("cg39_checkout_game_ids", JSON.stringify(ord.order_items?.map(i => i.game_id) || []));
+                              navigate(`/checkout?order_id=${ord.id}`);
+                            }}
+                            className="flex items-center justify-center gap-2 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition min-h-[38px]"
+                          >
+                            <CreditCard className="w-3.5 h-3.5 shrink-0" />
+                            <span>Continue Payment</span>
+                          </button>
+                        )}
+
                         <button
                           onClick={() => window.open(getWhatsAppOrderUrl(ord), "_blank")}
                           className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-xl px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition min-h-[38px]"

@@ -90,6 +90,7 @@ const Games = () => {
   const pageVal = parseInt(searchParams.get("page") || "0", 10);
 
   const [allGames, setAllGames] = useState([]);
+  const [totalGamesCount, setTotalGamesCount] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -102,17 +103,39 @@ const Games = () => {
     setLocalSearch(searchVal);
   }, [searchVal]);
 
-  /* ================= FETCH GAMES & CATEGORIES ================= */
+  /* ================= FETCH CATEGORIES ONCE ================= */
   useEffect(() => {
-    const loadData = async () => {
+    const loadCategories = async () => {
+      try {
+        const res = await axios.get(`${API}/api/categories`);
+        setCategories(res.data || []);
+      } catch (err) {
+        console.error("Categories fetch error:", err);
+      }
+    };
+    loadCategories();
+  }, []);
+
+  /* ================= FETCH PAGINATED GAMES ================= */
+  useEffect(() => {
+    const loadGames = async () => {
       try {
         setLoading(true);
-        const [gamesRes, catsRes] = await Promise.all([
-          axios.get(`${API}/api/games`),
-          axios.get(`${API}/api/categories`)
-        ]);
-        setAllGames(gamesRes.data || []);
-        setCategories(catsRes.data || []);
+        const res = await axios.get(`${API}/api/games`, {
+          params: {
+            page: pageVal,
+            limit: LIMIT,
+            search: searchVal,
+            category: categoryVal,
+            platform: platformVal,
+            product_type: productTypeVal,
+            maxPrice: maxPriceVal,
+            minSteamPrice: minSteamPriceVal,
+            sortBy: sortByVal
+          }
+        });
+        setAllGames(res.data?.games || []);
+        setTotalGamesCount(res.data?.total || 0);
       } catch (err) {
         console.error("Games page fetch error:", err);
         setError("Failed to load catalog games");
@@ -120,8 +143,8 @@ const Games = () => {
         setLoading(false);
       }
     };
-    loadData();
-  }, []);
+    loadGames();
+  }, [pageVal, searchVal, categoryVal, platformVal, productTypeVal, maxPriceVal, minSteamPriceVal, sortByVal]);
 
   /* ================= URL FILTER MUTATOR ================= */
   const handleFilterChange = (keyOrObject, value) => {
@@ -187,88 +210,11 @@ const Games = () => {
   };
 
   /* ================= COMBINED FILTER & SORT LOGIC ================= */
-  const filteredGames = useMemo(() => {
-    let result = [...allGames];
-
-    // 1. Search Query Match
-    if (searchVal) {
-      const q = searchVal.toLowerCase();
-      result = result.filter(g => 
-        g.title?.toLowerCase().includes(q) || 
-        g.description?.toLowerCase().includes(q) ||
-        g.categories?.name?.toLowerCase().includes(q)
-      );
-    }
-
-    // 2. Category Filter
-    if (categoryVal) {
-      const match = categories.find(
-        c => String(c.id) === String(categoryVal) || 
-             c.name.toLowerCase() === String(categoryVal).toLowerCase()
-      );
-      if (match) {
-        result = result.filter(g => String(g.category_id) === String(match.id));
-      } else {
-        result = result.filter(g => String(g.category_id) === String(categoryVal));
-      }
-    }
-
-    // 3. Platform Filter (Real Product Data Filter)
-    if (platformVal) {
-      result = result.filter(g => {
-        const p = (g.platform || "Steam").toLowerCase();
-        return p === platformVal.toLowerCase();
-      });
-    }
-
-    // 4. Product Type Filter (game, account, dlc)
-    if (productTypeVal) {
-      result = result.filter(g => {
-        const pt = (g.product_type || "game").toLowerCase();
-        if (productTypeVal === "game") return pt === "game" || (!g.is_bundle && !g.title?.toLowerCase().includes("account") && !g.title?.toLowerCase().includes("dlc"));
-        if (productTypeVal === "account") return pt === "account" || g.title?.toLowerCase().includes("account");
-        if (productTypeVal === "dlc") return pt === "dlc" || g.title?.toLowerCase().includes("dlc") || g.title?.toLowerCase().includes("expansion");
-        return true;
-      });
-    }
-
-    // 5. Price Filter (maxPrice)
-    if (maxPriceVal) {
-      result = result.filter(g => g.price <= Number(maxPriceVal));
-    }
-
-    // 6. AAA Deals (minSteamPrice)
-    if (minSteamPriceVal) {
-      result = result.filter(g => g.steam_price >= Number(minSteamPriceVal));
-    }
-
-    // 7. Sorting Controls
-    if (sortByVal === "price_asc") {
-      result.sort((a, b) => a.price - b.price);
-    } else if (sortByVal === "price_desc") {
-      result.sort((a, b) => b.price - a.price);
-    } else if (sortByVal === "newest") {
-      result.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    } else if (sortByVal === "discount") {
-      result.sort((a, b) => {
-        const discA = a.steam_price > a.price ? (a.steam_price - a.price) / a.steam_price : 0;
-        const discB = b.steam_price > b.price ? (b.steam_price - b.price) / b.steam_price : 0;
-        return discB - discA;
-      });
-    } else {
-      // Default: Recommended / Sort display order
-      result.sort((a, b) => (a.display_order || 999) - (b.display_order || 999));
-    }
-
-    return result;
-  }, [allGames, categories, searchVal, categoryVal, platformVal, productTypeVal, maxPriceVal, minSteamPriceVal, sortByVal]);
+  const filteredGames = allGames;
 
   // Pagination bounds
-  const totalPages = Math.ceil(filteredGames.length / LIMIT);
-  const paginatedGames = useMemo(() => {
-    const startIndex = pageVal * LIMIT;
-    return filteredGames.slice(startIndex, startIndex + LIMIT);
-  }, [filteredGames, pageVal]);
+  const totalPages = Math.ceil(totalGamesCount / LIMIT);
+  const paginatedGames = allGames;
 
   // Debounce search input to prevent back-stack bloat and query lag
   useEffect(() => {

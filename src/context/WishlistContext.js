@@ -39,6 +39,16 @@ export const WishlistProvider = ({ children }) => {
     fetchWishlist();
   }, [fetchWishlist]);
 
+  useEffect(() => {
+    const handleStorageChange = (e) => {
+      if (e.key === "cg39_wishlist_sync") {
+        fetchWishlist();
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [fetchWishlist]);
+
   const toggleWishlist = async (gameId) => {
     if (!user || !accessToken) {
       toast.error("Please login first");
@@ -54,6 +64,7 @@ export const WishlistProvider = ({ children }) => {
       setWishlist((prev) => [...prev, { game_id: gameId, id: `temp-${Date.now()}` }]);
       toast.success("Added to wishlist");
     }
+    localStorage.setItem("cg39_wishlist_sync", Date.now().toString());
 
     try {
       if (exists) {

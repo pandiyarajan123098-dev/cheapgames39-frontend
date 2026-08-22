@@ -101,19 +101,14 @@ const Contact = () => {
     e.preventDefault();
     try {
       setLoading(true);
-      const res = await fetch(`${API}/api/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Something went wrong");
+      await axios.post(`${API}/api/contact`, formData);
       toast.success("Message sent successfully!");
       setFormData({ name: "", email: "", message: "" });
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 5000);
-    } catch {
-      toast.error("Unable to send your message. Please try again.");
+    } catch (err) {
+      const errMsg = err.response?.data?.error || "Unable to send your message. Please try again.";
+      toast.error(errMsg);
     } finally {
       setLoading(false);
     }

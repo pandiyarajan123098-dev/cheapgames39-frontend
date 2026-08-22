@@ -79,6 +79,7 @@ import {
   SiRockstargames, 
   SiGogdotcom 
 } from "react-icons/si";
+import axios from "axios";
 
 export const Header = () => {
   const { user, logout, logoutLoading } = useAuth();
@@ -136,9 +137,8 @@ export const Header = () => {
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/categories`);
-        const data = await res.json();
-        setCategories(data || []);
+        const res = await axios.get(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/categories`);
+        setCategories(res.data || []);
       } catch (err) {
         console.error("Header categories loading error:", err);
       }
@@ -170,35 +170,30 @@ export const Header = () => {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
-  // Fetch games for live suggestion panel
+  // Fetch search suggestions from backend when user types (debounced)
   useEffect(() => {
-    const loadGames = async () => {
-      try {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/games`);
-        const data = await res.json();
-        setAllGames(data || []);
-      } catch (err) {
-        console.error("Search fetch games error:", err);
+    const delayDebounceFn = setTimeout(async () => {
+      const q = searchQuery.trim();
+      if (!q) {
+        setSearchResults([]);
+        setSelectedIndex(-1);
+        return;
       }
-    };
-    loadGames();
-  }, []);
+      try {
+        const res = await axios.get(
+          `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api/games?search=${encodeURIComponent(
+            q
+          )}&limit=5&page=0`
+        );
+        setSearchResults(res.data?.games || []);
+        setSelectedIndex(-1);
+      } catch (err) {
+        console.error("Search suggestions fetch error:", err);
+      }
+    }, 300); // 300ms debounce
 
-  // Filter games based on search query (title + category)
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      setSelectedIndex(-1);
-      return;
-    }
-    const q = searchQuery.toLowerCase();
-    const filtered = allGames.filter(game =>
-      game.title.toLowerCase().includes(q) ||
-      game.categories?.name?.toLowerCase().includes(q)
-    ).slice(0, 5);
-    setSearchResults(filtered);
-    setSelectedIndex(-1);
-  }, [searchQuery, allGames]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery]);
 
   // Handle escape key to close search suggestions
   useEffect(() => {

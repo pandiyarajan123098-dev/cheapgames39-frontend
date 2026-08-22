@@ -12,6 +12,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { toast } from "sonner";
 import AuthLayout from "../components/AuthLayout";
+import ReCAPTCHA from "react-google-recaptcha";
+import axios from "axios";
+
+const recaptchaSiteKey =
+  process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
+  "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3";
+
+const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
 
 /* ── Shared input style ─────────────────────────────────────────────── */
 const inputCls =
@@ -24,6 +32,7 @@ const Signup = () => {
   const [formData, setFormData] = useState({ full_name: "", email: "", password: "" });
   const [loading, setLoading]   = useState(false);
   const [showPassword, setShowPass] = useState(false);
+  const [captchaToken, setCaptcha]  = useState(null);
   const [error, setError]       = useState("");
 
   const handleChange = (e) =>
@@ -32,14 +41,32 @@ const Signup = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!formData.full_name || !formData.email || !formData.password) {
+      setError("Please fill in all fields.");
+      return;
+    }
+
+    if (!captchaToken) {
+      toast.error("Please complete the verification check.");
+      return;
+    }
+
     setLoading(true);
     try {
+      // Server-side reCAPTCHA token verification
+      const verifyRes = await axios.post(`${API}/verify-captcha`, { token: captchaToken });
+      if (!verifyRes.data.success) {
+        throw new Error("Captcha verification failed. Please try again.");
+      }
+
       await signup(formData.email, formData.password, formData.full_name);
       toast.success("Account created successfully!");
       navigate("/");
     } catch (err) {
+      const errMsg = err.response?.data?.error || err.message || "Signup failed";
       setError("Unable to create account. Please check your details and try again.");
-      toast.error(err.message || "Signup failed");
+      toast.error(errMsg);
       setLoading(false);
     }
   };
@@ -243,6 +270,15 @@ const Signup = () => {
                 )}
               </div>
             )}
+          </div>
+
+          {/* reCAPTCHA */}
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, marginTop: 4 }}>
+            <ReCAPTCHA
+              sitekey={recaptchaSiteKey}
+              onChange={(token) => setCaptcha(token)}
+              theme="light"
+            />
           </div>
 
           {/* Create Account button */}

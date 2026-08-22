@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 import { toast } from "sonner";
 import {
   Heart,
@@ -48,13 +49,45 @@ const Wishlist = () => {
   const { user, accessToken } = useAuth();
   const navigate = useNavigate();
 
+  const { wishlist: contextWishlist, loading, refreshWishlist, toggleWishlist } = useWishlist();
   const [wishlist, setWishlist] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [removingId, setRemovingId] = useState(null);
   const [sortBy, setSortBy] = useState("default");
   const [sortOpen, setSortOpen] = useState(false);
   const [suggestedGames, setSuggestedGames] = useState([]);
+
+  // Compute price labels and update prices history when contextWishlist updates
+  useEffect(() => {
+    if (!user || !contextWishlist) return;
+
+    const historyKey = `cg39_wishlist_prices_${user.id}`;
+    let savedPrices = {};
+    try {
+      const raw = localStorage.getItem(historyKey);
+      savedPrices = raw ? JSON.parse(raw) : {};
+      if (typeof savedPrices !== 'object' || Array.isArray(savedPrices)) savedPrices = {};
+    } catch (e) {
+      console.warn("[Wishlist] localStorage parse error:", e);
+    }
+    const newPrices = { ...savedPrices };
+
+    const updatedWishlist = contextWishlist.map((item) => {
+      const game = item.games;
+      if (!game) return item;
+      let priceLabel = null;
+      const previousPrice = savedPrices[game.id];
+      if (previousPrice !== undefined) {
+        if (game.price < previousPrice)       priceLabel = "Price dropped";
+        else if (game.price > previousPrice)  priceLabel = "Price updated";
+      }
+      newPrices[game.id] = game.price;
+      return { ...item, priceLabel };
+    });
+
+    localStorage.setItem(historyKey, JSON.stringify(newPrices));
+    setWishlist(updatedWishlist);
+  }, [contextWishlist, user]);
 
   useEffect(() => {
     const fetchSuggestions = async () => {
@@ -68,61 +101,15 @@ const Wishlist = () => {
         console.error("Failed to load suggested games:", err);
       }
     };
-    fetchSuggestions();
+    if (wishlist.length === 0) {
+      fetchSuggestions();
+    }
   }, [wishlist]);
 
   /* ── Guest redirect ── */
   useEffect(() => {
     if (!user) navigate("/login");
   }, [user, navigate]);
-
-  /* ── Fetch (preserved exactly from original) ── */
-  const fetchWishlist = useCallback(async () => {
-    if (!user || !accessToken) return;
-    try {
-      setLoading(true);
-      setError(false);
-      const res = await axios.get(`${API}/wishlist`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-      const items = res.data || [];
-      const historyKey = `cg39_wishlist_prices_${user.id}`;
-      let savedPrices = {};
-      try {
-        const raw = localStorage.getItem(historyKey);
-        savedPrices = raw ? JSON.parse(raw) : {};
-        if (typeof savedPrices !== 'object' || Array.isArray(savedPrices)) savedPrices = {};
-      } catch (e) {
-        console.warn("[Wishlist] localStorage parse error:", e);
-      }
-      const newPrices = { ...savedPrices };
-
-      const updatedWishlist = items.map((item) => {
-        const game = item.games;
-        if (!game) return item;
-        let priceLabel = null;
-        const previousPrice = savedPrices[game.id];
-        if (previousPrice !== undefined) {
-          if (game.price < previousPrice)       priceLabel = "Price dropped";
-          else if (game.price > previousPrice)  priceLabel = "Price updated";
-        }
-        newPrices[game.id] = game.price;
-        return { ...item, priceLabel };
-      });
-
-      localStorage.setItem(historyKey, JSON.stringify(newPrices));
-      setWishlist(updatedWishlist);
-    } catch {
-      setError(true);
-      toast.error("Failed to load wishlist");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, accessToken]);
-
-  useEffect(() => {
-    if (user) fetchWishlist();
-  }, [user, fetchWishlist]);
 
   /* ── Remove (with 200ms scale + opacity exit animation) ── */
   const handleRemove = async (gameId) => {
@@ -132,11 +119,7 @@ const Wishlist = () => {
       // Delay deletion to allow fade+scale exit transitions
       setTimeout(async () => {
         try {
-          await axios.delete(`${API}/wishlist/${gameId}`, {
-            headers: { Authorization: `Bearer ${accessToken}` },
-          });
-          setWishlist((prev) => prev.filter((item) => item.games.id !== gameId));
-          toast.success("Removed from wishlist");
+          await toggleWishlist(gameId);
         } catch {
           toast.error("Failed to remove item");
         } finally {
@@ -186,7 +169,7 @@ const Wishlist = () => {
             <p className="text-xs text-[#666666] font-semibold">Something went wrong while loading your saved games.</p>
           </div>
           <button
-            onClick={fetchWishlist}
+            onClick={refreshWishlist}
             className="flex items-center justify-center gap-2 bg-[#E10600] hover:bg-[#c40000] text-white rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider transition min-h-[44px]"
           >
             Try Again

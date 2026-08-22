@@ -275,22 +275,20 @@ const Home = () => {
       .slice(0, 5);
   }, [games]);
 
-  // Fetch real reviews from the database for the featured games
+  // Fetch real reviews from the database for the featured games in a single batch request
   useEffect(() => {
     if (featuredGames.length === 0) return;
     const fetchFeaturedReviews = async () => {
       try {
-        const reviewPromises = featuredGames.slice(0, 4).map(game => 
-          axios.get(`${API}/reviews/${game.id}`).catch(() => ({ data: [] }))
-        );
-        const results = await Promise.all(reviewPromises);
-        const allFetchedReviews = results
-          .flatMap((res, idx) => 
-            res.data.map(r => ({
-              ...r,
-              verifiedGame: featuredGames[idx].title
-            }))
-          );
+        const gameIds = featuredGames.slice(0, 4).map(game => game.id).join(",");
+        const res = await axios.get(`${API}/reviews/batch?gameIds=${gameIds}`);
+        const allFetchedReviews = (res.data || []).map(r => {
+          const game = featuredGames.find(g => g.id === r.game_id);
+          return {
+            ...r,
+            verifiedGame: game ? game.title : "Featured Game"
+          };
+        });
         setReviews(allFetchedReviews);
       } catch (err) {
         console.error("Error fetching reviews:", err);
@@ -619,19 +617,19 @@ const Home = () => {
 
     return (
       <div className="w-full bg-white py-5 select-none overflow-x-auto scrollbar-none">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-start md:justify-center gap-6 md:gap-8">
+        <div className="max-w-7xl mx-auto px-4 pr-10 sm:px-6 flex items-center justify-start md:justify-center gap-2 sm:gap-4 md:gap-6">
           {navItems.map((item, idx) => {
             const Icon = item.icon;
             return (
               <Link
                 key={idx}
                 to={item.path}
-                className="group flex flex-col items-center gap-2 shrink-0 transition"
+                className="group flex flex-col items-center gap-2 shrink-0 transition text-center w-[72px] sm:w-[80px] md:w-24"
               >
-                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#FAFAFA] group-hover:bg-[#111111] border border-[#E5E5E5] group-hover:border-[#111111] flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105">
+                <div className="w-12 h-12 md:w-14 md:h-14 rounded-full bg-[#FAFAFA] group-hover:bg-zinc-900 border border-[#E5E5E5] group-hover:border-zinc-900 flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-200 group-hover:scale-105">
                   <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#222222] group-hover:text-white transition-colors" />
                 </div>
-                <span className="text-[11px] md:text-xs font-semibold text-[#222222] group-hover:text-[#111111] transition-colors whitespace-nowrap">
+                <span className="text-[10px] md:text-xs font-semibold text-[#222222] group-hover:text-[#111111] transition-colors whitespace-normal leading-tight text-center max-w-full">
                   {item.label}
                 </span>
               </Link>
