@@ -86,7 +86,7 @@ export const GameCard = ({ game, onWishlistRemove }) => {
       navigate("/login");
       throw new Error("Login required");
     }
-    await addToCart(game.id);
+    await addToCart(game.id, 1, game);
     // Success feedback is handled by the button's Cart → Check icon transition
   };
 

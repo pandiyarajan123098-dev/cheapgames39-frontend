@@ -7,6 +7,7 @@ import React, {
 } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "./AuthContext";
+import { toast } from "sonner";
 
 const CartContext = createContext();
 
@@ -218,68 +219,137 @@ export const CartProvider = ({ children }) => {
      ================= ADD TO CART =======================
   ===================================================== */
 
-  const addToCart = async (game_id, quantity = 1) => {
+  const addToCart = async (game_id, quantity = 1, game = null) => {
+    // Capture current state for potential rollback
+    const prevCart = [...cart];
+    const prevCartCount = cartCount;
+
+    // Construct the optimistic item
+    let resolvedGame = game;
+    if (!resolvedGame) {
+      const existingInCart = cart.find(item => item.game_id === game_id);
+      if (existingInCart?.games) {
+        resolvedGame = existingInCart.games;
+      } else {
+        resolvedGame = { id: game_id, title: "Game Details", price: 0, steam_price: 0 };
+      }
+    }
+
+    // Update the local cart state instantly
+    let updatedCart = [...cart];
+    const existingIndex = updatedCart.findIndex(item => item.game_id === game_id);
+
+    if (existingIndex > -1) {
+      updatedCart[existingIndex] = {
+        ...updatedCart[existingIndex],
+        quantity: updatedCart[existingIndex].quantity + quantity
+      };
+    } else {
+      updatedCart.push({
+        id: `opt-${Date.now()}-${Math.random()}`,
+        game_id,
+        quantity,
+        games: resolvedGame
+      });
+    }
+
+    // Set optimistic UI state instantly
+    setCart(updatedCart);
+    setCartCount(updatedCart.reduce((sum, item) => sum + item.quantity, 0));
+    updateAbandonedCartTracking(updatedCart);
+
+    // If guest: update localStorage and resolve
     if (!user) {
-      // Guest Cart implementation
-      const localCartRaw = localStorage.getItem("cg39_guest_cart");
-      let localCart = [];
-      if (localCartRaw) {
-        try {
-          localCart = JSON.parse(localCartRaw);
-        } catch (e) {}
-      }
-
-      const existingIndex = localCart.findIndex(item => item.game_id === game_id);
-      if (existingIndex > -1) {
-        localCart[existingIndex].quantity += quantity;
-      } else {
-        // Fetch the game item locally or temporarily populate to refresh on render
-        localCart.push({
-          id: `guest-${Date.now()}-${Math.random()}`,
-          game_id,
-          quantity,
-          games: null // Will be populated dynamically during fetchCart
-        });
-      }
-
-      localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
+      localStorage.setItem("cg39_guest_cart", JSON.stringify(updatedCart));
       localStorage.setItem("cg39_cart_sync", Date.now().toString());
-      await fetchCart();
-      return;
+      return Promise.resolve();
     }
 
-    try {
-      // Check if already exists in DB
-      const { data: existing } = await supabase
-        .from("cart")
-        .select("id, quantity")
-        .eq("user_id", user.id)
-        .eq("game_id", game_id)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
+    // Asynchronous Background Sync
+    const syncDatabase = async () => {
+      try {
+        const { data: existing, error: checkError } = await supabase
           .from("cart")
-          .update({ quantity: existing.quantity + quantity })
-          .eq("id", existing.id);
+          .select("id, quantity")
+          .eq("user_id", user.id)
+          .eq("game_id", game_id)
+          .maybeSingle();
 
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("cart").insert({
-          user_id: user.id,
-          game_id,
-          quantity,
-        });
+        if (checkError) throw checkError;
 
-        if (error) throw error;
+        if (existing) {
+          const { error } = await supabase
+            .from("cart")
+            .update({ quantity: existing.quantity + quantity })
+            .eq("id", existing.id);
+          if (error) throw error;
+        } else {
+          // Attempt insert
+          const { error } = await supabase.from("cart").insert({
+            user_id: user.id,
+            game_id,
+            quantity,
+          });
+          if (error) {
+            // Handle unique constraint conflict (race condition)
+            if (error.code === "23505" || error.message?.includes("unique")) {
+              const { data: retryExisting } = await supabase
+                .from("cart")
+                .select("id, quantity")
+                .eq("user_id", user.id)
+                .eq("game_id", game_id)
+                .maybeSingle();
+              if (retryExisting) {
+                await supabase
+                  .from("cart")
+                  .update({ quantity: retryExisting.quantity + quantity })
+                  .eq("id", retryExisting.id);
+              }
+            } else {
+              throw error;
+            }
+          }
+        }
+
+        // Successfully synced
+        localStorage.setItem("cg39_cart_sync", Date.now().toString());
+
+        // Quietly fetch actual DB data to replace temporary IDs with database IDs
+        const { data: verifiedCart, error: fetchError } = await supabase
+          .from("cart")
+          .select(`
+            id,
+            quantity,
+            game_id,
+            games (
+              id,
+              title,
+              price,
+              steam_price,
+              image_url
+            )
+          `)
+          .eq("user_id", user.id);
+
+        if (!fetchError && verifiedCart) {
+          setCart(verifiedCart);
+          setCartCount(verifiedCart.reduce((sum, item) => sum + item.quantity, 0));
+          updateAbandonedCartTracking(verifiedCart);
+        }
+      } catch (err) {
+        console.error("Background cart sync failed:", err.message);
+        // Rollback state
+        setCart(prevCart);
+        setCartCount(prevCartCount);
+        updateAbandonedCartTracking(prevCart);
+        toast.error("Couldn't add this game. Please try again.");
       }
+    };
 
-      localStorage.setItem("cg39_cart_sync", Date.now().toString());
-      await fetchCart();
-    } catch (error) {
-      console.error("Add to cart error:", error.message);
-      throw error;
-    }
+    // Trigger sync in the background
+    syncDatabase();
+
+    return Promise.resolve();
   };
 
   /* =====================================================
@@ -292,6 +362,21 @@ export const CartProvider = ({ children }) => {
       return;
     }
 
+    const prevCart = [...cart];
+    const prevCartCount = cartCount;
+
+    // Optimistic state update
+    const updatedCart = cart.map(item => {
+      if (item.id === cart_id) {
+        return { ...item, quantity };
+      }
+      return item;
+    });
+
+    setCart(updatedCart);
+    setCartCount(updatedCart.reduce((sum, item) => sum + item.quantity, 0));
+    updateAbandonedCartTracking(updatedCart);
+
     if (!user) {
       // Guest local update
       const localCartRaw = localStorage.getItem("cg39_guest_cart");
@@ -302,26 +387,33 @@ export const CartProvider = ({ children }) => {
           localCart[idx].quantity = quantity;
           localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
           localStorage.setItem("cg39_cart_sync", Date.now().toString());
-          await fetchCart();
         }
       }
-      return;
+      return Promise.resolve();
     }
 
-    try {
-      const { error } = await supabase
-        .from("cart")
-        .update({ quantity })
-        .eq("id", cart_id);
+    // Background database update
+    const syncUpdate = async () => {
+      try {
+        const { error } = await supabase
+          .from("cart")
+          .update({ quantity })
+          .eq("id", cart_id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      localStorage.setItem("cg39_cart_sync", Date.now().toString());
-      await fetchCart();
-    } catch (error) {
-      console.error("Update cart error:", error.message);
-      throw error;
-    }
+        localStorage.setItem("cg39_cart_sync", Date.now().toString());
+      } catch (error) {
+        console.error("Update cart error:", error.message);
+        setCart(prevCart);
+        setCartCount(prevCartCount);
+        updateAbandonedCartTracking(prevCart);
+        toast.error("Failed to update item quantity. Please try again.");
+      }
+    };
+
+    syncUpdate();
+    return Promise.resolve();
   };
 
   /* =====================================================
@@ -329,6 +421,16 @@ export const CartProvider = ({ children }) => {
   ===================================================== */
 
   const removeFromCart = async (cart_id) => {
+    const prevCart = [...cart];
+    const prevCartCount = cartCount;
+
+    // Optimistic state update
+    const updatedCart = cart.filter(item => item.id !== cart_id);
+
+    setCart(updatedCart);
+    setCartCount(updatedCart.reduce((sum, item) => sum + item.quantity, 0));
+    updateAbandonedCartTracking(updatedCart);
+
     if (!user) {
       // Guest local remove
       const localCartRaw = localStorage.getItem("cg39_guest_cart");
@@ -337,25 +439,32 @@ export const CartProvider = ({ children }) => {
         localCart = localCart.filter(item => item.id !== cart_id);
         localStorage.setItem("cg39_guest_cart", JSON.stringify(localCart));
         localStorage.setItem("cg39_cart_sync", Date.now().toString());
-        await fetchCart();
       }
-      return;
+      return Promise.resolve();
     }
 
-    try {
-      const { error } = await supabase
-        .from("cart")
-        .delete()
-        .eq("id", cart_id);
+    // Background database update
+    const syncRemove = async () => {
+      try {
+        const { error } = await supabase
+          .from("cart")
+          .delete()
+          .eq("id", cart_id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      localStorage.setItem("cg39_cart_sync", Date.now().toString());
-      await fetchCart();
-    } catch (error) {
-      console.error("Remove cart error:", error.message);
-      throw error;
-    }
+        localStorage.setItem("cg39_cart_sync", Date.now().toString());
+      } catch (error) {
+        console.error("Remove cart error:", error.message);
+        setCart(prevCart);
+        setCartCount(prevCartCount);
+        updateAbandonedCartTracking(prevCart);
+        toast.error("Failed to remove item. Please try again.");
+      }
+    };
+
+    syncRemove();
+    return Promise.resolve();
   };
 
   /* =====================================================

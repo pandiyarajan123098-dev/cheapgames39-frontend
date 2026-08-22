@@ -45,8 +45,13 @@ const GameDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, accessToken } = useAuth();
-  const { addToCart } = useCart();
+  const { cart, addToCart } = useCart();
   const { toggleWishlist, isGameInWishlist, loading: wishlistLoading } = useWishlist();
+
+  const isInCart = useMemo(() => {
+    if (!game || !cart) return false;
+    return cart.some(item => item.game_id === game.id);
+  }, [game, cart]);
 
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -372,7 +377,7 @@ const GameDetails = () => {
   const handleAddToCart = async () => {
     try {
       setCartLoading(true);
-      await addToCart(game.id);
+      await addToCart(game.id, 1, game);
     } catch (err) {
       toast.error(err.message || "Failed to add to cart");
     } finally {
@@ -383,7 +388,7 @@ const GameDetails = () => {
   const handleBuyNow = async () => {
     try {
       setBuyNowLoading(true);
-      await addToCart(game.id);
+      await addToCart(game.id, 1, game);
       navigate("/checkout");
     } catch (err) {
       toast.error(err.message || "Failed to purchase game");
@@ -632,11 +637,24 @@ const GameDetails = () => {
               <button
                 onClick={handleAddToCart}
                 disabled={cartLoading}
-                className="w-full sm:flex-1 bg-[#111111] hover:bg-[#151515] border border-white/8 hover:border-white/20 text-white rounded-xl min-h-[46px] font-bold uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50"
-                aria-label={`Add ${game.title} to cart`}
+                className={`w-full sm:flex-1 text-white rounded-xl min-h-[46px] font-bold uppercase text-xs tracking-wider transition flex items-center justify-center gap-2 active:scale-[0.98] disabled:opacity-50 ${
+                  isInCart 
+                    ? "bg-[#16A34A]/10 hover:bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 font-extrabold" 
+                    : "bg-[#111111] hover:bg-[#151515] border border-white/8 hover:border-white/20"
+                }`}
+                aria-label={isInCart ? `Added ${game.title} to cart` : `Add ${game.title} to cart`}
               >
-                <ShoppingCart className="w-4 h-4 text-zinc-400" />
-                {cartLoading ? "Adding..." : "Add to Cart"}
+                {isInCart ? (
+                  <>
+                    <Check className="w-4 h-4 text-emerald-400" weight="bold" />
+                    <span>Added to Cart</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4 text-zinc-400" />
+                    <span>Add to Cart</span>
+                  </>
+                )}
               </button>
 
               <button 

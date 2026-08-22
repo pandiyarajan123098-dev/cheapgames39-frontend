@@ -70,7 +70,7 @@ export default function HeroSlider({ games }) {
     return matched;
   }, [games]);
 
-  const handleAddToCart = async (e, gameId, gameTitle, gameImage) => {
+  const handleAddToCart = async (e, game) => {
     e.stopPropagation();
     if (!user) {
       notify.loginRequiredCart();
@@ -78,8 +78,8 @@ export default function HeroSlider({ games }) {
       return;
     }
     try {
-      await addToCart(gameId);
-      notify.addedToCart(gameTitle, gameImage);
+      await addToCart(game.id, 1, game);
+      notify.addedToCart(game.title, game.image_url);
     } catch {
       notify.actionFailed('add to cart');
     }
@@ -172,7 +172,7 @@ export default function HeroSlider({ games }) {
                     {/* CTA Actions */}
                     <div className="flex items-center gap-2.5 mt-1.5 w-full sm:w-auto">
                       <button
-                        onClick={(e) => handleAddToCart(e, game.id, game.title, game.image_url)}
+                        onClick={(e) => handleAddToCart(e, game)}
                         className="h-11 px-5 rounded-xl bg-[#E10600] hover:bg-[#c40000] active:scale-[0.98] text-xs font-bold uppercase tracking-wider transition flex items-center justify-center gap-2 shrink-0"
                         style={{ color: "#FFFFFF" }}
                       >
