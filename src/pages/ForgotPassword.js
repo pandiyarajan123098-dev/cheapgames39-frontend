@@ -9,33 +9,60 @@ import {
   CheckCircle,
 } from "@phosphor-icons/react";
 import AuthLayout from "../components/AuthLayout";
+import ReCAPTCHA from "react-google-recaptcha";
+import axios from "axios";
 
 const inputCls =
   "w-full bg-[#F7F7F7] border border-[#E5E5E5] rounded-xl pl-11 pr-4 text-sm text-[#111111] placeholder-[#BBBBBB] focus:outline-none focus:border-[#FF0000] focus:ring-2 focus:ring-[#FF0000]/10 transition";
 
+const recaptchaSiteKey =
+  process.env.REACT_APP_RECAPTCHA_SITE_KEY ||
+  "6LeIxAcTAAAAAJcZVRqyCQupg8m73n3VB13sg8g3";
+
+const API = `${process.env.REACT_APP_BACKEND_URL || "http://localhost:5000"}/api`;
+
 export default function ForgotPassword() {
-  const [email, setEmail]     = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent]       = useState(false);
-  const [error, setError]     = useState("");
+  const [email, setEmail]         = useState("");
+  const [loading, setLoading]     = useState(false);
+  const [sent, setSent]           = useState(false);
+  const [error, setError]         = useState("");
+  const [captchaToken, setCaptcha] = useState(null);
 
   const handleReset = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
 
-    const { error: supaErr } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (supaErr) {
-      setError("Unable to send reset link. Please try again.");
-      toast.error("Unable to send reset link. Please try again.");
-    } else {
-      setSent(true);
-      toast.success("Password reset link sent. Check your email.");
+    if (!captchaToken) {
+      toast.error("Please complete the verification check.");
+      return;
     }
-    setLoading(false);
+
+    setLoading(true);
+    try {
+      // Server-side reCAPTCHA token verification
+      const verifyRes = await axios.post(`${API}/verify-captcha`, { token: captchaToken });
+      if (!verifyRes.data.success) {
+        throw new Error("Captcha verification failed. Please try again.");
+      }
+
+      const { error: supaErr } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (supaErr) {
+        setError("Unable to send reset link. Please try again.");
+        toast.error("Unable to send reset link. Please try again.");
+      } else {
+        setSent(true);
+        toast.success("Password reset link sent. Check your email.");
+      }
+    } catch (err) {
+      const errMsg = err.response?.data?.error || err.message || "Captcha check failed.";
+      setError(errMsg);
+      toast.error(errMsg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -123,6 +150,15 @@ export default function ForgotPassword() {
                     className={inputCls}
                   />
                 </div>
+              </div>
+
+              {/* reCAPTCHA */}
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                <ReCAPTCHA
+                  sitekey={recaptchaSiteKey}
+                  onChange={(token) => setCaptcha(token)}
+                  theme="light"
+                />
               </div>
 
               {/* Send button */}
