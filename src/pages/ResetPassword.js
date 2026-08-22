@@ -61,7 +61,7 @@ export default function ResetPassword() {
           background: "#FFFFFF",
           border: "1px solid #E7E7E7",
           borderRadius: 20,
-          boxShadow: "0 10px 35px rgba(0,0,0,0.06)",
+          boxShadow: "0 8px 24px rgba(0,0,0,0.08)",
           padding: "36px 36px 32px",
           width: "100%",
           maxWidth: 460,

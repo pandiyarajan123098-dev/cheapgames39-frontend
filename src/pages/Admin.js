@@ -154,6 +154,11 @@ const Admin = () => {
     is_bundle: false,
     in_stock: true,
     display_order: '',
+    is_structured: false,
+    overview: '',
+    story: '',
+    gameplay: '',
+    features: ['']
   });
 
   // Orders Log Search & Filters
@@ -454,12 +459,37 @@ const Admin = () => {
       is_bundle: false,
       in_stock: true,
       display_order: '',
+      is_structured: false,
+      overview: '',
+      story: '',
+      gameplay: '',
+      features: ['']
     });
     setShowGameModal(true);
   };
 
   const handleEditGame = (game) => {
     setEditingGame(game);
+    
+    let isStructured = false;
+    let overview = '';
+    let story = '';
+    let gameplay = '';
+    let features = [''];
+
+    if (game.description && game.description.trim().startsWith('{')) {
+      try {
+        const parsed = JSON.parse(game.description);
+        isStructured = true;
+        overview = parsed.overview || '';
+        story = parsed.story || '';
+        gameplay = parsed.gameplay || '';
+        features = Array.isArray(parsed.features) && parsed.features.length > 0 ? parsed.features : [''];
+      } catch (e) {
+        // fallback
+      }
+    }
+
     setGameFormData({
       title: game.title || '',
       description: game.description || '',
@@ -472,6 +502,11 @@ const Admin = () => {
       is_bundle: game.is_bundle ?? false,
       in_stock: game.in_stock ?? true,
       display_order: game.display_order?.toString() || '',
+      is_structured: isStructured,
+      overview: isStructured ? overview : '',
+      story: isStructured ? story : '',
+      gameplay: isStructured ? gameplay : '',
+      features: features
     });
     setShowGameModal(true);
   };
@@ -482,10 +517,31 @@ const Admin = () => {
       toast.error("Please fill in all required fields");
       return;
     }
+    
+    if (gameFormData.is_structured && !gameFormData.overview.trim()) {
+      toast.error("Overview is required for structured descriptions");
+      return;
+    }
+
     try {
+      let finalDescription = gameFormData.description.trim();
+      if (gameFormData.is_structured) {
+        const cleanedFeatures = gameFormData.features
+          .map(f => f.trim())
+          .filter(f => f.length > 0);
+
+        const structuredObj = {
+          overview: gameFormData.overview.trim(),
+          story: gameFormData.story.trim(),
+          gameplay: gameFormData.gameplay.trim(),
+          features: cleanedFeatures
+        };
+        finalDescription = JSON.stringify(structuredObj);
+      }
+
       const payload = {
         title: gameFormData.title.trim(),
-        description: gameFormData.description.trim(),
+        description: finalDescription,
         steam_price: gameFormData.steam_price ? parseFloat(gameFormData.steam_price) : null,
         price: parseFloat(gameFormData.price),
         category_id: parseInt(gameFormData.category_id),
@@ -2407,14 +2463,108 @@ const Admin = () => {
                   />
                 </div>
 
-                <div className="sm:col-span-2">
-                  <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Description</label>
-                  <textarea
-                    value={gameFormData.description}
-                    onChange={(e) => setGameFormData({ ...gameFormData, description: e.target.value })}
-                    className="w-full h-20 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
-                    placeholder="Game summary details..."
-                  />
+                <div className="sm:col-span-2 space-y-3">
+                  <div className="flex items-center justify-between bg-zinc-50 border border-[#E5E5E5] p-3 rounded-xl select-none">
+                    <div>
+                      <span className="text-zinc-700 font-bold block">Structured Description Details</span>
+                      <span className="text-zinc-400 text-[10px] block font-medium">Toggle to write detailed Overview, Story, Gameplay, and Key Features</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setGameFormData({ ...gameFormData, is_structured: !gameFormData.is_structured })}
+                      className={`w-11 h-6 rounded-full transition-colors relative flex items-center px-1 shrink-0 ${gameFormData.is_structured ? 'bg-[#E10600]' : 'bg-zinc-300'}`}
+                    >
+                      <div className={`w-4 h-4 bg-white rounded-full shadow-md transform transition-transform ${gameFormData.is_structured ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
+                  </div>
+
+                  {!gameFormData.is_structured ? (
+                    <div>
+                      <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Simple Description</label>
+                      <textarea
+                        value={gameFormData.description}
+                        onChange={(e) => setGameFormData({ ...gameFormData, description: e.target.value })}
+                        className="w-full h-24 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
+                        placeholder="Game summary details..."
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-3 bg-zinc-50/50 border border-[#E5E5E5] p-4 rounded-xl">
+                      <div>
+                        <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Overview (Intro) *</label>
+                        <textarea
+                          required={gameFormData.is_structured}
+                          value={gameFormData.overview}
+                          onChange={(e) => setGameFormData({ ...gameFormData, overview: e.target.value })}
+                          className="w-full h-20 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
+                          placeholder="Brief 2-4 sentences explaining what the game is..."
+                        />
+                      </div>
+                      
+                      <div>
+                        <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Story & Setting</label>
+                        <textarea
+                          value={gameFormData.story}
+                          onChange={(e) => setGameFormData({ ...gameFormData, story: e.target.value })}
+                          className="w-full h-20 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
+                          placeholder="Explain the game's world, setting, and basic premise..."
+                        />
+                      </div>
+
+                      <div>
+                        <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Gameplay Experience</label>
+                        <textarea
+                          value={gameFormData.gameplay}
+                          onChange={(e) => setGameFormData({ ...gameFormData, gameplay: e.target.value })}
+                          className="w-full h-20 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg p-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
+                          placeholder="Explain the core gameplay loop and mechanics..."
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <label className="text-zinc-400 font-bold uppercase text-[9px] block">Key Features</label>
+                          <button
+                            type="button"
+                            onClick={() => setGameFormData({ ...gameFormData, features: [...gameFormData.features, ''] })}
+                            className="text-[10px] font-bold text-[#E10600] hover:text-[#C10500] uppercase tracking-wider transition"
+                          >
+                            + Add Feature
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          {gameFormData.features.map((feature, idx) => (
+                            <div key={idx} className="flex gap-2">
+                              <input
+                                type="text"
+                                value={feature}
+                                onChange={(e) => {
+                                  const updated = [...gameFormData.features];
+                                  updated[idx] = e.target.value;
+                                  setGameFormData({ ...gameFormData, features: updated });
+                                }}
+                                className="flex-1 h-9 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg px-3 text-zinc-800 placeholder-zinc-400 bg-white font-semibold transition"
+                                placeholder={`Feature #${idx + 1}`}
+                              />
+                              {gameFormData.features.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = gameFormData.features.filter((_, i) => i !== idx);
+                                    setGameFormData({ ...gameFormData, features: updated });
+                                  }}
+                                  className="px-2.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded-lg text-[10px] font-bold transition uppercase"
+                                >
+                                  Remove
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -2471,13 +2621,17 @@ const Admin = () => {
                 </div>
 
                 <div>
-                  <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">Display Order</label>
+                  <label className="text-zinc-400 font-bold uppercase text-[9px] block mb-1">
+                    Display Priority <span className="text-zinc-300 normal-case font-medium">(lower = shown first, 1 = top)</span>
+                  </label>
                   <input
                     type="number"
+                    min="1"
+                    max="9999"
                     value={gameFormData.display_order}
                     onChange={(e) => setGameFormData({ ...gameFormData, display_order: e.target.value })}
                     className="w-full h-10 border border-[#E5E5E5] focus:outline-none focus:ring-1 focus:ring-[#E10600] rounded-lg px-3.5 text-zinc-800 bg-white font-semibold transition"
-                    placeholder="0"
+                    placeholder="e.g. 1 = first, 50 = popular, 200 = older"
                   />
                 </div>
 

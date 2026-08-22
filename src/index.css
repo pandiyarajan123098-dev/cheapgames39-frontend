@@ -20,6 +20,10 @@ code {
 @layer base {
     :root {
         --primary-bg: #FFFFFF;
+        --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.02);
+        --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.03);
+        --shadow-elevated: 0 6px 20px rgba(0, 0, 0, 0.04);
+        --shadow-floating: 0 10px 30px rgba(0, 0, 0, 0.06);
         --secondary-bg: #F7F7F7;
         --tertiary-bg: #F2F2F2;
         --card-bg: #FFFFFF;

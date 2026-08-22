@@ -102,12 +102,12 @@ const Contact = () => {
     try {
       setLoading(true);
       await axios.post(`${API}/api/contact`, formData);
-      toast.success("Message sent successfully!");
+      toast.success("Message sent successfully. We'll get back to you soon.");
       setFormData({ name: "", email: "", message: "" });
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 5000);
     } catch (err) {
-      const errMsg = err.response?.data?.error || "Unable to send your message. Please try again.";
+      const errMsg = err.response?.data?.error || "Unable to send your message right now. Please try again.";
       toast.error(errMsg);
     } finally {
       setLoading(false);

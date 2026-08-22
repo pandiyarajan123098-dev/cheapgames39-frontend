@@ -41,17 +41,24 @@ const getDiscountPercent = (steamPrice, price) => {
   return Math.round(((steamPrice - price) / steamPrice) * 100);
 };
 
+const getPlainDescription = (desc) => {
+  if (desc && desc.trim().startsWith("{")) {
+    try {
+      const parsed = JSON.parse(desc);
+      if (parsed.overview) return parsed.overview;
+    } catch (e) {
+      // ignore
+    }
+  }
+  return desc || "";
+};
+
 const GameDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, accessToken } = useAuth();
   const { cart, addToCart } = useCart();
   const { toggleWishlist, isGameInWishlist, loading: wishlistLoading } = useWishlist();
-
-  const isInCart = useMemo(() => {
-    if (!game || !cart) return false;
-    return cart.some(item => item.game_id === game.id);
-  }, [game, cart]);
 
   const [game, setGame] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +85,11 @@ const GameDetails = () => {
   });
 
   const inWishlist = isGameInWishlist(id);
+
+  const isInCart = useMemo(() => {
+    if (!game || !cart) return false;
+    return cart.some(item => item.game_id === game.id);
+  }, [game, cart]);
 
   /* ================= RATING STATS ================= */
   const reviewsStats = useMemo(() => {
@@ -272,9 +284,10 @@ const GameDetails = () => {
 
     if (game?.title) {
       document.title = `${game.title} | CheapGames39`;
-      updateMetaTag("description", game.description || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`);
+      const plainDesc = getPlainDescription(game.description);
+      updateMetaTag("description", plainDesc || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`);
       updateMetaTag("og:title", `${game.title} | CheapGames39`, true);
-      updateMetaTag("og:description", game.description || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`, true);
+      updateMetaTag("og:description", plainDesc || `Buy ${game.title} at CheapGames39 at a massive discount compared to Steam.`, true);
       updateMetaTag("og:image", game.image_url || "", true);
 
       // Update canonical link
@@ -302,7 +315,7 @@ const GameDetails = () => {
       "@type": "Product",
       "name": game.title,
       "image": game.image_url,
-      "description": game.description,
+      "description": getPlainDescription(game.description),
       "offers": {
         "@type": "Offer",
         "priceCurrency": "INR",
@@ -500,6 +513,15 @@ const GameDetails = () => {
     return Math.round(val);
   };
 
+  let aboutData = null;
+  if (game && game.description && game.description.trim().startsWith("{")) {
+    try {
+      aboutData = JSON.parse(game.description);
+    } catch (e) {
+      // ignore
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#080808] text-white pt-[68px] md:pt-[74px] pb-16 px-4 sm:px-6 font-sans">
       <div className="max-w-[1320px] mx-auto animate-page-section">
@@ -584,7 +606,7 @@ const GameDetails = () => {
 
             {/* Description intro */}
             <p className="text-zinc-300 text-sm leading-relaxed max-w-2xl font-medium">
-              {game.description}
+              {aboutData ? aboutData.overview : game.description}
             </p>
 
             {/* Platform characteristics indicators */}
@@ -726,9 +748,55 @@ const GameDetails = () => {
             <h3 className="text-lg font-bold uppercase tracking-wide text-white flex items-center gap-2 select-none">
               <FileText className="w-4.5 h-4.5 text-[#E00000]" /> About This Game
             </h3>
-            <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-line pr-4">
-              {game.description}
-            </p>
+            {aboutData ? (
+              <div className="space-y-6 text-zinc-400 text-sm leading-relaxed pr-4">
+                <p className="text-zinc-300">
+                  {aboutData.overview}
+                </p>
+                
+                {aboutData.story && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#E00000]">
+                      Story & Setting
+                    </h4>
+                    <p>
+                      {aboutData.story}
+                    </p>
+                  </div>
+                )}
+
+                {aboutData.gameplay && (
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#E00000]">
+                      Gameplay Experience
+                    </h4>
+                    <p>
+                      {aboutData.gameplay}
+                    </p>
+                  </div>
+                )}
+
+                {aboutData.features && aboutData.features.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-[#E00000]">
+                      Key Features
+                    </h4>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+                      {aboutData.features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-2">
+                          <span className="text-[#E00000] font-black mt-0.5">•</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-zinc-400 text-sm leading-relaxed whitespace-pre-line pr-4">
+                {game.description}
+              </p>
+            )}
           </div>
 
           {/* Specs panel */}
@@ -868,7 +936,7 @@ const GameDetails = () => {
               {!user ? (
                 <div className="text-center py-4 space-y-3">
                   <p className="text-xs text-zinc-500">Please log in to submit a verified review.</p>
-                  <button onClick={() => navigate("/login")} className="bg-[#E00000] hover:bg-[#F00000] text-xs font-bold px-4 py-2 rounded-lg uppercase transition min-h-[44px] w-full" aria-label="Login to leave review">Login</button>
+                  <button onClick={() => navigate("/login")} className="bg-[#E00000] hover:bg-[#F00000] text-white text-xs font-bold px-4 py-2 rounded-lg uppercase transition min-h-[44px] w-full" aria-label="Login to leave review">Login</button>
                 </div>
               ) : eligibility.reviewStatus === "pending" ? (
                 <div className="text-center py-4 select-none bg-amber-500/5 border border-amber-500/10 rounded-xl p-4">
@@ -1006,11 +1074,11 @@ const GameDetails = () => {
         </section>
 
         {/* RELATED PRODUCTS */}
-        <section className="border-t border-white/8 pt-12 space-y-16">
+        <section className="border-t border-white/8 pt-12">
           {/* YOU MAY ALSO LIKE */}
           {recommendedLike.length > 0 && (
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+            <div className="cg39-section">
+              <h3 className="cg39-section-heading text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
                 You <span className="text-[#E00000]">May Also Like</span>
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
@@ -1023,8 +1091,8 @@ const GameDetails = () => {
 
           {/* MORE FROM THIS CATEGORY */}
           {recommendedCategory.length > 0 && (
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+            <div className="cg39-section">
+              <h3 className="cg39-section-heading text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
                 More From <span className="text-[#E00000]">This Category</span>
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
@@ -1037,8 +1105,8 @@ const GameDetails = () => {
 
           {/* PLAYERS ALSO VIEWED */}
           {recommendedViewed.length > 0 && (
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+            <div className="cg39-section">
+              <h3 className="cg39-section-heading text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
                 Players <span className="text-[#E00000]">Also Viewed</span>
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">
@@ -1051,8 +1119,8 @@ const GameDetails = () => {
 
           {/* MORE GREAT DEALS */}
           {recommendedDeals.length > 0 && (
-            <div>
-              <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight mb-8">
+            <div className="cg39-section">
+              <h3 className="cg39-section-heading text-xl sm:text-2xl font-black uppercase tracking-tight text-white">
                 More Great <span className="text-[#E00000]">Deals</span>
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-fade-in">

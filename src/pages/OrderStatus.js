@@ -262,7 +262,7 @@ const OrderStatus = () => {
                 <button
                   onClick={() => fetchOrderDetails(orderId)}
                   disabled={loading}
-                  className="w-full bg-[#E00000] hover:bg-[#F00000] disabled:opacity-50 py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider min-h-[48px]"
+                  className="w-full bg-[#E00000] hover:bg-[#F00000] disabled:opacity-50 text-white py-3.5 rounded-xl font-bold transition flex items-center justify-center gap-2 text-xs uppercase tracking-wider min-h-[48px]"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Search className="w-4 h-4" /> Track Order Status</>}
                 </button>
@@ -592,7 +592,7 @@ const OrderStatus = () => {
                           sessionStorage.setItem("cg39_checkout_order_id", order.id);
                           navigate("/checkout");
                         }}
-                        className="w-full flex items-center justify-center gap-2 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-wider transition hover:shadow-[0_0_15px_rgba(255,0,0,0.25)] min-h-[44px]"
+                        className="w-full flex items-center justify-center gap-2 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-3 text-xs font-bold uppercase tracking-wider transition hover:shadow-md min-h-[44px]"
                         aria-label="Submit payment reference for pending order"
                       >
                         <Send className="w-4 h-4" /> Submit Payment Reference

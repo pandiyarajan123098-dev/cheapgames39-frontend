@@ -605,6 +605,16 @@ h1, h2, h3, h4, h5, h6 {
   background-color: #f3f4f6;
 }
 
+.cg39-game-card-image-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.25) 0%, rgba(0, 0, 0, 0.05) 40%, transparent 80%),
+              linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 0%, transparent 40%);
+  pointer-events: none;
+  z-index: 5;
+}
+
 .cg39-game-card-image {
   width: 100%;
   height: 100%;
@@ -648,7 +658,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #4b5563;
   border: 1px solid #e5e7eb;
   border-radius: 50%;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
   transition: all 150ms ease;
   cursor: pointer;
 }
@@ -679,7 +689,7 @@ h1, h2, h3, h4, h5, h6 {
   color: #374151;
   border: 1px solid #e5e7eb;
   border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.10);
 }
 
 /* Card Content Area */
@@ -1228,5 +1238,90 @@ h1, h2, h3, h4, h5, h6 {
   }
   100% {
     transform: translateX(-50%);
+  }
+}
+
+/* =========================================================================
+   CG39 — GLOBAL SHADOW & CARD DEPTH REFINEMENT
+   ========================================================================= */
+
+/* Normalize Tailwind Shadow Classes globally to CSS variables hierarchy */
+.shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+.shadow, .shadow-md {
+  box-shadow: var(--shadow-card) !important;
+}
+.shadow-lg {
+  box-shadow: var(--shadow-elevated) !important;
+}
+.shadow-xl {
+  box-shadow: var(--shadow-floating) !important;
+}
+.shadow-2xl {
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.10) !important;
+}
+
+/* Normalize Hover Shadow Utilities */
+.hover\:shadow-sm:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04) !important;
+}
+.hover\:shadow:hover, .hover\:shadow-md:hover {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05) !important;
+}
+.hover\:shadow-lg:hover {
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06) !important;
+}
+.hover\:shadow-xl:hover {
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+/* Game Card Shadows & Hovers normalization */
+.cg39-game-card {
+  box-shadow: var(--shadow-card) !important;
+  border: 1px solid #e5e5e5 !important;
+}
+@media (min-width: 1024px) {
+  .cg39-game-card.reveal-visible:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.05) !important;
+    border-color: #d5d5d5 !important;
+  }
+}
+
+/* Flying item thumbnail shadow softness */
+.cg39-atc-item {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+/* Dynamic Header Offsets */
+.pt-\[68px\] {
+  padding-top: var(--header-height, 68px) !important;
+}
+@media (min-width: 768px) {
+  .md\:pt-\[74px\] {
+    padding-top: var(--header-height, 74px) !important;
+  }
+}
+
+/* Shared Spacing System for Storefront Sections */
+.cg39-section {
+  margin-top: 32px !important;
+  margin-bottom: 32px !important;
+}
+.cg39-section:first-of-type {
+  margin-top: 0px !important;
+}
+@media (min-width: 768px) {
+  .cg39-section {
+    margin-top: 48px !important;
+    margin-bottom: 48px !important;
+  }
+}
+.cg39-section-heading {
+  margin-bottom: 18px !important;
+}
+@media (min-width: 768px) {
+  .cg39-section-heading {
+    margin-bottom: 24px !important;
   }
 }

@@ -448,7 +448,7 @@ export const Footer = () => {
         rel="noopener noreferrer"
         aria-label="Contact us on WhatsApp"
         title="Contact us on WhatsApp"
-        className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full w-[52px] h-[52px] md:w-[56px] md:h-[56px] flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 z-40"
+        className="fixed bottom-[calc(1.25rem+env(safe-area-inset-bottom,0px))] right-5 sm:bottom-6 sm:right-6 bg-[#25D366] hover:bg-[#20ba56] text-white rounded-full w-[52px] h-[52px] md:w-[56px] md:h-[56px] flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-200 hover:scale-105 active:scale-95 z-40"
       >
         <FaWhatsapp size={26} style={{ color: '#FFFFFF' }} className="shrink-0" />
       </a>

@@ -254,23 +254,28 @@ const Home = () => {
 
   // Compute game sections based on actual data
   const bestDealsGames = useMemo(() => {
+    // Sort by popularity (display_order) first among games that have a real discount
     return [...games]
       .filter(g => g.in_stock !== false && g.steam_price > g.price)
       .sort((a, b) => {
-        const discA = (a.steam_price - a.price) / a.steam_price;
-        const discB = (b.steam_price - b.price) / b.steam_price;
-        return discB - discA;
+        const orderA = a.display_order || 999;
+        const orderB = b.display_order || 999;
+        return orderA - orderB; // lower display_order = more popular = shown first
       })
       .slice(0, 5);
   }, [games]);
 
   const featuredGames = useMemo(() => {
-    const filtered = games.filter(g => g.is_new === true || g.is_new === "true");
-    return filtered.length > 0 ? filtered.slice(0, 5) : games.slice(0, 5);
+    // Always prefer the most popular games (lowest display_order)
+    const sorted = [...games]
+      .filter(g => g.in_stock !== false)
+      .sort((a, b) => (a.display_order || 999) - (b.display_order || 999));
+    return sorted.slice(0, 5);
   }, [games]);
 
   const trendingGames = useMemo(() => {
     return [...games]
+      .filter(g => g.in_stock !== false)
       .sort((a, b) => (a.display_order || 999) - (b.display_order || 999))
       .slice(0, 5);
   }, [games]);
@@ -545,7 +550,7 @@ const Home = () => {
             <div className="flex flex-wrap gap-3 mt-1">
               <button
                 onClick={() => navigate(slide.btn1Link)}
-                className="bg-[#E50909] hover:bg-[#8B0000] text-xs md:text-sm font-black uppercase tracking-wider px-7 py-3.5 rounded-xl transition active:scale-[0.98] shadow-md shadow-[#E50909]/25 min-h-[44px]"
+                className="bg-[#E50909] hover:bg-[#8B0000] text-xs md:text-sm font-black uppercase tracking-wider px-7 py-3.5 rounded-xl transition active:scale-[0.98] shadow-md min-h-[44px]"
                 style={{ color: "#FFFFFF" }}
               >
                 <span style={{ color: "#FFFFFF" }}>{slide.btn1Text}</span>
@@ -642,14 +647,10 @@ const Home = () => {
 
   // Compact Promotional Deal Grid (High Contrast, Translucent Price Container & 100% Legibility)
   const renderDealBanners = () => {
-    // Select top 6 games with highest discount or top featured deals from real database
+    // Select top 6 most popular games (by display_order) that have a real discount
     const promoGames = [...games]
-      .filter(g => g.in_stock !== false)
-      .sort((a, b) => {
-        const discA = a.steam_price > a.price ? (a.steam_price - a.price) / a.steam_price : 0;
-        const discB = b.steam_price > b.price ? (b.steam_price - b.price) / b.steam_price : 0;
-        return discB - discA;
-      })
+      .filter(g => g.in_stock !== false && g.steam_price > g.price)
+      .sort((a, b) => (a.display_order || 999) - (b.display_order || 999))
       .slice(0, 6);
 
     if (promoGames.length === 0) return null;
@@ -676,11 +677,11 @@ const Home = () => {
                   }}
                 />
 
-                {/* Localized Bottom/Left Gradient for 100% Text Readability */}
+                {/* Localized Top and Bottom Gradients for 100% Text & Action Readability */}
                 <div 
                   className="absolute inset-0 pointer-events-none"
                   style={{
-                    background: "linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.10) 70%, transparent 100%)"
+                    background: "linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 30%, transparent 50%), linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.10) 70%, transparent 100%)"
                   }}
                 />
 
@@ -930,7 +931,7 @@ const Home = () => {
             </div>
             <button
               onClick={() => navigate("/offers")}
-              className="bg-[#FF0000] hover:bg-[#CC0000] text-[#FFFFFF] text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shrink-0 relative z-20 shadow-md shadow-[#FF0000]/10 border border-[#FF0000]"
+              className="bg-[#FF0000] hover:bg-[#CC0000] text-[#FFFFFF] text-xs font-black uppercase tracking-wider px-5 py-3 rounded-lg transition active:scale-[0.98] shrink-0 relative z-20 shadow-md border border-[#FF0000]"
             >
               Explore Deals
             </button>
@@ -1040,7 +1041,7 @@ const Home = () => {
           <div className="flex gap-3 justify-center items-center">
             <button
               onClick={() => navigate("/games")}
-              className="bg-[#E10600] hover:bg-[#ff1a13] text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition active:scale-[0.98] min-h-[40px] shadow-md shadow-[#E10600]/10"
+              className="bg-[#E10600] hover:bg-[#ff1a13] text-white font-bold px-6 py-3 rounded-xl text-xs uppercase tracking-wider transition active:scale-[0.98] min-h-[40px] shadow-md"
             >
               Shop Games
             </button>
@@ -1072,7 +1073,7 @@ const Home = () => {
             href="https://wa.me/916379490178"
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-[#E10600] hover:bg-[#C80500] text-white font-bold px-6 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md shadow-[#E10600]/10 h-11 min-h-[44px] min-w-[140px] active:scale-[0.98]"
+            className="bg-[#E10600] hover:bg-[#C80500] text-white font-bold px-6 rounded-xl text-xs uppercase tracking-wider transition flex items-center justify-center gap-2 shadow-md h-11 min-h-[44px] min-w-[140px] active:scale-[0.98]"
           >
             <FaWhatsapp className="w-4 h-4" /> WhatsApp
           </a>

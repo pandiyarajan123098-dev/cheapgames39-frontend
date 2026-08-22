@@ -39,7 +39,7 @@ export default function HeroSlide({ slide }) {
 
             <div className="mt-6 flex flex-wrap gap-4">
               <Link to="/games">
-                <button className="bg-[#B50000] hover:bg-[#D00000] px-6 py-3 rounded-full font-bold transition-all text-sm uppercase tracking-wider shadow-lg hover:shadow-[#B50000]/20">
+                <button className="bg-[#B50000] hover:bg-[#D00000] px-6 py-3 rounded-full font-bold transition-all text-sm uppercase tracking-wider shadow-lg hover:shadow-xl">
                   {slide.primaryBtn}
                 </button>
               </Link>

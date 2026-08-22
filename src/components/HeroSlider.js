@@ -12,12 +12,20 @@ import "swiper/css/pagination";
 import "swiper/css/effect-fade";
 
 const FEATURED_TITLES = [
-  { key: "resident evil 4", tagline: "SURVIVE THE HORROR" },
-  { key: "grand theft auto v", tagline: "LOS SANTOS AWAITS" },
-  { key: "red dead redemption 2", tagline: "OUTLAWS FOR LIFE" },
-  { key: "cyberpunk 2077", tagline: "NIGHT CITY NEVER SLEEPS" },
-  { key: "elden ring", tagline: "RISE, TARNISHED" },
-  { key: "forza horizon 5", tagline: "RACE WITHOUT LIMITS" }
+  { key: "grand theft auto v",              tagline: "LOS SANTOS AWAITS" },
+  { key: "red dead redemption 2",           tagline: "OUTLAWS FOR LIFE" },
+  { key: "cyberpunk 2077",                  tagline: "NIGHT CITY NEVER SLEEPS" },
+  { key: "elden ring",                      tagline: "RISE, TARNISHED" },
+  { key: "god of war ragnarok",             tagline: "THE END OF ALL THINGS" },
+  { key: "god of war",                      tagline: "BE A GOD" },
+  { key: "the witcher 3",                   tagline: "THE WORLD NEEDS A WITCHER" },
+  { key: "black myth wukong",               tagline: "DESTINED FOR GREATNESS" },
+  { key: "sekiro",                          tagline: "ONLY DEATH IS CERTAIN" },
+  { key: "ghost of tsushima",               tagline: "BECOME THE GHOST" },
+  { key: "the last of us",                  tagline: "YOU CAN'T OUTRUN THE TRUTH" },
+  { key: "spider-man remastered",           tagline: "YOUR FRIENDLY NEIGHBOURHOOD" },
+  { key: "hogwarts legacy",                 tagline: "YOUR LEGACY BEGINS" },
+  { key: "resident evil 4",                 tagline: "SURVIVE THE HORROR" },
 ];
 
 const getBgPosition = (title) => {

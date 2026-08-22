@@ -88,6 +88,31 @@ export const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const headerRef = useRef(null);
+
+  useEffect(() => {
+    const measureHeader = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.offsetHeight;
+        document.documentElement.style.setProperty('--header-height', `${height}px`);
+      }
+    };
+    
+    measureHeader();
+    window.addEventListener("resize", measureHeader);
+    
+    let resizeObserver;
+    if (headerRef.current && window.ResizeObserver) {
+      resizeObserver = new ResizeObserver(measureHeader);
+      resizeObserver.observe(headerRef.current);
+    }
+
+    return () => {
+      window.removeEventListener("resize", measureHeader);
+      if (resizeObserver) resizeObserver.disconnect();
+    };
+  }, []);
+
   const [isCartPulsing, setIsCartPulsing] = useState(false);
   const [showCartCheck, setShowCartCheck] = useState(false);
 
@@ -617,7 +642,7 @@ export const Header = () => {
 
   return (
     <>
-      <header className="sticky top-0 z-50 bg-white border-b border-[#E5E5E5] h-16 md:h-[70px] shadow-sm">
+      <header ref={headerRef} className="sticky top-0 z-50 bg-white border-b border-[#E5E5E5] h-16 md:h-[70px] shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between gap-4">
           
           {/* Logo */}
@@ -921,7 +946,7 @@ export const Header = () => {
               </button>
 
               {userMenuOpen && (
-                <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.10)] py-2 z-50">
+                <div className="absolute right-0 mt-2 w-52 bg-white border border-[#E5E5E5] rounded-2xl shadow-xl py-2 z-50 overflow-hidden">
                   {user ? (
                     <>
                       <div className="px-4 py-2.5 border-b border-[#F0F0F0] mb-1.5">
@@ -930,20 +955,24 @@ export const Header = () => {
                       </div>
                       <Link
                         to="/dashboard"
-                        className="flex items-center gap-2.5 px-4 py-2 text-xs text-[#444444] hover:text-[#111111] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1"
+                        className="flex items-center gap-3 px-4 py-2 text-xs text-[#444444] hover:text-[#111111] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1 w-[calc(100%-8px)]"
                         onClick={() => setUserMenuOpen(false)}
                       >
-                        <User className="w-3.5 h-3.5 text-[#999999]" />
+                        <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                          <User className="w-3.5 h-3.5 text-[#999999]" />
+                        </div>
                         My Account
                       </Link>
 
                       {(user?.email === "pandiyarajan007123@gmail.com" || user?.role === "admin") && (
                         <Link
                           to="/admin"
-                          className="flex items-center gap-2.5 px-4 py-2 text-xs text-[#E00000] hover:bg-[#E00000]/5 font-bold transition rounded-lg mx-1"
+                          className="flex items-center gap-3 px-4 py-2 text-xs text-[#E00000] hover:text-[#E00000] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1 w-[calc(100%-8px)]"
                           onClick={() => setUserMenuOpen(false)}
                         >
-                          <LayoutDashboard className="w-3.5 h-3.5" />
+                          <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                            <LayoutDashboard className="w-3.5 h-3.5 text-[#E00000]" />
+                          </div>
                           Admin Panel
                         </Link>
                       )}
@@ -953,9 +982,11 @@ export const Header = () => {
                           await handleLogout();
                         }}
                         disabled={logoutLoading}
-                        className="w-full text-left flex items-center gap-2.5 px-4 py-2 text-xs text-[#777777] hover:text-red-600 hover:bg-[#FFF5F5] transition rounded-lg mx-1 border-t border-[#F0F0F0] mt-1.5 pt-2.5"
+                        className="text-left flex items-center gap-3 px-4 py-2 text-xs text-[#444444] hover:text-[#111111] hover:bg-[#F5F5F5] font-semibold transition rounded-lg mx-1 w-[calc(100%-8px)]"
                       >
-                        <LogOut className="w-3.5 h-3.5" />
+                        <div className="w-4 h-4 flex items-center justify-center shrink-0">
+                          <LogOut className="w-3.5 h-3.5 text-[#999999]" />
+                        </div>
                         {logoutLoading ? "Logging out…" : "Log Out"}
                       </button>
                     </>

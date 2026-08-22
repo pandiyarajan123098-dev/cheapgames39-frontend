@@ -331,7 +331,7 @@ const Success = () => {
         <div className="flex flex-col sm:flex-row gap-4">
           <button
             onClick={() => navigate(`/order-status?id=${order.id}`)}
-            className="flex-1 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition hover:shadow-[0_0_20px_rgba(255,0,0,0.25)] flex items-center justify-center gap-2 min-h-[48px] active:scale-[0.98]"
+            className="flex-1 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition hover:shadow-md flex items-center justify-center gap-2 min-h-[48px] active:scale-[0.98]"
             aria-label="View Order Status page"
           >
             <span>View Order Status</span>

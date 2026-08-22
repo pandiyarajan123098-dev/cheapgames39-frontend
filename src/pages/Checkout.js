@@ -611,7 +611,7 @@ const Checkout = () => {
                   <button
                     type="submit"
                     disabled={loading || cart.length === 0}
-                    className="w-full bg-[#E00000] hover:bg-[#F00000] disabled:opacity-50 text-white rounded-xl py-3.5 font-bold transition flex items-center justify-center gap-2 uppercase tracking-wider active:scale-[0.98] hover:shadow-[0_0_20px_rgba(255,0,0,0.3)] min-h-[48px]"
+                    className="w-full bg-[#E00000] hover:bg-[#F00000] disabled:opacity-50 text-white rounded-xl py-3.5 font-bold transition flex items-center justify-center gap-2 uppercase tracking-wider active:scale-[0.98] hover:shadow-md min-h-[48px]"
                     aria-label="Proceed to Payment"
                   >
                     {loading ? "Creating Order..." : (
@@ -939,7 +939,7 @@ const Checkout = () => {
                   sessionStorage.clear();
                   navigate(`/order-status?id=${orderId}`);
                 }}
-                className="flex-1 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition hover:shadow-[0_0_20px_rgba(255,0,0,0.3)] min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98]"
+                className="flex-1 bg-[#E00000] hover:bg-[#F00000] text-white rounded-xl py-4 font-bold uppercase text-xs tracking-wider transition hover:shadow-md min-h-[48px] flex items-center justify-center gap-2 active:scale-[0.98]"
                 aria-label="Track Order Status details"
               >
                 <span>View Order Status</span>
